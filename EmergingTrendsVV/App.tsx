@@ -5,34 +5,30 @@
  * @format
  */
 
-import { NewAppScreen } from '@react-native/new-app-screen';
+import React, { useState } from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import LoginPage from './src/pages/Login';
+import RegisterPage from './src/pages/Register';
+import VaultPage from './src/pages/VaultPage';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
+  const [screen, setScreen] = useState<'login' | 'register' | 'vault'>('login');
 
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <View style={styles.container}>
+        {screen === 'login' ? (
+          <LoginPage onNavigate={setScreen} />
+        ) : null}
+        {screen === 'register' ? (
+          <RegisterPage onNavigate={setScreen} />
+        ) : null}
+        {screen === 'vault' ? <VaultPage /> : null}
+      </View>
     </SafeAreaProvider>
-  );
-}
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
   );
 }
 
