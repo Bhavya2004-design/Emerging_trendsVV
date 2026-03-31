@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Alert,
   View,
   Text,
   TextInput,
@@ -49,14 +50,34 @@ export default function LoginPage({ onNavigate }) {
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.loginButton}>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={() =>
+            Alert.alert(
+              'Authentication not ready',
+              'Use Continue as Guest until the backend is connected.',
+            )
+          }>
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
         <Text style={styles.orText}>or login with</Text>
 
-        <TouchableOpacity style={styles.googleButton}>
+        <TouchableOpacity
+          style={styles.googleButton}
+          onPress={() =>
+            Alert.alert(
+              'Google Sign-In not ready',
+              'Use Continue as Guest until authentication is set up.',
+            )
+          }>
           <Text style={styles.googleText}>Google</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.demoButton}
+          onPress={() => onNavigate('vault')}>
+          <Text style={styles.demoButtonText}>Continue as Guest</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -152,6 +173,16 @@ const styles = StyleSheet.create({
   googleText: {
     fontSize: 18,
     color: '#2E2E2E',
+    fontFamily: 'serif',
+  },
+  demoButton: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  demoButtonText: {
+    fontSize: 15,
+    color: '#7FAF9B',
+    fontWeight: '600',
     fontFamily: 'serif',
   },
   bottomLinkWrap: {

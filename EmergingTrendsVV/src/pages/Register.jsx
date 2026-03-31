@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Alert,
   View,
   Text,
   TextInput,
@@ -77,7 +78,14 @@ export default function RegisterPage({ onNavigate }) {
             secureTextEntry
           />
 
-          <TouchableOpacity style={styles.registerButton}>
+          <TouchableOpacity
+            style={styles.registerButton}
+            onPress={() =>
+              Alert.alert(
+                'Registration not ready',
+                'Backend setup is still pending. Please use Login or Continue as Guest for now.',
+              )
+            }>
             <Text style={styles.registerButtonText}>Register</Text>
           </TouchableOpacity>
 
