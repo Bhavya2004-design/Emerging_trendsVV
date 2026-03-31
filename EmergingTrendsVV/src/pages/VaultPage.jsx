@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -23,15 +24,21 @@ const bottomTabs = [
   { key: 'profile', label: 'Profile', icon: '◠' },
 ];
 
-export default function VaultPage({ loadVaultItems = getVaultItems }) {
+export default function VaultPage({
+  loadVaultItems = getVaultItems,
+  items,
+  selectedBottomTab = 'vault',
+  onBottomTabPress,
+}) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
   const topSpacing = Math.max(insets.top, statusBarHeight) + 14;
   const [activeTab, setActiveTab] = useState('all');
-  const [selectedBottomTab, setSelectedBottomTab] = useState('vault');
-  const [items, setItems] = useState([]);
+  const [loadedItems, setLoadedItems] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState({});
+
+  const sourceItems = items || loadedItems;
 
   useEffect(() => {
     let isMounted = true;
@@ -43,7 +50,7 @@ export default function VaultPage({ loadVaultItems = getVaultItems }) {
         return;
       }
 
-      setItems(result);
+      setLoadedItems(result);
       setFavoriteIds(
         result.reduce((accumulator, item) => {
           accumulator[item.id] = item.isFavorite;
@@ -61,24 +68,33 @@ export default function VaultPage({ loadVaultItems = getVaultItems }) {
 
   const filteredItems = useMemo(() => {
     if (activeTab === 'favorites') {
-      return items.filter(item => favoriteIds[item.id]);
+      return sourceItems.filter(item => favoriteIds[item.id]);
     }
 
     if (activeTab === 'all') {
-      return items;
+      return sourceItems;
     }
 
-    return items.filter(item => item.category === activeTab);
-  }, [activeTab, favoriteIds, items]);
+    return sourceItems.filter(item => item.category === activeTab);
+  }, [activeTab, favoriteIds, sourceItems]);
 
   const summary = useMemo(() => {
     const favoritesCount = Object.values(favoriteIds).filter(Boolean).length;
 
     return {
-      savedCount: items.length,
+      savedCount: sourceItems.length,
       favoritesCount,
     };
-  }, [favoriteIds, items]);
+  }, [favoriteIds, sourceItems]);
+
+  useEffect(() => {
+    setFavoriteIds(currentFavorites =>
+      sourceItems.reduce((accumulator, item) => {
+        accumulator[item.id] = item.isFavorite || currentFavorites[item.id] || false;
+        return accumulator;
+      }, {}),
+    );
+  }, [sourceItems]);
 
   const gutter = width < 380 ? 14 : 18;
   const horizontalPadding = width < 380 ? 18 : 24;
@@ -92,14 +108,16 @@ export default function VaultPage({ loadVaultItems = getVaultItems }) {
   }
 
   function handleBottomTabPress(tabKey) {
-    if (tabKey === 'vault') {
-      setSelectedBottomTab('vault');
+    if (onBottomTabPress) {
+      onBottomTabPress(tabKey);
       return;
     }
 
-    setSelectedBottomTab(tabKey);
+    if (tabKey === 'vault') {
+      return;
+    }
+
     Alert.alert('Coming soon', `${tabKey[0].toUpperCase()}${tabKey.slice(1)} page is not built yet.`);
-    setSelectedBottomTab('vault');
   }
 
   function renderHeader() {
@@ -181,7 +199,11 @@ export default function VaultPage({ loadVaultItems = getVaultItems }) {
           </Pressable>
         </View>
 
-        <OutfitMockImage mockImage={item.mockImage} />
+        {item.imageUri ? (
+          <Image source={{ uri: item.imageUri }} style={styles.imageMock} />
+        ) : (
+          <OutfitMockImage mockImage={item.mockImage} />
+        )}
 
         <View style={styles.cardTextWrap}>
           <Text numberOfLines={2} style={styles.cardTitle}>
