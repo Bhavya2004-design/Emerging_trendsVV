@@ -14,6 +14,7 @@ import VaultPage from './src/pages/VaultPage';
 import ScanPage from './src/pages/ScanPage';
 import CommunityPage from './src/pages/CommunityPage';
 import AddedToVaultPage from './src/pages/AddedToVaultPage';
+import ProfilePage from './src/pages/ProfilePage';
 import { mockVaultItems } from './src/data/vaultMockData';
 import { saveOutfitToDatabase } from './src/services/outfitStorage';
 
@@ -32,12 +33,12 @@ type ScanOutfitPayload = {
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
-  const [screen, setScreen] = useState<'login' | 'register' | 'vault' | 'scan' | 'community' | 'added-to-vault'>('login');
+  const [screen, setScreen] = useState<'login' | 'register' | 'vault' | 'scan' | 'community' | 'profile' | 'added-to-vault'>('login');
   const [vaultItems, setVaultItems] = useState(mockVaultItems);
   const [lastAddedSection, setLastAddedSection] = useState('your selected section');
 
   function handleBottomTabPress(tabKey: string) {
-    if (tabKey === 'vault' || tabKey === 'scan' || tabKey === 'community') {
+    if (tabKey === 'vault' || tabKey === 'scan' || tabKey === 'community' || tabKey === 'profile') {
       setScreen(tabKey);
       return;
     }
@@ -105,6 +106,12 @@ function App() {
             onNavigate={handleBottomTabPress}
             onGoToVault={() => setScreen('vault')}
             onViewSuggestions={() => setScreen('community')}
+          />
+        ) : null}
+        {screen === 'profile' ? (
+          <ProfilePage
+            selectedBottomTab="profile"
+            onNavigate={handleBottomTabPress}
           />
         ) : null}
       </View>
