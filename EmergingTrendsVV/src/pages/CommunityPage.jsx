@@ -19,13 +19,7 @@ import {
   initialCommentsByPost,
 } from '../data/communityMockData';
 
-const bottomTabs = [
-  { key: 'home', label: 'Home', icon: '⌂' },
-  { key: 'scan', label: 'Scan', icon: '⌗' },
-  { key: 'vault', label: 'Vault', icon: '⬡' },
-  { key: 'community', label: 'Community', icon: '◌' },
-  { key: 'profile', label: 'Profile', icon: '◠' },
-];
+import BottomTabBar from '../components/BottomTabBar';
 
 const userMap = communityUsers.reduce((acc, user) => {
   acc[user.id] = user;
@@ -42,12 +36,32 @@ function MockOutfitImage({ mockImage, compact = false }) {
       ]}
     >
       <View style={styles.mockTopRow}>
-        <View style={[styles.mockAccentCircle, { backgroundColor: mockImage.accents[0] }]} />
-        <View style={[styles.mockAccentCircleSmall, { backgroundColor: mockImage.accents[1] }]} />
+        <View
+          style={[
+            styles.mockAccentCircle,
+            { backgroundColor: mockImage.accents[0] },
+          ]}
+        />
+        <View
+          style={[
+            styles.mockAccentCircleSmall,
+            { backgroundColor: mockImage.accents[1] },
+          ]}
+        />
       </View>
       <View style={styles.mockCenterBar}>
-        <View style={[styles.mockBlockTall, { backgroundColor: mockImage.accents[2] }]} />
-        <View style={[styles.mockBlockWide, { backgroundColor: mockImage.accents[3] }]} />
+        <View
+          style={[
+            styles.mockBlockTall,
+            { backgroundColor: mockImage.accents[2] },
+          ]}
+        />
+        <View
+          style={[
+            styles.mockBlockWide,
+            { backgroundColor: mockImage.accents[3] },
+          ]}
+        />
       </View>
     </View>
   );
@@ -66,7 +80,12 @@ function Avatar({ user, size = 42 }) {
         },
       ]}
     >
-      <Text style={[styles.avatarText, { fontSize: Math.max(12, Math.floor(size * 0.34)) }]}>
+      <Text
+        style={[
+          styles.avatarText,
+          { fontSize: Math.max(12, Math.floor(size * 0.34)) },
+        ]}
+      >
         {user.name.charAt(0).toUpperCase()}
       </Text>
     </View>
@@ -93,7 +112,10 @@ function PostCard({
   return (
     <View style={[styles.postCard, compact && styles.postCardCompact]}>
       <View style={styles.postHeader}>
-        <TouchableOpacity style={styles.postUser} onPress={() => onOpenProfile(user.id)}>
+        <TouchableOpacity
+          style={styles.postUser}
+          onPress={() => onOpenProfile(user.id)}
+        >
           <Avatar user={user} size={compact ? 34 : 42} />
           <View>
             <Text style={styles.postName}>{user.name}</Text>
@@ -105,7 +127,12 @@ function PostCard({
           style={[styles.followBtn, isFollowing && styles.followBtnActive]}
           onPress={() => onToggleFollow(user.id)}
         >
-          <Text style={[styles.followBtnText, isFollowing && styles.followBtnTextActive]}>
+          <Text
+            style={[
+              styles.followBtnText,
+              isFollowing && styles.followBtnTextActive,
+            ]}
+          >
             {isFollowing ? 'Following' : 'Follow'}
           </Text>
         </TouchableOpacity>
@@ -122,26 +149,46 @@ function PostCard({
       </View>
 
       <View style={styles.socialStatsRow}>
-        <Text style={styles.socialStatText}>{post.likes + (isLiked ? 1 : 0)} likes</Text>
+        <Text style={styles.socialStatText}>
+          {post.likes + (isLiked ? 1 : 0)} likes
+        </Text>
         <Text style={styles.socialStatText}>{commentCount} comments</Text>
       </View>
 
       <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.iconActionBtn} onPress={() => onToggleLike(post.id)}>
+        <TouchableOpacity
+          style={styles.iconActionBtn}
+          onPress={() => onToggleLike(post.id)}
+        >
           <Text style={[styles.iconAction, isLiked && styles.iconActionActive]}>
             {isLiked ? '♥' : '♡'}
           </Text>
-          <Text style={[styles.iconActionLabel, isLiked && styles.iconActionLabelActive]}>Like</Text>
+          <Text
+            style={[
+              styles.iconActionLabel,
+              isLiked && styles.iconActionLabelActive,
+            ]}
+          >
+            Like
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconActionBtn} onPress={() => onOpenComments(post.id)}>
+        <TouchableOpacity
+          style={styles.iconActionBtn}
+          onPress={() => onOpenComments(post.id)}
+        >
           <Text style={styles.iconAction}>💬</Text>
           <Text style={styles.iconActionLabel}>Comment</Text>
         </TouchableOpacity>
       </View>
 
       {commentPreview ? (
-        <TouchableOpacity style={styles.commentPreviewBox} onPress={() => onOpenComments(post.id)}>
-          <Text style={styles.commentPreviewAuthor}>{commentPreview.author}</Text>
+        <TouchableOpacity
+          style={styles.commentPreviewBox}
+          onPress={() => onOpenComments(post.id)}
+        >
+          <Text style={styles.commentPreviewAuthor}>
+            {commentPreview.author}
+          </Text>
           <Text style={styles.commentPreviewText}>{commentPreview.text}</Text>
         </TouchableOpacity>
       ) : null}
@@ -175,7 +222,7 @@ export default function CommunityPage({
 
   const filteredPosts = useMemo(() => {
     if (timelineTab === 'following') {
-      return communityPosts.filter((post) => followedIds.includes(post.userId));
+      return communityPosts.filter(post => followedIds.includes(post.userId));
     }
     return communityPosts;
   }, [timelineTab, followedIds]);
@@ -184,26 +231,32 @@ export default function CommunityPage({
     if (!selectedProfileId) {
       return [];
     }
-    return communityPosts.filter((post) => post.userId === selectedProfileId);
+    return communityPosts.filter(post => post.userId === selectedProfileId);
   }, [selectedProfileId]);
 
-  const activeComments = activeCommentsPostId ? commentsByPost[activeCommentsPostId] || [] : [];
+  const activeComments = activeCommentsPostId
+    ? commentsByPost[activeCommentsPostId] || []
+    : [];
 
   const activeCommentsPost = activeCommentsPostId
-    ? communityPosts.find((post) => post.id === activeCommentsPostId)
+    ? communityPosts.find(post => post.id === activeCommentsPostId)
     : null;
 
-  const toggleFollow = (userId) => {
+  const toggleFollow = userId => {
     const user = userMap[userId];
 
-    setFollowedIds((prev) => {
+    setFollowedIds(prev => {
       const already = prev.includes(userId);
-      const next = already ? prev.filter((id) => id !== userId) : [...prev, userId];
+      const next = already
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId];
 
-      setNotifications((existing) => [
+      setNotifications(existing => [
         {
           id: `n-follow-${userId}-${Date.now()}`,
-          text: already ? `You unfollowed ${user.name}.` : `You started following ${user.name}.`,
+          text: already
+            ? `You unfollowed ${user.name}.`
+            : `You started following ${user.name}.`,
           time: 'now',
         },
         ...existing,
@@ -213,13 +266,15 @@ export default function CommunityPage({
     });
   };
 
-  const toggleLike = (postId) => {
-    setLikedPostIds((prev) =>
-      prev.includes(postId) ? prev.filter((id) => id !== postId) : [...prev, postId]
+  const toggleLike = postId => {
+    setLikedPostIds(prev =>
+      prev.includes(postId)
+        ? prev.filter(id => id !== postId)
+        : [...prev, postId],
     );
   };
 
-  const openProfile = (userId) => {
+  const openProfile = userId => {
     setSelectedProfileId(userId);
   };
 
@@ -227,7 +282,7 @@ export default function CommunityPage({
     setSelectedProfileId(null);
   };
 
-  const openComments = (postId) => {
+  const openComments = postId => {
     setActiveCommentsPostId(postId);
   };
 
@@ -243,7 +298,7 @@ export default function CommunityPage({
       return;
     }
 
-    setCommentsByPost((prev) => ({
+    setCommentsByPost(prev => ({
       ...prev,
       [activeCommentsPostId]: [
         ...(prev[activeCommentsPostId] || []),
@@ -255,7 +310,7 @@ export default function CommunityPage({
         },
       ],
     }));
-    setNotifications((existing) => [
+    setNotifications(existing => [
       {
         id: `n-comment-${activeCommentsPostId}-${Date.now()}`,
         text: 'Your comment was added.',
@@ -268,7 +323,7 @@ export default function CommunityPage({
 
   const renderGrid = () => (
     <View style={styles.gridWrap}>
-      {filteredPosts.map((post) => {
+      {filteredPosts.map(post => {
         const user = userMap[post.userId];
         return (
           <TouchableOpacity
@@ -293,7 +348,7 @@ export default function CommunityPage({
 
   const renderFeed = () => (
     <View style={styles.feedWrap}>
-      {filteredPosts.map((post) => {
+      {filteredPosts.map(post => {
         const user = userMap[post.userId];
         return (
           <PostCard
@@ -337,7 +392,9 @@ export default function CommunityPage({
 
           <View style={styles.profileStatsRow}>
             <View style={styles.profileStatBox}>
-              <Text style={styles.profileStatNum}>{selectedProfilePosts.length}</Text>
+              <Text style={styles.profileStatNum}>
+                {selectedProfilePosts.length}
+              </Text>
               <Text style={styles.profileStatLabel}>Posts</Text>
             </View>
             <View style={styles.profileStatBox}>
@@ -351,7 +408,10 @@ export default function CommunityPage({
           </View>
 
           <TouchableOpacity
-            style={[styles.followBtnLarge, isFollowing && styles.followBtnLargeActive]}
+            style={[
+              styles.followBtnLarge,
+              isFollowing && styles.followBtnLargeActive,
+            ]}
             onPress={() => toggleFollow(user.id)}
           >
             <Text
@@ -367,8 +427,11 @@ export default function CommunityPage({
 
         <Text style={styles.profilePostsTitle}>Posts</Text>
         <View style={styles.gridWrap}>
-          {selectedProfilePosts.map((post) => (
-            <View key={post.id} style={[styles.gridCard, isSmall && styles.gridCardSmall]}>
+          {selectedProfilePosts.map(post => (
+            <View
+              key={post.id}
+              style={[styles.gridCard, isSmall && styles.gridCardSmall]}
+            >
               <MockOutfitImage mockImage={post.mockImage} compact />
               <Text style={styles.profilePostCaption} numberOfLines={1}>
                 {post.caption}
@@ -386,12 +449,14 @@ export default function CommunityPage({
         <View style={styles.topBar}>
           <View>
             <Text style={styles.headerTitle}>Community</Text>
-            <Text style={styles.headerSub}>Discover and follow style creators</Text>
+            <Text style={styles.headerSub}>
+              Discover and follow style creators
+            </Text>
           </View>
 
           <TouchableOpacity
             style={styles.notifyBtn}
-            onPress={() => setShowNotifications((prev) => !prev)}
+            onPress={() => setShowNotifications(prev => !prev)}
           >
             <Text style={styles.notifyBtnText}>🔔</Text>
           </TouchableOpacity>
@@ -399,7 +464,10 @@ export default function CommunityPage({
 
         <View style={styles.tabRow}>
           <TouchableOpacity
-            style={[styles.segmentBtn, timelineTab === 'following' && styles.segmentBtnActive]}
+            style={[
+              styles.segmentBtn,
+              timelineTab === 'following' && styles.segmentBtnActive,
+            ]}
             onPress={() => setTimelineTab('following')}
           >
             <Text
@@ -413,7 +481,10 @@ export default function CommunityPage({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.segmentBtn, timelineTab === 'all' && styles.segmentBtnActive]}
+            style={[
+              styles.segmentBtn,
+              timelineTab === 'all' && styles.segmentBtnActive,
+            ]}
             onPress={() => setTimelineTab('all')}
           >
             <Text
@@ -429,16 +500,36 @@ export default function CommunityPage({
 
         <View style={styles.modeRow}>
           <TouchableOpacity
-            style={[styles.modeBtn, viewMode === 'grid' && styles.modeBtnActive]}
+            style={[
+              styles.modeBtn,
+              viewMode === 'grid' && styles.modeBtnActive,
+            ]}
             onPress={() => setViewMode('grid')}
           >
-            <Text style={[styles.modeText, viewMode === 'grid' && styles.modeTextActive]}>Grid</Text>
+            <Text
+              style={[
+                styles.modeText,
+                viewMode === 'grid' && styles.modeTextActive,
+              ]}
+            >
+              Grid
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modeBtn, viewMode === 'feed' && styles.modeBtnActive]}
+            style={[
+              styles.modeBtn,
+              viewMode === 'feed' && styles.modeBtnActive,
+            ]}
             onPress={() => setViewMode('feed')}
           >
-            <Text style={[styles.modeText, viewMode === 'feed' && styles.modeTextActive]}>Feed</Text>
+            <Text
+              style={[
+                styles.modeText,
+                viewMode === 'feed' && styles.modeTextActive,
+              ]}
+            >
+              Feed
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -473,7 +564,7 @@ export default function CommunityPage({
 
               <FlatList
                 data={notifications}
-                keyExtractor={(item) => item.id}
+                keyExtractor={item => item.id}
                 renderItem={({ item }) => (
                   <View style={styles.notificationItem}>
                     <Text style={styles.notificationText}>{item.text}</Text>
@@ -503,7 +594,10 @@ export default function CommunityPage({
           <View style={styles.commentsOverlay}>
             <View style={styles.commentsCard}>
               <View style={styles.commentsHeader}>
-                <TouchableOpacity onPress={closeComments} style={styles.commentsBackBtn}>
+                <TouchableOpacity
+                  onPress={closeComments}
+                  style={styles.commentsBackBtn}
+                >
                   <Text style={styles.commentsBackText}>←</Text>
                 </TouchableOpacity>
                 <Text style={styles.commentsTitle}>Comments</Text>
@@ -516,11 +610,13 @@ export default function CommunityPage({
 
               <FlatList
                 data={activeComments}
-                keyExtractor={(item) => item.id}
+                keyExtractor={item => item.id}
                 renderItem={({ item }) => (
                   <View style={styles.commentItem}>
                     <View style={styles.commentAvatarMini}>
-                      <Text style={styles.commentAvatarMiniText}>{item.author.charAt(0)}</Text>
+                      <Text style={styles.commentAvatarMiniText}>
+                        {item.author.charAt(0)}
+                      </Text>
                     </View>
                     <View style={styles.commentBubble}>
                       <View style={styles.commentTopLine}>
@@ -546,7 +642,10 @@ export default function CommunityPage({
                   onChangeText={setDraftComment}
                   multiline
                 />
-                <TouchableOpacity style={styles.commentSendBtn} onPress={submitComment}>
+                <TouchableOpacity
+                  style={styles.commentSendBtn}
+                  onPress={submitComment}
+                >
                   <Text style={styles.commentSendText}>Post</Text>
                 </TouchableOpacity>
               </View>
@@ -554,23 +653,7 @@ export default function CommunityPage({
           </View>
         ) : null}
 
-        <View style={styles.bottomNav}>
-          {bottomTabs.map((tab) => {
-            const active = selectedBottomTab === tab.key;
-            return (
-              <TouchableOpacity
-                key={tab.key}
-                style={styles.bottomTab}
-                onPress={() => onNavigate(tab.key)}
-              >
-                <View style={[styles.bottomIconWrap, active && styles.bottomIconWrapActive]}>
-                  <Text style={[styles.bottomIcon, active && styles.bottomIconActive]}>{tab.icon}</Text>
-                </View>
-                <Text style={[styles.bottomLabel, active && styles.bottomLabelActive]}>{tab.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <BottomTabBar selectedTab={selectedBottomTab} onNavigate={onNavigate} />
       </View>
     </SafeAreaView>
   );
@@ -673,7 +756,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 110,
+    paddingBottom: 132,
   },
   emptyBox: {
     marginTop: 40,
@@ -1233,49 +1316,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6e6258',
     fontFamily: 'serif',
-  },
-  bottomNav: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#fbf7f0',
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#efe5d8',
-  },
-  bottomTab: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  bottomIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  bottomIconWrapActive: {
-    backgroundColor: '#e8f2ed',
-  },
-  bottomIcon: {
-    color: '#64594e',
-    fontSize: 20,
-  },
-  bottomIconActive: {
-    color: '#97bfae',
-  },
-  bottomLabel: {
-    color: '#64594e',
-    fontSize: 12,
-    fontFamily: 'serif',
-  },
-  bottomLabelActive: {
-    color: '#97bfae',
   },
 });
