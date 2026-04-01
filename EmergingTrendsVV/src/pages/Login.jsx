@@ -46,7 +46,7 @@ export default function LoginPage({ onNavigate }) {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.forgotWrap}>
+        <TouchableOpacity style={styles.forgotWrap} onPress={() => onNavigate('forgot-password')}>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
 
@@ -76,7 +76,7 @@ export default function LoginPage({ onNavigate }) {
 
         <TouchableOpacity
           style={styles.demoButton}
-          onPress={() => onNavigate('vault')}>
+          onPress={() => onNavigate('home')}>
           <Text style={styles.demoButtonText}>Continue as Guest</Text>
         </TouchableOpacity>
 
@@ -95,13 +95,13 @@ export default function LoginPage({ onNavigate }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#e8e4da',
   },
   container: {
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 28,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#e8e4da',
   },
   logoSection: {
     alignItems: 'center',

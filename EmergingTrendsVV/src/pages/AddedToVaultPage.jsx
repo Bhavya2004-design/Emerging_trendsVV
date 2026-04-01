@@ -62,11 +62,11 @@ export default function AddedToVaultPage({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
   },
   screen: {
     flex: 1,
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
   },
   contentWrap: {
     flex: 1,
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 999,
     alignItems: 'center',
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
   },
   secondaryButtonText: {
     color: '#2b3430',

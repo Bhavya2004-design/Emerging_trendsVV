@@ -105,7 +105,7 @@ export default function RegisterPage({ onNavigate }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#e8e4da',
   },
   scrollContent: {
     flexGrow: 1,
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 28,
     paddingVertical: 28,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#e8e4da',
   },
   logoSection: {
     alignItems: 'center',

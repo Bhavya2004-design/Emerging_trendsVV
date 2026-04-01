@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "all": "^0.0.0",
+    "react-native": "0.84.1"
+  },
+  "devDependencies": {
+    "@react-native-community/cli": "latest",
+    "@react-native/metro-config": "^0.84.1",
+    "@react-native/typescript-config": "^0.84.1"
+  }
+}

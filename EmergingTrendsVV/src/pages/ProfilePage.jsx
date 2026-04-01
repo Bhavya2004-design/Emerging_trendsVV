@@ -151,7 +151,10 @@ function SavedOutfitCard({ item, onToggleSave }) {
   );
 }
 
-export default function ProfilePage({ onNavigate, selectedBottomTab = 'profile' }) {
+export default function ProfilePage({
+  onNavigate,
+  selectedBottomTab = 'profile',
+}) {
   const [view, setView] = useState('home');
   const [profile, setProfile] = useState({
     userID: 'user-maria-01',
@@ -613,7 +616,7 @@ export default function ProfilePage({ onNavigate, selectedBottomTab = 'profile' 
         <View style={styles.sectionCard}>
           <Text style={styles.sectionSubtitle}>Theme</Text>
           <View style={styles.chipRow}>
-            {['Light', 'Dark', 'Cream'].map((entry) => (
+            {['Light', 'Cream'].map((entry) => (
               <Pressable
                 key={entry}
                 onPress={() => setTheme(entry)}
@@ -695,11 +698,11 @@ export default function ProfilePage({ onNavigate, selectedBottomTab = 'profile' 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
   },
   screen: {
     flex: 1,
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
     paddingHorizontal: 16,
     paddingTop: 8,
   },

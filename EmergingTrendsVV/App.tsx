@@ -6,15 +6,18 @@
  */
 
 import React, { useState } from 'react';
-import { Alert, StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import { Alert, StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import LoginPage from './src/pages/Login';
 import RegisterPage from './src/pages/Register';
+import ForgotPasswordPage from './src/pages/ForgotPassword';
 import VaultPage from './src/pages/VaultPage';
 import ScanPage from './src/pages/ScanPage';
 import CommunityPage from './src/pages/CommunityPage';
 import AddedToVaultPage from './src/pages/AddedToVaultPage';
 import ProfilePage from './src/pages/ProfilePage';
+import HomePage from './src/pages/HomePage';
+import SplashScreen from './src/components/SplashScreen';
 import { mockVaultItems } from './src/data/vaultMockData';
 import { saveOutfitToDatabase } from './src/services/outfitStorage';
 
@@ -32,13 +35,12 @@ type ScanOutfitPayload = {
 };
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-  const [screen, setScreen] = useState<'login' | 'register' | 'vault' | 'scan' | 'community' | 'profile' | 'added-to-vault'>('login');
+  const [screen, setScreen] = useState<'splash' | 'login' | 'register' | 'forgot-password' | 'home' | 'vault' | 'scan' | 'community' | 'profile' | 'added-to-vault'>('splash');
   const [vaultItems, setVaultItems] = useState(mockVaultItems);
   const [lastAddedSection, setLastAddedSection] = useState('your selected section');
 
   function handleBottomTabPress(tabKey: string) {
-    if (tabKey === 'vault' || tabKey === 'scan' || tabKey === 'community' || tabKey === 'profile') {
+    if (tabKey === 'home' || tabKey === 'vault' || tabKey === 'scan' || tabKey === 'community' || tabKey === 'profile') {
       setScreen(tabKey);
       return;
     }
@@ -72,13 +74,28 @@ function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle="dark-content" />
       <View style={styles.container}>
+        {screen === 'splash' ? (
+          <SplashScreen
+            onFinish={() => setScreen('login')}
+            logoSource={require('./src/pages/VV_logo.png')}
+          />
+        ) : null}
         {screen === 'login' ? (
           <LoginPage onNavigate={setScreen} />
         ) : null}
         {screen === 'register' ? (
           <RegisterPage onNavigate={setScreen} />
+        ) : null}
+        {screen === 'forgot-password' ? (
+          <ForgotPasswordPage onNavigate={setScreen} />
+        ) : null}
+        {screen === 'home' ? (
+          <HomePage
+            selectedBottomTab="home"
+            onNavigate={handleBottomTabPress}
+          />
         ) : null}
         {screen === 'vault' ? (
           <VaultPage

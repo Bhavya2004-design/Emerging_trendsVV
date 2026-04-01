@@ -468,11 +468,11 @@ function Circle({ style }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
   },
   screen: {
     flex: 1,
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
   },
   listContent: {
     paddingTop: 10,

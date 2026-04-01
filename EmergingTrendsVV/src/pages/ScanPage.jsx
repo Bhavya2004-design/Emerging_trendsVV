@@ -442,11 +442,11 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
   },
   screen: {
     flex: 1,
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
   },
   editDetailsButton: {
     height: 48,
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
     borderWidth: 3,
     borderColor: '#7faf9b',
     marginBottom: 4,
