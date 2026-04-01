@@ -106,6 +106,7 @@ function App() {
         ) : null}
         {screen === 'scan' ? (
           <ScanPage
+            selectedBottomTab="scan"
             onNavigate={handleBottomTabPress}
             onSaveOutfit={handleAddOutfit}
           />

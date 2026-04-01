@@ -13,25 +13,23 @@ import {
   View,
 } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import BottomTabBar from '../components/BottomTabBar';
 import { vaultTabs } from '../data/vaultMockData';
-import { analyzeOutfitImage, processOutfitImage } from '../services/aiOutfitAnalyzer';
+import {
+  analyzeOutfitImage,
+  processOutfitImage,
+} from '../services/aiOutfitAnalyzer';
 
-const bottomTabs = [
-  { key: 'home', label: 'Home', icon: '⌂' },
-  { key: 'scan', label: 'Scan', icon: '⌗' },
-  { key: 'vault', label: 'Vault', icon: '⬡' },
-  { key: 'community', label: 'Community', icon: '◌' },
-  { key: 'profile', label: 'Profile', icon: '◠' },
-];
-
-const assignableTabs = vaultTabs.filter(tab => tab.key !== 'all' && tab.key !== 'favorites');
+const assignableTabs = vaultTabs.filter(
+  tab => tab.key !== 'all' && tab.key !== 'favorites',
+);
 
 const subtitleByCategory = {
   travel: 'Travel, Captured via Scan',
   work: 'Work, Captured via Scan',
 };
 
-export default function ScanPage({ onNavigate, onSaveOutfit }) {
+export default function ScanPage({ onNavigate, onSaveOutfit, selectedBottomTab = 'scan' }) {
   const [capturedImageUri, setCapturedImageUri] = useState('');
   const [processedImageUri, setProcessedImageUri] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('travel');
@@ -49,7 +47,9 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
   });
 
   const selectedTabLabel = useMemo(
-    () => assignableTabs.find(tab => tab.key === selectedCategory)?.label || 'Travel Outfit',
+    () =>
+      assignableTabs.find(tab => tab.key === selectedCategory)?.label ||
+      'Travel Outfit',
     [selectedCategory],
   );
 
@@ -75,7 +75,10 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
     const permissionGranted = await ensureCameraPermission();
 
     if (!permissionGranted) {
-      Alert.alert('Permission needed', 'Please allow camera access to scan outfits.');
+      Alert.alert(
+        'Permission needed',
+        'Please allow camera access to scan outfits.',
+      );
       return;
     }
 
@@ -91,7 +94,10 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
     }
 
     if (result.errorCode) {
-      Alert.alert('Camera error', result.errorMessage || 'Could not open camera.');
+      Alert.alert(
+        'Camera error',
+        result.errorMessage || 'Could not open camera.',
+      );
       return;
     }
 
@@ -127,7 +133,10 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
     }
 
     if (result.errorCode) {
-      Alert.alert('Gallery error', result.errorMessage || 'Could not open gallery.');
+      Alert.alert(
+        'Gallery error',
+        result.errorMessage || 'Could not open gallery.',
+      );
       return;
     }
 
@@ -171,7 +180,10 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
 
   async function handleRunAiDetection() {
     if (!capturedImageUri) {
-      Alert.alert('No outfit image', 'Scan an outfit first before AI detection.');
+      Alert.alert(
+        'No outfit image',
+        'Scan an outfit first before AI detection.',
+      );
       return;
     }
 
@@ -179,7 +191,8 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
 
     try {
       const processingResult = await processOutfitImage(capturedImageUri);
-      const resolvedImageUri = processingResult.processedImageUri || capturedImageUri;
+      const resolvedImageUri =
+        processingResult.processedImageUri || capturedImageUri;
       setProcessedImageUri(resolvedImageUri);
     } finally {
       setIsProcessingImage(false);
@@ -196,7 +209,10 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
       setAiDetails(analysis);
       setIsEditingDetails(false);
     } catch (error) {
-      Alert.alert('AI detection failed', 'Try again. You can still add manually to vault.');
+      Alert.alert(
+        'AI detection failed',
+        'Try again. You can still add manually to vault.',
+      );
     } finally {
       setIsAnalyzing(false);
     }
@@ -204,7 +220,10 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
 
   async function handleSaveOutfit() {
     if (!capturedImageUri) {
-      Alert.alert('No outfit image', 'Scan an outfit first before adding it to Vault.');
+      Alert.alert(
+        'No outfit image',
+        'Scan an outfit first before adding it to Vault.',
+      );
       return;
     }
 
@@ -213,7 +232,8 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
     try {
       const detailsReady = Boolean(aiDetails.itemType);
       const normalizedItemType = detailsReady
-        ? aiDetails.itemType.charAt(0).toUpperCase() + aiDetails.itemType.slice(1)
+        ? aiDetails.itemType.charAt(0).toUpperCase() +
+          aiDetails.itemType.slice(1)
         : selectedTabLabel;
       const composedSubtitle = detailsReady
         ? `${aiDetails.color}, ${aiDetails.material}, ${aiDetails.style}`
@@ -250,25 +270,37 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.screen}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.headerRow}>
             <Pressable onPress={() => onNavigate('vault')} hitSlop={10}>
               <Text style={styles.backIcon}>←</Text>
             </Pressable>
             <View style={styles.headerTextWrap}>
               <Text style={styles.headerTitle}>Scan Outfit</Text>
-              <Text style={styles.headerSubtitle}>Tap to scan clothes and add to VogueVault</Text>
+              <Text style={styles.headerSubtitle}>
+                Tap to scan clothes and add to VogueVault
+              </Text>
             </View>
             <View style={styles.headerSpacer} />
           </View>
 
           <View style={styles.previewWrap}>
             {capturedImageUri ? (
-              <Image source={{ uri: processedImageUri || capturedImageUri }} style={styles.previewImage} />
+              <Image
+                source={{ uri: processedImageUri || capturedImageUri }}
+                style={styles.previewImage}
+              />
             ) : (
               <View style={styles.previewPlaceholder}>
-                <Text style={styles.previewPlaceholderText}>No outfit scanned yet</Text>
-                <Text style={styles.previewHintText}>Tap SCAN ITEM or Select from Gallery</Text>
+                <Text style={styles.previewPlaceholderText}>
+                  No outfit scanned yet
+                </Text>
+                <Text style={styles.previewHintText}>
+                  Tap SCAN ITEM or Select from Gallery
+                </Text>
               </View>
             )}
             <View style={styles.cropCornerTopLeft} />
@@ -277,14 +309,22 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
             <View style={styles.cropCornerBottomRight} />
           </View>
 
-          <Text style={styles.helperText}>Not sure ? Start with gallery or searching</Text>
+          <Text style={styles.helperText}>
+            Not sure ? Start with gallery or searching
+          </Text>
 
           <View style={styles.quickActionsRow}>
-            <Pressable style={styles.quickActionButton} onPress={handlePickFromGallery}>
+            <Pressable
+              style={styles.quickActionButton}
+              onPress={handlePickFromGallery}
+            >
               <Text style={styles.quickActionIcon}>⌂</Text>
               <Text style={styles.quickActionText}>Select from Gallery</Text>
             </Pressable>
-            <Pressable style={styles.quickActionButton} onPress={handleOpenCamera}>
+            <Pressable
+              style={styles.quickActionButton}
+              onPress={handleOpenCamera}
+            >
               <Text style={styles.quickActionIcon}>⌕</Text>
               <Text style={styles.quickActionText}>Search clothing</Text>
             </Pressable>
@@ -298,9 +338,18 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
               return (
                 <Pressable
                   key={tab.key}
-                  style={[styles.assignChip, isActive && styles.assignChipActive]}
-                  onPress={() => setSelectedCategory(tab.key)}>
-                  <Text style={[styles.assignChipText, isActive && styles.assignChipTextActive]}>
+                  style={[
+                    styles.assignChip,
+                    isActive && styles.assignChipActive,
+                  ]}
+                  onPress={() => setSelectedCategory(tab.key)}
+                >
+                  <Text
+                    style={[
+                      styles.assignChipText,
+                      isActive && styles.assignChipTextActive,
+                    ]}
+                  >
                     {tab.label}
                   </Text>
                 </Pressable>
@@ -324,8 +373,8 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
                 {isProcessingImage
                   ? 'PROCESSING IMAGE...'
                   : isAnalyzing
-                    ? 'ANALYZING OUTFIT...'
-                    : 'RUN AI DETECTION'}
+                  ? 'ANALYZING OUTFIT...'
+                  : 'RUN AI DETECTION'}
               </Text>
             </Pressable>
           ) : null}
@@ -339,7 +388,9 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
                     <TextInput
                       style={styles.detailInput}
                       value={aiDetails.itemType}
-                      onChangeText={(value) => setAiDetails(prev => ({ ...prev, itemType: value }))}
+                      onChangeText={value =>
+                        setAiDetails(prev => ({ ...prev, itemType: value }))
+                      }
                     />
                   ) : (
                     <Text style={styles.detailValue}>{aiDetails.itemType}</Text>
@@ -351,7 +402,9 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
                     <TextInput
                       style={styles.detailInput}
                       value={aiDetails.color}
-                      onChangeText={(value) => setAiDetails(prev => ({ ...prev, color: value }))}
+                      onChangeText={value =>
+                        setAiDetails(prev => ({ ...prev, color: value }))
+                      }
                     />
                   ) : (
                     <Text style={styles.detailValue}>{aiDetails.color}</Text>
@@ -366,7 +419,9 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
                     <TextInput
                       style={styles.detailInput}
                       value={aiDetails.material}
-                      onChangeText={(value) => setAiDetails(prev => ({ ...prev, material: value }))}
+                      onChangeText={value =>
+                        setAiDetails(prev => ({ ...prev, material: value }))
+                      }
                     />
                   ) : (
                     <Text style={styles.detailValue}>{aiDetails.material}</Text>
@@ -378,7 +433,9 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
                     <TextInput
                       style={styles.detailInput}
                       value={aiDetails.style}
-                      onChangeText={(value) => setAiDetails(prev => ({ ...prev, style: value }))}
+                      onChangeText={value =>
+                        setAiDetails(prev => ({ ...prev, style: value }))
+                      }
                     />
                   ) : (
                     <Text style={styles.detailValue}>{aiDetails.style}</Text>
@@ -387,32 +444,51 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
               </View>
 
               {aiDetails.occasion ? (
-                <Text style={styles.occasionText}>Best use: {aiDetails.occasion}</Text>
+                <Text style={styles.occasionText}>
+                  Best use: {aiDetails.occasion}
+                </Text>
               ) : null}
 
-              <Pressable style={[styles.scanButton, styles.confirmButton]} onPress={handleSaveOutfit} disabled={isSaving}>
-                <Text style={styles.confirmButtonText}>{isSaving ? 'ADDING...' : 'CONFIRM AND ADD TO VAULT'}</Text>
+              <Pressable
+                style={[styles.scanButton, styles.confirmButton]}
+                onPress={handleSaveOutfit}
+                disabled={isSaving}
+              >
+                <Text style={styles.confirmButtonText}>
+                  {isSaving ? 'ADDING...' : 'CONFIRM AND ADD TO VAULT'}
+                </Text>
               </Pressable>
 
               <Pressable
                 style={[styles.scanButton, styles.editDetailsButton]}
                 onPress={() => setIsEditingDetails(current => !current)}
               >
-                <Text style={styles.editDetailsButtonText}>{isEditingDetails ? 'SAVE DETAILS' : 'EDIT DETAILS'}</Text>
+                <Text style={styles.editDetailsButtonText}>
+                  {isEditingDetails ? 'SAVE DETAILS' : 'EDIT DETAILS'}
+                </Text>
               </Pressable>
             </View>
           ) : null}
 
           {capturedImageUri && !aiDetails.itemType ? (
             <View style={styles.secondaryActionsRow}>
-              <Pressable style={styles.secondaryButton} onPress={handleOpenCamera}>
+              <Pressable
+                style={styles.secondaryButton}
+                onPress={handleOpenCamera}
+              >
                 <Text style={styles.secondaryButtonText}>Rescan</Text>
               </Pressable>
               <Pressable style={styles.secondaryButton} onPress={handleDiscard}>
                 <Text style={styles.secondaryButtonText}>Discard</Text>
               </Pressable>
-              <Pressable style={[styles.secondaryButton, styles.addButton]} onPress={handleRunAiDetection} disabled={isAnalyzing || isProcessingImage}>
-                <Text style={[styles.secondaryButtonText, styles.addButtonText]}>
+              <Pressable
+                style={[styles.secondaryButton, styles.addButton]}
+                onPress={handleRunAiDetection}
+                disabled={isAnalyzing || isProcessingImage}
+              >
+                <Text
+                  style={[styles.secondaryButtonText, styles.addButtonText]}
+                >
                   {isAnalyzing || isProcessingImage ? 'Analyzing...' : 'Detect'}
                 </Text>
               </Pressable>
@@ -420,20 +496,7 @@ export default function ScanPage({ onNavigate, onSaveOutfit }) {
           ) : null}
         </ScrollView>
 
-        <View style={styles.bottomBar}>
-          {bottomTabs.map(tab => {
-            const isActive = tab.key === 'scan';
-
-            return (
-              <Pressable key={tab.key} onPress={() => onNavigate(tab.key)} style={styles.bottomTab}>
-                <View style={[styles.bottomIconWrap, isActive && styles.bottomIconWrapActive]}>
-                  <Text style={[styles.bottomIcon, isActive && styles.bottomIconActive]}>{tab.icon}</Text>
-                </View>
-                <Text style={[styles.bottomLabel, isActive && styles.bottomLabelActive]}>{tab.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <BottomTabBar selectedTab={selectedBottomTab} onNavigate={onNavigate} />
       </View>
     </SafeAreaView>
   );
@@ -726,49 +789,5 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: '#2f4338',
     fontWeight: '700',
-  },
-  bottomBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#fbf7f0',
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#efe5d8',
-  },
-  bottomTab: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  bottomIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  bottomIconWrapActive: {
-    backgroundColor: '#e8f2ed',
-  },
-  bottomIcon: {
-    fontSize: 20,
-    color: '#64594e',
-  },
-  bottomIconActive: {
-    color: '#97bfae',
-  },
-  bottomLabel: {
-    color: '#64594e',
-    fontSize: 12,
-    fontFamily: 'serif',
-  },
-  bottomLabelActive: {
-    color: '#97bfae',
   },
 });

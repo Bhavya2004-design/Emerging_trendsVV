@@ -1,25 +1,18 @@
 import React from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-
-const bottomTabs = [
-  { key: 'home', label: 'Home', icon: '⌂' },
-  { key: 'scan', label: 'Scan', icon: '⌗' },
-  { key: 'vault', label: 'Vault', icon: '⬡' },
-  { key: 'community', label: 'Community', icon: '◌' },
-  { key: 'profile', label: 'Profile', icon: '◠' },
-];
+import { SafeAreaView } from 'react-native-safe-area-context';
+import BottomTabBar from '../components/BottomTabBar';
 
 const quickActions = [
-  { key: 'scan', label: 'Scan Outfit', icon: '◉' },
-  { key: 'vault', label: 'My Vault', icon: '▦' },
-  { key: 'community', label: 'Pack for Trip', icon: '◈' },
+  { key: 'scan', label: 'Scan Outfit', icon: '📷' },
+  { key: 'vault', label: 'My Vault', icon: '🧥' },
+  { key: 'community', label: 'Pack for Trip', icon: '🧳' },
 ];
 
 const posts = [
@@ -39,18 +32,18 @@ const posts = [
   },
 ];
 
-function OutfitPreview() {
+function OutfitPreview({ compact = false }) {
   return (
-    <View style={styles.previewImage}>
-      <View style={styles.previewJacket} />
-      <View style={styles.previewDenim} />
+    <View style={compact ? styles.previewImageCompact : styles.previewImage}>
+      <View style={compact ? styles.previewJacketCompact : styles.previewJacket} />
+      <View style={compact ? styles.previewDenimCompact : styles.previewDenim} />
     </View>
   );
 }
 
 export default function HomePage({ onNavigate, selectedBottomTab = 'home' }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
         <ScrollView
           style={styles.scrollArea}
@@ -70,15 +63,19 @@ export default function HomePage({ onNavigate, selectedBottomTab = 'home' }) {
 
           <View style={styles.suggestionCard}>
             <Text style={styles.suggestionTitle}>AI Outfit Suggestion</Text>
-            <View style={styles.suggestionContent}>
-              <View style={styles.suggestionTextWrap}>
-                <Text style={styles.suggestionText}>Beige jacket + White Shirt + Denim</Text>
-                <TouchableOpacity style={styles.viewButton} onPress={() => onNavigate('vault')}>
-                  <Text style={styles.viewButtonText}>View Outfit</Text>
-                </TouchableOpacity>
-              </View>
-              <OutfitPreview />
+            <View style={styles.suggestionTopRow}>
+              <Text
+                style={styles.suggestionText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                Beige jacket + White Shirt + Denim
+              </Text>
+              <OutfitPreview compact />
             </View>
+            <TouchableOpacity style={styles.viewButton} onPress={() => onNavigate('vault')}>
+              <Text style={styles.viewButtonText}>View Outfit</Text>
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -89,7 +86,9 @@ export default function HomePage({ onNavigate, selectedBottomTab = 'home' }) {
                 style={styles.quickActionCard}
                 onPress={() => onNavigate(action.key)}
               >
-                <Text style={styles.quickActionIcon}>{action.icon}</Text>
+                <Text style={styles.quickActionIcon} allowFontScaling={false}>
+                  {action.icon}
+                </Text>
                 <Text style={styles.quickActionLabel}>{action.label}</Text>
               </TouchableOpacity>
             ))}
@@ -121,23 +120,7 @@ export default function HomePage({ onNavigate, selectedBottomTab = 'home' }) {
           ))}
         </ScrollView>
 
-        <View style={styles.bottomNav}>
-          {bottomTabs.map((tab) => {
-            const active = selectedBottomTab === tab.key;
-            return (
-              <TouchableOpacity
-                key={tab.key}
-                style={styles.bottomTab}
-                onPress={() => onNavigate(tab.key)}
-              >
-                <View style={[styles.bottomIconWrap, active && styles.bottomIconWrapActive]}>
-                  <Text style={[styles.bottomIcon, active && styles.bottomIconActive]}>{tab.icon}</Text>
-                </View>
-                <Text style={[styles.bottomLabel, active && styles.bottomLabelActive]}>{tab.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <BottomTabBar selectedTab={selectedBottomTab} onNavigate={onNavigate} />
       </View>
     </SafeAreaView>
   );
@@ -151,14 +134,14 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#e8e4da',
-    paddingHorizontal: 14,
     paddingTop: 18,
   },
   scrollArea: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 120,
+    paddingHorizontal: 14,
+    paddingBottom: 132,
   },
   headerRow: {
     flexDirection: 'row',
@@ -202,43 +185,49 @@ const styles = StyleSheet.create({
   },
   suggestionCard: {
     backgroundColor: '#f0ede7',
-    borderRadius: 28,
-    padding: 18,
-    marginBottom: 18,
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 14,
+    marginBottom: 16,
+    minHeight: 136,
+    justifyContent: 'center',
   },
   suggestionTitle: {
     color: '#7faf9b',
-    fontSize: 35,
+    fontSize: 15,
     fontWeight: '700',
     fontFamily: 'serif',
+    marginBottom: 12,
   },
-  suggestionContent: {
+  suggestionTopRow: {
     flexDirection: 'row',
-    marginTop: 10,
-    gap: 14,
     alignItems: 'center',
-  },
-  suggestionTextWrap: {
-    flex: 1,
+    gap: 10,
+    minHeight: 72,
   },
   suggestionText: {
+    flex: 1,
+    minWidth: 0,
     color: '#2b2b2b',
-    fontSize: 34,
-    lineHeight: 50,
+    fontSize: 13,
+    lineHeight: 18,
     fontFamily: 'serif',
-    marginBottom: 14,
   },
   viewButton: {
-    width: 150,
+    alignSelf: 'flex-start',
+    marginTop: 16,
     backgroundColor: '#7faf9b',
     borderRadius: 999,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   viewButtonText: {
     color: '#f9f7f3',
-    fontSize: 17,
+    fontSize: 12,
     fontFamily: 'serif',
+    fontWeight: '600',
   },
   previewImage: {
     width: 134,
@@ -248,10 +237,26 @@ const styles = StyleSheet.create({
     padding: 10,
     justifyContent: 'space-between',
   },
+  previewImageCompact: {
+    width: 72,
+    height: 72,
+    borderRadius: 10,
+    backgroundColor: '#ece4d8',
+    padding: 8,
+    justifyContent: 'space-between',
+    flexShrink: 0,
+  },
   previewJacket: {
     width: '92%',
     height: 56,
     borderRadius: 8,
+    backgroundColor: '#d8c9b5',
+    alignSelf: 'center',
+  },
+  previewJacketCompact: {
+    width: '90%',
+    height: 30,
+    borderRadius: 5,
     backgroundColor: '#d8c9b5',
     alignSelf: 'center',
   },
@@ -262,28 +267,39 @@ const styles = StyleSheet.create({
     backgroundColor: '#a7bfd1',
     alignSelf: 'flex-end',
   },
+  previewDenimCompact: {
+    width: '55%',
+    height: 24,
+    borderRadius: 5,
+    backgroundColor: '#a7bfd1',
+    alignSelf: 'flex-end',
+  },
   sectionTitle: {
     color: '#2b2b2b',
     fontFamily: 'serif',
-    fontSize: 44,
+    fontSize: 22,
     marginBottom: 10,
   },
   quickActionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 10,
     marginBottom: 18,
   },
   quickActionCard: {
-    width: '31%',
+    flex: 1,
+    minHeight: 124,
     backgroundColor: '#f0ede7',
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
-    paddingVertical: 12,
+    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 8,
   },
   quickActionIcon: {
-    fontSize: 38,
-    color: '#7faf9b',
-    marginBottom: 6,
+    fontSize: 46,
+    lineHeight: 52,
+    marginBottom: 10,
   },
   communityTitle: {
     marginBottom: 2,
@@ -291,7 +307,9 @@ const styles = StyleSheet.create({
   quickActionLabel: {
     fontFamily: 'serif',
     color: '#2b2b2b',
-    fontSize: 13,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   postCard: {
     backgroundColor: '#f0ede7',
@@ -347,49 +365,5 @@ const styles = StyleSheet.create({
     color: '#4b433d',
     fontFamily: 'serif',
     fontSize: 13,
-  },
-  bottomNav: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#fbf7f0',
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#efe5d8',
-  },
-  bottomTab: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  bottomIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  bottomIconWrapActive: {
-    backgroundColor: '#e8f2ed',
-  },
-  bottomIcon: {
-    color: '#64594e',
-    fontSize: 20,
-  },
-  bottomIconActive: {
-    color: '#97bfae',
-  },
-  bottomLabel: {
-    color: '#64594e',
-    fontSize: 12,
-    fontFamily: 'serif',
-  },
-  bottomLabelActive: {
-    color: '#97bfae',
   },
 });

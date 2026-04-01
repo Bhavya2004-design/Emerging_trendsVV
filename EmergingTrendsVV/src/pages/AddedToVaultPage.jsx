@@ -1,13 +1,7 @@
 import React from 'react';
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-
-const bottomTabs = [
-  { key: 'home', label: 'Home', icon: '⌂' },
-  { key: 'scan', label: 'Scan', icon: '⌗' },
-  { key: 'vault', label: 'Vault', icon: '⬡' },
-  { key: 'community', label: 'Community', icon: '◌' },
-  { key: 'profile', label: 'Profile', icon: '◠' },
-];
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import BottomTabBar from '../components/BottomTabBar';
 
 export default function AddedToVaultPage({
   onNavigate,
@@ -17,7 +11,7 @@ export default function AddedToVaultPage({
   selectedBottomTab = 'vault',
 }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
         <View style={styles.contentWrap}>
           <Text style={styles.title}>ADDED TO VAULT</Text>
@@ -28,7 +22,8 @@ export default function AddedToVaultPage({
 
           <Text style={styles.confirmedText}>CONFIRMED!</Text>
           <Text style={styles.descriptionText}>
-            YOUR OUTFIT ANALYSIS HAS BEEN ADDED TO {sectionLabel.toUpperCase()} AND IS READY FOR MATCHING.
+            YOUR OUTFIT ANALYSIS HAS BEEN ADDED TO {sectionLabel.toUpperCase()}{' '}
+            AND IS READY FOR MATCHING.
           </Text>
 
           <Pressable style={styles.primaryButton} onPress={onGoToVault}>
@@ -36,24 +31,13 @@ export default function AddedToVaultPage({
           </Pressable>
 
           <Pressable style={styles.secondaryButton} onPress={onViewSuggestions}>
-            <Text style={styles.secondaryButtonText}>VIEW MY OUTFIT SUGGESTIONS</Text>
+            <Text style={styles.secondaryButtonText}>
+              VIEW MY OUTFIT SUGGESTIONS
+            </Text>
           </Pressable>
         </View>
 
-        <View style={styles.bottomBar}>
-          {bottomTabs.map((tab) => {
-            const isActive = tab.key === selectedBottomTab;
-
-            return (
-              <Pressable key={tab.key} onPress={() => onNavigate(tab.key)} style={styles.bottomTab}>
-                <View style={[styles.bottomIconWrap, isActive && styles.bottomIconWrapActive]}>
-                  <Text style={[styles.bottomIcon, isActive && styles.bottomIconActive]}>{tab.icon}</Text>
-                </View>
-                <Text style={[styles.bottomLabel, isActive && styles.bottomLabelActive]}>{tab.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <BottomTabBar selectedTab={selectedBottomTab} onNavigate={onNavigate} />
       </View>
     </SafeAreaView>
   );
@@ -145,49 +129,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.4,
-  },
-  bottomBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#fbf7f0',
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#efe5d8',
-  },
-  bottomTab: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  bottomIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  bottomIconWrapActive: {
-    backgroundColor: '#e8f2ed',
-  },
-  bottomIcon: {
-    fontSize: 20,
-    color: '#64594e',
-  },
-  bottomIconActive: {
-    color: '#97bfae',
-  },
-  bottomLabel: {
-    color: '#64594e',
-    fontSize: 12,
-    fontFamily: 'serif',
-  },
-  bottomLabelActive: {
-    color: '#97bfae',
   },
 });

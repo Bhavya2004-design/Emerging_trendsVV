@@ -10,15 +10,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BottomTabBar from '../components/BottomTabBar';
 import { communityPosts } from '../data/communityMockData';
-
-const bottomTabs = [
-  { key: 'home', label: 'Home', icon: '⌂' },
-  { key: 'scan', label: 'Scan', icon: '⌗' },
-  { key: 'vault', label: 'Vault', icon: '⬡' },
-  { key: 'community', label: 'Community', icon: '◌' },
-  { key: 'profile', label: 'Profile', icon: '◠' },
-];
 
 const activityLinks = [
   { key: 'my-vault', icon: '⌂', label: 'My Vault' },
@@ -38,7 +31,8 @@ function buildSavedOutfits() {
   return communityPosts.slice(0, 6).map((post, index) => ({
     id: `saved-${post.id}`,
     title: post.caption,
-    category: index % 3 === 0 ? 'Casual' : index % 3 === 1 ? 'Formal' : 'Summer',
+    category:
+      index % 3 === 0 ? 'Casual' : index % 3 === 1 ? 'Formal' : 'Summer',
     isSaved: true,
     mockImage: post.mockImage,
   }));
@@ -107,7 +101,10 @@ function LinkSection({ title, links, onPress }) {
         <Pressable
           key={link.key}
           onPress={() => onPress(link.key)}
-          style={[styles.linkRow, index === links.length - 1 && styles.linkRowLast]}
+          style={[
+            styles.linkRow,
+            index === links.length - 1 && styles.linkRowLast,
+          ]}
         >
           <View style={styles.linkLeft}>
             <Text style={styles.linkIcon}>{link.icon}</Text>
@@ -135,16 +132,57 @@ function ViewTitle({ title, onBack }) {
 function SavedOutfitCard({ item, onToggleSave }) {
   return (
     <View style={styles.savedCard}>
-      <View style={[styles.savedImage, { backgroundColor: item.mockImage.background }]}> 
-        <View style={[styles.savedAccent, { backgroundColor: item.mockImage.accents[0], width: 20, height: 20, borderRadius: 10 }]} />
-        <View style={[styles.savedAccent, { backgroundColor: item.mockImage.accents[1], width: 40, height: 16, borderRadius: 8 }]} />
-        <View style={[styles.savedAccent, { backgroundColor: item.mockImage.accents[2], width: 28, height: 28, borderRadius: 8 }]} />
+      <View
+        style={[
+          styles.savedImage,
+          { backgroundColor: item.mockImage.background },
+        ]}
+      >
+        <View
+          style={[
+            styles.savedAccent,
+            {
+              backgroundColor: item.mockImage.accents[0],
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.savedAccent,
+            {
+              backgroundColor: item.mockImage.accents[1],
+              width: 40,
+              height: 16,
+              borderRadius: 8,
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.savedAccent,
+            {
+              backgroundColor: item.mockImage.accents[2],
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+            },
+          ]}
+        />
       </View>
-      <Text numberOfLines={2} style={styles.savedTitle}>{item.title}</Text>
+      <Text numberOfLines={2} style={styles.savedTitle}>
+        {item.title}
+      </Text>
       <View style={styles.savedMetaRow}>
         <Text style={styles.savedTag}>{item.category}</Text>
         <Pressable onPress={() => onToggleSave(item.id)}>
-          <Text style={[styles.saveToggle, !item.isSaved && styles.saveToggleOff]}>{item.isSaved ? '♥' : '♡'}</Text>
+          <Text
+            style={[styles.saveToggle, !item.isSaved && styles.saveToggleOff]}
+          >
+            {item.isSaved ? '♥' : '♡'}
+          </Text>
         </Pressable>
       </View>
     </View>
@@ -197,7 +235,7 @@ export default function ProfilePage({
   const [theme, setTheme] = useState('Cream');
 
   const savedCategories = useMemo(() => {
-    const tags = Array.from(new Set(savedOutfits.map((item) => item.category)));
+    const tags = Array.from(new Set(savedOutfits.map(item => item.category)));
     return ['All', ...tags];
   }, [savedOutfits]);
 
@@ -205,21 +243,22 @@ export default function ProfilePage({
     if (savedFilter === 'All') {
       return savedOutfits;
     }
-    return savedOutfits.filter((item) => item.category === savedFilter);
+    return savedOutfits.filter(item => item.category === savedFilter);
   }, [savedOutfits, savedFilter]);
 
-  const selectedTrip = tripCards.find((trip) => trip.id === selectedTripId) || null;
+  const selectedTrip =
+    tripCards.find(trip => trip.id === selectedTripId) || null;
 
   function updateProfileField(field, value) {
-    setProfile((current) => ({
+    setProfile(current => ({
       ...current,
       [field]: value,
     }));
   }
 
   function toggleSavedOutfit(id) {
-    setSavedOutfits((current) =>
-      current.map((item) =>
+    setSavedOutfits(current =>
+      current.map(item =>
         item.id === id
           ? {
               ...item,
@@ -231,21 +270,21 @@ export default function ProfilePage({
   }
 
   function toggleNotification(key) {
-    setNotificationSettings((current) => ({
+    setNotificationSettings(current => ({
       ...current,
       [key]: !current[key],
     }));
   }
 
   function togglePrivacyAccount() {
-    setPrivacySettings((current) => ({
+    setPrivacySettings(current => ({
       ...current,
       privateAccount: !current.privateAccount,
     }));
   }
 
   function updateClosetVisibility(next) {
-    setPrivacySettings((current) => ({
+    setPrivacySettings(current => ({
       ...current,
       closetVisibility: next,
     }));
@@ -257,8 +296,8 @@ export default function ProfilePage({
   }
 
   function savePostCaption(postId) {
-    setPosts((current) =>
-      current.map((post) =>
+    setPosts(current =>
+      current.map(post =>
         post.id === postId
           ? {
               ...post,
@@ -272,8 +311,8 @@ export default function ProfilePage({
   }
 
   function togglePostVisibility(postId) {
-    setPosts((current) =>
-      current.map((post) =>
+    setPosts(current =>
+      current.map(post =>
         post.id === postId
           ? {
               ...post,
@@ -291,7 +330,7 @@ export default function ProfilePage({
         text: 'Delete',
         style: 'destructive',
         onPress: () => {
-          setPosts((current) => current.filter((post) => post.id !== postId));
+          setPosts(current => current.filter(post => post.id !== postId));
           if (editingPostId === postId) {
             setEditingPostId('');
             setEditingCaption('');
@@ -303,7 +342,10 @@ export default function ProfilePage({
 
   function renderHome() {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentPadBottom}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentPadBottom}
+      >
         <View style={styles.topBar}>
           <Pressable hitSlop={8} onPress={() => onNavigate('vault')}>
             <Text style={styles.backIcon}>←</Text>
@@ -312,7 +354,11 @@ export default function ProfilePage({
 
         <ProfileHeader profile={profile} />
 
-        <LinkSection title="My Activity" links={activityLinks} onPress={setView} />
+        <LinkSection
+          title="My Activity"
+          links={activityLinks}
+          onPress={setView}
+        />
         <LinkSection title="Settings" links={settingsLinks} onPress={setView} />
       </ScrollView>
     );
@@ -320,12 +366,20 @@ export default function ProfilePage({
 
   function renderMyVaultShortcut() {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentPadBottom}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentPadBottom}
+      >
         <ViewTitle title="My Vault" onBack={() => setView('home')} />
         <View style={styles.sectionCard}>
-          <Text style={styles.subCopy}>Owner Mode route will pass this user ID to VaultMainPage:</Text>
+          <Text style={styles.subCopy}>
+            Owner Mode route will pass this user ID to VaultMainPage:
+          </Text>
           <Text style={styles.codeLike}>{profile.userID}</Text>
-          <Pressable style={styles.primaryBtn} onPress={() => onNavigate('vault')}>
+          <Pressable
+            style={styles.primaryBtn}
+            onPress={() => onNavigate('vault')}
+          >
             <Text style={styles.primaryBtnText}>Open VaultMainPage</Text>
           </Pressable>
         </View>
@@ -335,24 +389,45 @@ export default function ProfilePage({
 
   function renderSavedOutfits() {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentPadBottom}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentPadBottom}
+      >
         <ViewTitle title="Saved Outfits" onBack={() => setView('home')} />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          {savedCategories.map((tag) => (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+        >
+          {savedCategories.map(tag => (
             <Pressable
               key={tag}
               onPress={() => setSavedFilter(tag)}
-              style={[styles.filterChip, savedFilter === tag && styles.filterChipActive]}
+              style={[
+                styles.filterChip,
+                savedFilter === tag && styles.filterChipActive,
+              ]}
             >
-              <Text style={[styles.filterChipText, savedFilter === tag && styles.filterChipTextActive]}>{tag}</Text>
+              <Text
+                style={[
+                  styles.filterChipText,
+                  savedFilter === tag && styles.filterChipTextActive,
+                ]}
+              >
+                {tag}
+              </Text>
             </Pressable>
           ))}
         </ScrollView>
 
         <View style={styles.savedGrid}>
-          {visibleSavedOutfits.map((item) => (
-            <SavedOutfitCard key={item.id} item={item} onToggleSave={toggleSavedOutfit} />
+          {visibleSavedOutfits.map(item => (
+            <SavedOutfitCard
+              key={item.id}
+              item={item}
+              onToggleSave={toggleSavedOutfit}
+            />
           ))}
         </View>
       </ScrollView>
@@ -361,12 +436,15 @@ export default function ProfilePage({
 
   function renderTravelPacking() {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentPadBottom}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentPadBottom}
+      >
         <ViewTitle title="Travel Packing" onBack={() => setView('home')} />
 
         <View style={styles.sectionCard}>
           <Text style={styles.sectionSubtitle}>Trip Cards</Text>
-          {tripCards.map((trip) => {
+          {tripCards.map(trip => {
             const isActive = selectedTripId === trip.id;
             return (
               <Pressable
@@ -375,7 +453,9 @@ export default function ProfilePage({
                 style={[styles.tripRow, isActive && styles.tripRowActive]}
               >
                 <Text style={styles.tripTitle}>{trip.name}</Text>
-                <Text style={styles.tripMeta}>{trip.itemCount} items • {trip.weight} kg</Text>
+                <Text style={styles.tripMeta}>
+                  {trip.itemCount} items • {trip.weight} kg
+                </Text>
               </Pressable>
             );
           })}
@@ -384,11 +464,19 @@ export default function ProfilePage({
         {selectedTrip ? (
           <View style={styles.sectionCard}>
             <Text style={styles.sectionSubtitle}>Checklist</Text>
-            <Text style={styles.subCopy}>Add from Closet Items database to {selectedTrip.name}</Text>
+            <Text style={styles.subCopy}>
+              Add from Closet Items database to {selectedTrip.name}
+            </Text>
             <View style={styles.chipRow}>
-              <View style={styles.smallChip}><Text style={styles.smallChipText}>Blazer</Text></View>
-              <View style={styles.smallChip}><Text style={styles.smallChipText}>Sneakers</Text></View>
-              <View style={styles.smallChip}><Text style={styles.smallChipText}>Linen Shirt</Text></View>
+              <View style={styles.smallChip}>
+                <Text style={styles.smallChipText}>Blazer</Text>
+              </View>
+              <View style={styles.smallChip}>
+                <Text style={styles.smallChipText}>Sneakers</Text>
+              </View>
+              <View style={styles.smallChip}>
+                <Text style={styles.smallChipText}>Linen Shirt</Text>
+              </View>
             </View>
 
             <Text style={styles.sectionSubtitle}>Outfit Planner Canvas</Text>
@@ -403,9 +491,21 @@ export default function ProfilePage({
 
             <Text style={styles.sectionSubtitle}>Status Bar</Text>
             <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${Math.min(100, Math.round((selectedTrip.itemCount / 30) * 100))}%` }]} />
+              <View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: `${Math.min(
+                      100,
+                      Math.round((selectedTrip.itemCount / 30) * 100),
+                    )}%`,
+                  },
+                ]}
+              />
             </View>
-            <Text style={styles.subCopy}>{selectedTrip.itemCount}/30 items packed</Text>
+            <Text style={styles.subCopy}>
+              {selectedTrip.itemCount}/30 items packed
+            </Text>
           </View>
         ) : null}
       </ScrollView>
@@ -414,10 +514,13 @@ export default function ProfilePage({
 
   function renderCommunityPosts() {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentPadBottom}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentPadBottom}
+      >
         <ViewTitle title="Community Posts" onBack={() => setView('home')} />
 
-        {posts.map((post) => {
+        {posts.map(post => {
           const isEditing = editingPostId === post.id;
           return (
             <View key={post.id} style={styles.sectionCard}>
@@ -438,27 +541,41 @@ export default function ProfilePage({
               <View style={styles.analyticsRow}>
                 <Text style={styles.analyticsText}>Likes: {post.likes}</Text>
                 <Text style={styles.analyticsText}>Saves: {post.saves}</Text>
-                <Text style={styles.analyticsText}>Visibility: {post.visibility}</Text>
+                <Text style={styles.analyticsText}>
+                  Visibility: {post.visibility}
+                </Text>
               </View>
 
               <View style={styles.actionButtonsRow}>
                 {isEditing ? (
-                  <Pressable style={styles.smallActionBtn} onPress={() => savePostCaption(post.id)}>
+                  <Pressable
+                    style={styles.smallActionBtn}
+                    onPress={() => savePostCaption(post.id)}
+                  >
                     <Text style={styles.smallActionBtnText}>Save Caption</Text>
                   </Pressable>
                 ) : (
-                  <Pressable style={styles.smallActionBtn} onPress={() => startEditPost(post)}>
+                  <Pressable
+                    style={styles.smallActionBtn}
+                    onPress={() => startEditPost(post)}
+                  >
                     <Text style={styles.smallActionBtnText}>Edit Caption</Text>
                   </Pressable>
                 )}
 
-                <Pressable style={styles.smallActionBtn} onPress={() => togglePostVisibility(post.id)}>
+                <Pressable
+                  style={styles.smallActionBtn}
+                  onPress={() => togglePostVisibility(post.id)}
+                >
                   <Text style={styles.smallActionBtnText}>
                     Make {post.visibility === 'public' ? 'Private' : 'Public'}
                   </Text>
                 </Pressable>
 
-                <Pressable style={styles.deleteBtn} onPress={() => deletePost(post.id)}>
+                <Pressable
+                  style={styles.deleteBtn}
+                  onPress={() => deletePost(post.id)}
+                >
                   <Text style={styles.deleteBtnText}>Delete</Text>
                 </Pressable>
               </View>
@@ -471,25 +588,37 @@ export default function ProfilePage({
 
   function renderEditProfile() {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentPadBottom}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentPadBottom}
+      >
         <ViewTitle title="Edit Profile" onBack={() => setView('home')} />
 
         <View style={styles.sectionCard}>
-          <Pressable style={styles.avatarEditRow} onPress={() => Alert.alert('Avatar Picker', 'Hook your image picker here.') }>
-            <View style={styles.avatarMini}><Text style={styles.avatarMiniText}>{profile.name.charAt(0)}</Text></View>
+          <Pressable
+            style={styles.avatarEditRow}
+            onPress={() =>
+              Alert.alert('Avatar Picker', 'Hook your image picker here.')
+            }
+          >
+            <View style={styles.avatarMini}>
+              <Text style={styles.avatarMiniText}>
+                {profile.name.charAt(0)}
+              </Text>
+            </View>
             <Text style={styles.linkLabel}>Change Avatar</Text>
           </Pressable>
 
           <TextInput
             value={profile.name}
-            onChangeText={(text) => updateProfileField('name', text)}
+            onChangeText={text => updateProfileField('name', text)}
             style={styles.input}
             placeholder="Display Name"
             placeholderTextColor="#a29a90"
           />
           <TextInput
             value={profile.bio}
-            onChangeText={(text) => updateProfileField('bio', text)}
+            onChangeText={text => updateProfileField('bio', text)}
             style={[styles.input, styles.inputTall]}
             multiline
             placeholder="Bio"
@@ -497,28 +626,28 @@ export default function ProfilePage({
           />
           <TextInput
             value={profile.height}
-            onChangeText={(text) => updateProfileField('height', text)}
+            onChangeText={text => updateProfileField('height', text)}
             style={styles.input}
             placeholder="Height (optional/private)"
             placeholderTextColor="#a29a90"
           />
           <TextInput
             value={profile.size}
-            onChangeText={(text) => updateProfileField('size', text)}
+            onChangeText={text => updateProfileField('size', text)}
             style={styles.input}
             placeholder="Size (optional/private)"
             placeholderTextColor="#a29a90"
           />
           <TextInput
             value={profile.instagram}
-            onChangeText={(text) => updateProfileField('instagram', text)}
+            onChangeText={text => updateProfileField('instagram', text)}
             style={styles.input}
             placeholder="Instagram handle"
             placeholderTextColor="#a29a90"
           />
           <TextInput
             value={profile.tiktok}
-            onChangeText={(text) => updateProfileField('tiktok', text)}
+            onChangeText={text => updateProfileField('tiktok', text)}
             style={styles.input}
             placeholder="TikTok handle"
             placeholderTextColor="#a29a90"
@@ -530,14 +659,45 @@ export default function ProfilePage({
 
   function renderNotificationSettings() {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentPadBottom}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentPadBottom}
+      >
         <ViewTitle title="Notifications" onBack={() => setView('home')} />
 
         <View style={styles.sectionCard}>
-          <View style={styles.toggleRow}><Text style={styles.linkLabel}>New Followers</Text><Switch value={notificationSettings.newFollowers} onValueChange={() => toggleNotification('newFollowers')} trackColor={{ false: '#d6cec2', true: '#9bc7b7' }} /></View>
-          <View style={styles.toggleRow}><Text style={styles.linkLabel}>Outfit Likes</Text><Switch value={notificationSettings.outfitLikes} onValueChange={() => toggleNotification('outfitLikes')} trackColor={{ false: '#d6cec2', true: '#9bc7b7' }} /></View>
-          <View style={styles.toggleRow}><Text style={styles.linkLabel}>Style Reminders</Text><Switch value={notificationSettings.styleReminders} onValueChange={() => toggleNotification('styleReminders')} trackColor={{ false: '#d6cec2', true: '#9bc7b7' }} /></View>
-          <View style={styles.toggleRow}><Text style={styles.linkLabel}>Community Alerts</Text><Switch value={notificationSettings.communityAlerts} onValueChange={() => toggleNotification('communityAlerts')} trackColor={{ false: '#d6cec2', true: '#9bc7b7' }} /></View>
+          <View style={styles.toggleRow}>
+            <Text style={styles.linkLabel}>New Followers</Text>
+            <Switch
+              value={notificationSettings.newFollowers}
+              onValueChange={() => toggleNotification('newFollowers')}
+              trackColor={{ false: '#d6cec2', true: '#9bc7b7' }}
+            />
+          </View>
+          <View style={styles.toggleRow}>
+            <Text style={styles.linkLabel}>Outfit Likes</Text>
+            <Switch
+              value={notificationSettings.outfitLikes}
+              onValueChange={() => toggleNotification('outfitLikes')}
+              trackColor={{ false: '#d6cec2', true: '#9bc7b7' }}
+            />
+          </View>
+          <View style={styles.toggleRow}>
+            <Text style={styles.linkLabel}>Style Reminders</Text>
+            <Switch
+              value={notificationSettings.styleReminders}
+              onValueChange={() => toggleNotification('styleReminders')}
+              trackColor={{ false: '#d6cec2', true: '#9bc7b7' }}
+            />
+          </View>
+          <View style={styles.toggleRow}>
+            <Text style={styles.linkLabel}>Community Alerts</Text>
+            <Switch
+              value={notificationSettings.communityAlerts}
+              onValueChange={() => toggleNotification('communityAlerts')}
+              trackColor={{ false: '#d6cec2', true: '#9bc7b7' }}
+            />
+          </View>
         </View>
       </ScrollView>
     );
@@ -547,7 +707,10 @@ export default function ProfilePage({
     const closetVisibilityOptions = ['Everyone', 'Followers', 'Only Me'];
 
     return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentPadBottom}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentPadBottom}
+      >
         <ViewTitle title="Privacy" onBack={() => setView('home')} />
 
         <View style={styles.sectionCard}>
@@ -562,19 +725,21 @@ export default function ProfilePage({
 
           <Text style={styles.sectionSubtitle}>Closet Visibility</Text>
           <View style={styles.chipRow}>
-            {closetVisibilityOptions.map((option) => (
+            {closetVisibilityOptions.map(option => (
               <Pressable
                 key={option}
                 onPress={() => updateClosetVisibility(option)}
                 style={[
                   styles.smallChip,
-                  privacySettings.closetVisibility === option && styles.smallChipActive,
+                  privacySettings.closetVisibility === option &&
+                    styles.smallChipActive,
                 ]}
               >
                 <Text
                   style={[
                     styles.smallChipText,
-                    privacySettings.closetVisibility === option && styles.smallChipTextActive,
+                    privacySettings.closetVisibility === option &&
+                      styles.smallChipTextActive,
                   ]}
                 >
                   {option}
@@ -584,14 +749,16 @@ export default function ProfilePage({
           </View>
 
           <Text style={styles.sectionSubtitle}>Blocked Users</Text>
-          {privacySettings.blockedUsers.map((user) => (
+          {privacySettings.blockedUsers.map(user => (
             <View key={user} style={styles.blockedRow}>
               <Text style={styles.subCopy}>{user}</Text>
               <Pressable
                 onPress={() =>
-                  setPrivacySettings((current) => ({
+                  setPrivacySettings(current => ({
                     ...current,
-                    blockedUsers: current.blockedUsers.filter((entry) => entry !== user),
+                    blockedUsers: current.blockedUsers.filter(
+                      entry => entry !== user,
+                    ),
                   }))
                 }
               >
@@ -600,7 +767,12 @@ export default function ProfilePage({
             </View>
           ))}
 
-          <Pressable style={styles.primaryBtn} onPress={() => Alert.alert('Data Export', 'CSV export hook goes here.') }>
+          <Pressable
+            style={styles.primaryBtn}
+            onPress={() =>
+              Alert.alert('Data Export', 'CSV export hook goes here.')
+            }
+          >
             <Text style={styles.primaryBtnText}>Export Closet CSV</Text>
           </Pressable>
         </View>
@@ -610,33 +782,68 @@ export default function ProfilePage({
 
   function renderAppSettings() {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentPadBottom}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentPadBottom}
+      >
         <ViewTitle title="App Settings" onBack={() => setView('home')} />
 
         <View style={styles.sectionCard}>
           <Text style={styles.sectionSubtitle}>Theme</Text>
           <View style={styles.chipRow}>
-            {['Light', 'Cream'].map((entry) => (
+            {['Light', 'Cream'].map(entry => (
               <Pressable
                 key={entry}
                 onPress={() => setTheme(entry)}
-                style={[styles.smallChip, theme === entry && styles.smallChipActive]}
+                style={[
+                  styles.smallChip,
+                  theme === entry && styles.smallChipActive,
+                ]}
               >
-                <Text style={[styles.smallChipText, theme === entry && styles.smallChipTextActive]}>{entry}</Text>
+                <Text
+                  style={[
+                    styles.smallChipText,
+                    theme === entry && styles.smallChipTextActive,
+                  ]}
+                >
+                  {entry}
+                </Text>
               </Pressable>
             ))}
           </View>
 
-          <Pressable style={styles.linkRow} onPress={() => Alert.alert('Storage', 'Clear cache action can be attached here.') }>
-            <View style={styles.linkLeft}><Text style={styles.linkIcon}>⌂</Text><Text style={styles.linkLabel}>Storage Management</Text></View>
+          <Pressable
+            style={styles.linkRow}
+            onPress={() =>
+              Alert.alert('Storage', 'Clear cache action can be attached here.')
+            }
+          >
+            <View style={styles.linkLeft}>
+              <Text style={styles.linkIcon}>⌂</Text>
+              <Text style={styles.linkLabel}>Storage Management</Text>
+            </View>
             <Text style={styles.linkArrow}>›</Text>
           </Pressable>
-          <Pressable style={styles.linkRow} onPress={() => Alert.alert('Help & Support', 'Connect FAQ / bug report links here.') }>
-            <View style={styles.linkLeft}><Text style={styles.linkIcon}>◌</Text><Text style={styles.linkLabel}>Help / Support</Text></View>
+          <Pressable
+            style={styles.linkRow}
+            onPress={() =>
+              Alert.alert(
+                'Help & Support',
+                'Connect FAQ / bug report links here.',
+              )
+            }
+          >
+            <View style={styles.linkLeft}>
+              <Text style={styles.linkIcon}>◌</Text>
+              <Text style={styles.linkLabel}>Help / Support</Text>
+            </View>
             <Text style={styles.linkArrow}>›</Text>
           </Pressable>
 
-          <Pressable style={styles.logoutBtn} onPress={() => onNavigate('login')}>
+          <Pressable
+            style={styles.logoutBtn}
+            onPress={() => onNavigate('login')}
+          >
             <Text style={styles.logoutBtnText}>Logout</Text>
           </Pressable>
         </View>
@@ -677,20 +884,7 @@ export default function ProfilePage({
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.screen}>{renderCurrentView()}</View>
 
-      <View style={styles.bottomBar}>
-        {bottomTabs.map((tab) => {
-          const isActive = tab.key === selectedBottomTab;
-
-          return (
-            <Pressable key={tab.key} onPress={() => onNavigate(tab.key)} style={styles.bottomTab}>
-              <View style={[styles.bottomIconWrap, isActive && styles.bottomIconWrapActive]}>
-                <Text style={[styles.bottomIcon, isActive && styles.bottomIconActive]}>{tab.icon}</Text>
-              </View>
-              <Text style={[styles.bottomLabel, isActive && styles.bottomLabelActive]}>{tab.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <BottomTabBar selectedTab={selectedBottomTab} onNavigate={onNavigate} />
     </SafeAreaView>
   );
 }
@@ -1148,49 +1342,5 @@ const styles = StyleSheet.create({
   },
   contentPadBottom: {
     paddingBottom: 132,
-  },
-  bottomBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#fbf7f0',
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#efe5d8',
-  },
-  bottomTab: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  bottomIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  bottomIconWrapActive: {
-    backgroundColor: '#e8f2ed',
-  },
-  bottomIcon: {
-    fontSize: 20,
-    color: '#64594e',
-  },
-  bottomIconActive: {
-    color: '#97bfae',
-  },
-  bottomLabel: {
-    color: '#64594e',
-    fontSize: 12,
-    fontFamily: 'serif',
-  },
-  bottomLabelActive: {
-    color: '#97bfae',
   },
 });
