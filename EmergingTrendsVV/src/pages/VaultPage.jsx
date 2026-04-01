@@ -10,6 +10,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -37,6 +38,8 @@ export default function VaultPage({
   const [activeTab, setActiveTab] = useState('all');
   const [loadedItems, setLoadedItems] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchVisible, setSearchVisible] = useState(false);
 
   const sourceItems = items || loadedItems;
 
@@ -67,16 +70,27 @@ export default function VaultPage({
   }, [loadVaultItems]);
 
   const filteredItems = useMemo(() => {
+    let result;
     if (activeTab === 'favorites') {
-      return sourceItems.filter(item => favoriteIds[item.id]);
+      result = sourceItems.filter(item => favoriteIds[item.id]);
+    } else if (activeTab === 'all') {
+      result = sourceItems;
+    } else {
+      result = sourceItems.filter(item => item.category === activeTab);
     }
 
-    if (activeTab === 'all') {
-      return sourceItems;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(
+        item =>
+          item.title?.toLowerCase().includes(q) ||
+          item.subtitle?.toLowerCase().includes(q) ||
+          item.category?.toLowerCase().includes(q),
+      );
     }
 
-    return sourceItems.filter(item => item.category === activeTab);
-  }, [activeTab, favoriteIds, sourceItems]);
+    return result;
+  }, [activeTab, favoriteIds, sourceItems, searchQuery]);
 
   const summary = useMemo(() => {
     const favoritesCount = Object.values(favoriteIds).filter(Boolean).length;
@@ -128,9 +142,12 @@ export default function VaultPage({
           <View style={styles.headerActions}>
             <Pressable
               hitSlop={10}
-              onPress={() => Alert.alert('Search', 'Search will connect to your vault items later.')}
+              onPress={() => {
+                setSearchVisible(v => !v);
+                setSearchQuery('');
+              }}
               style={styles.headerIconButton}>
-              <Text style={styles.headerIcon}>⌕</Text>
+              <Text style={[styles.headerIcon, searchVisible && { color: '#97bfae' }]}>⌕</Text>
             </Pressable>
             <Pressable
               hitSlop={10}
@@ -140,6 +157,27 @@ export default function VaultPage({
             </Pressable>
           </View>
         </View>
+
+        {searchVisible ? (
+          <View style={styles.searchBarWrap}>
+            <Text style={styles.searchIcon}>⌕</Text>
+            <TextInput
+              autoFocus
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search your vault…"
+              placeholderTextColor="#b0a89e"
+              style={styles.searchInput}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+            {searchQuery.length > 0 && (
+              <Pressable hitSlop={8} onPress={() => setSearchQuery('')}>
+                <Text style={styles.searchClear}>✕</Text>
+              </Pressable>
+            )}
+          </View>
+        ) : null}
 
         <ScrollView
           horizontal
@@ -469,6 +507,34 @@ const styles = StyleSheet.create({
   headerIcon: {
     fontSize: 20,
     color: '#534740',
+  },
+  searchBarWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fbf7f0',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#d6cfc5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginBottom: 12,
+  },
+  searchIcon: {
+    fontSize: 16,
+    color: '#97bfae',
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'serif',
+    color: '#4e423c',
+    paddingVertical: 2,
+  },
+  searchClear: {
+    fontSize: 14,
+    color: '#b0a89e',
+    paddingLeft: 6,
   },
   tabsRow: {
     paddingBottom: 10,
