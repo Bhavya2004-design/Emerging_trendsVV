@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomTabBar from '../components/BottomTabBar';
+import ScreenBackButton from '../components/ScreenBackButton';
 import { communityPosts } from '../data/communityMockData';
 
 const activityLinks = [
@@ -347,9 +348,7 @@ export default function ProfilePage({
         contentContainerStyle={styles.contentPadBottom}
       >
         <View style={styles.topBar}>
-          <Pressable hitSlop={8} onPress={() => onNavigate('vault')}>
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
+          <ScreenBackButton onPress={() => onNavigate('home')} />
         </View>
 
         <ProfileHeader profile={profile} />

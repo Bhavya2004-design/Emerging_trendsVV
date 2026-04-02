@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenBackButton from '../components/ScreenBackButton';
 
 export default function ForgotPasswordPage({ onNavigate }) {
   const [email, setEmail] = useState('');
@@ -19,11 +27,10 @@ export default function ForgotPasswordPage({ onNavigate }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={styles.topBack}>
+        <ScreenBackButton onPress={() => onNavigate('login')} />
+      </View>
       <View style={styles.container}>
-        <TouchableOpacity style={styles.backWrap} onPress={() => onNavigate('login')}>
-          <Text style={styles.backText}>← Back to Login</Text>
-        </TouchableOpacity>
-
         <Text style={styles.title}>Forgot Password</Text>
         <Text style={styles.subtitle}>
           Enter your email and we will send you a reset link.
@@ -52,21 +59,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#e8e4da',
   },
+  topBack: {
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 4,
+    backgroundColor: '#e8e4da',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 28,
     backgroundColor: '#e8e4da',
-  },
-  backWrap: {
-    marginBottom: 18,
-    alignSelf: 'flex-start',
-  },
-  backText: {
-    color: '#7FAF9B',
-    fontSize: 15,
-    fontFamily: 'serif',
-    fontWeight: '600',
   },
   title: {
     fontSize: 34,

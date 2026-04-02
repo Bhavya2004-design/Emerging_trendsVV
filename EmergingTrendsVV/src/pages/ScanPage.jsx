@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import BottomTabBar from '../components/BottomTabBar';
+import ScreenBackButton from '../components/ScreenBackButton';
 import { vaultTabs } from '../data/vaultMockData';
 import {
   analyzeOutfitImage,
@@ -29,7 +30,11 @@ const subtitleByCategory = {
   work: 'Work, Captured via Scan',
 };
 
-export default function ScanPage({ onNavigate, onSaveOutfit, selectedBottomTab = 'scan' }) {
+export default function ScanPage({
+  onNavigate,
+  onSaveOutfit,
+  selectedBottomTab = 'scan',
+}) {
   const [capturedImageUri, setCapturedImageUri] = useState('');
   const [processedImageUri, setProcessedImageUri] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('travel');
@@ -268,16 +273,14 @@ export default function ScanPage({ onNavigate, onSaveOutfit, selectedBottomTab =
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.headerRow}>
-            <Pressable onPress={() => onNavigate('vault')} hitSlop={10}>
-              <Text style={styles.backIcon}>←</Text>
-            </Pressable>
+            <ScreenBackButton onPress={() => onNavigate('home')} />
             <View style={styles.headerTextWrap}>
               <Text style={styles.headerTitle}>Scan Outfit</Text>
               <Text style={styles.headerSubtitle}>
@@ -510,6 +513,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#e8e4da',
+    paddingTop: 18,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -520,11 +524,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
     marginTop: 6,
-  },
-  backIcon: {
-    fontSize: 28,
-    color: '#5a4f46',
-    marginTop: -4,
   },
   headerTextWrap: {
     flex: 1,

@@ -19,6 +19,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import BottomTabBar from '../components/BottomTabBar';
+import ScreenBackButton from '../components/ScreenBackButton';
 import { getVaultItems, vaultTabs } from '../data/vaultMockData';
 
 export default function VaultPage({
@@ -139,7 +140,10 @@ export default function VaultPage({
     return (
       <View style={styles.headerWrapper}>
         <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>My Vault</Text>
+          <View style={styles.headerTitleBlock}>
+            <ScreenBackButton onPress={() => handleBottomTabPress('home')} />
+            <Text style={styles.headerTitle}>My Vault</Text>
+          </View>
           <View style={styles.headerActions}>
             <Pressable
               hitSlop={10}
@@ -927,12 +931,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
   },
+  headerTitleBlock: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 0,
+    marginRight: 8,
+  },
   headerTitle: {
     fontSize: 27,
     lineHeight: 33,
     color: '#534740',
     fontFamily: 'serif',
     fontWeight: '500',
+    flexShrink: 1,
   },
   headerActions: {
     flexDirection: 'row',

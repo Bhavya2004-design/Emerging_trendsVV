@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomTabBar from '../components/BottomTabBar';
+import ScreenBackButton from '../components/ScreenBackButton';
 
 export default function AddedToVaultPage({
   onNavigate,
@@ -13,6 +14,9 @@ export default function AddedToVaultPage({
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
+        <View style={styles.topBack}>
+          <ScreenBackButton onPress={() => onNavigate('home')} />
+        </View>
         <View style={styles.contentWrap}>
           <Text style={styles.title}>ADDED TO VAULT</Text>
 
@@ -52,11 +56,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#e8e4da',
   },
+  topBack: {
+    paddingHorizontal: 14,
+    paddingTop: 6,
+    paddingBottom: 4,
+  },
   contentWrap: {
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 36,
   },
   title: {
     fontSize: 40,
