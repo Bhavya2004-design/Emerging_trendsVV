@@ -158,15 +158,6 @@ export default function VaultPage({
                 ⌕
               </Text>
             </Pressable>
-            <Pressable
-              hitSlop={10}
-              onPress={() =>
-                Alert.alert('Menu', 'Vault actions menu will be added here.')
-              }
-              style={styles.headerIconButton}
-            >
-              <Text style={styles.headerIcon}>⋯</Text>
-            </Pressable>
           </View>
         </View>
 

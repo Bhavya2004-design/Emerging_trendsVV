@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import PageBackButton from '../components/PageBackButton';
 
 export default function RegisterPage({ onNavigate }) {
   const [firstName, setFirstName] = useState('');
@@ -20,6 +21,7 @@ export default function RegisterPage({ onNavigate }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+      <PageBackButton onPress={() => onNavigate('login')} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>

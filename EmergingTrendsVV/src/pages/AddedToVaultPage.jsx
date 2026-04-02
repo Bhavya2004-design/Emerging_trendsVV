@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomTabBar from '../components/BottomTabBar';
+import PageBackButton from '../components/PageBackButton';
 
 export default function AddedToVaultPage({
   onNavigate,
@@ -13,8 +14,11 @@ export default function AddedToVaultPage({
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
+        <PageBackButton onPress={onGoToVault} />
         <View style={styles.contentWrap}>
-          <Text style={styles.title}>ADDED TO VAULT</Text>
+          <View style={styles.titleWrap}>
+            <Text style={styles.title}>ADDED TO VAULT</Text>
+          </View>
 
           <View style={styles.confirmBadge}>
             <Text style={styles.confirmIcon}>✓</Text>
@@ -58,12 +62,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 60,
   },
+  titleWrap: {
+    width: '100%',
+    alignItems: 'center',
+  },
   title: {
     fontSize: 40,
     color: '#1f1e1a',
     fontWeight: '700',
     fontFamily: 'serif',
     letterSpacing: 1,
+    textAlign: 'center',
+    alignSelf: 'center',
   },
   confirmBadge: {
     marginTop: 32,

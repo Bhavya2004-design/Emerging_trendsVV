@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import PageBackButton from '../components/PageBackButton';
 
 export default function LoginPage({ onNavigate }) {
   const [email, setEmail] = useState('');
@@ -17,6 +18,7 @@ export default function LoginPage({ onNavigate }) {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.container}>
+        <PageBackButton onPress={() => onNavigate('splash')} />
         <View style={styles.logoSection}>
           <Image
             source={require('./VV_logo.png')}

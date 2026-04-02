@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import PageBackButton from '../components/PageBackButton';
 
 export default function ForgotPasswordPage({ onNavigate }) {
   const [email, setEmail] = useState('');
@@ -20,9 +21,7 @@ export default function ForgotPasswordPage({ onNavigate }) {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.container}>
-        <TouchableOpacity style={styles.backWrap} onPress={() => onNavigate('login')}>
-          <Text style={styles.backText}>← Back to Login</Text>
-        </TouchableOpacity>
+        <PageBackButton onPress={() => onNavigate('login')} />
 
         <Text style={styles.title}>Forgot Password</Text>
         <Text style={styles.subtitle}>
@@ -57,16 +56,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 28,
     backgroundColor: '#e8e4da',
-  },
-  backWrap: {
-    marginBottom: 18,
-    alignSelf: 'flex-start',
-  },
-  backText: {
-    color: '#7FAF9B',
-    fontSize: 15,
-    fontFamily: 'serif',
-    fontWeight: '600',
   },
   title: {
     fontSize: 34,

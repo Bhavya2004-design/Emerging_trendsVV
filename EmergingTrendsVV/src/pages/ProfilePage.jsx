@@ -14,17 +14,17 @@ import BottomTabBar from '../components/BottomTabBar';
 import { communityPosts } from '../data/communityMockData';
 
 const activityLinks = [
-  { key: 'my-vault', icon: '⌂', label: 'My Vault' },
-  { key: 'saved-outfits', icon: '♡', label: 'Saved Outfits' },
-  { key: 'travel-packing', icon: '⌂', label: 'Travel Packing' },
-  { key: 'community-posts', icon: '◌', label: 'Community Posts' },
+  { key: 'my-vault', icon: '🗂', label: 'My Vault' },
+  { key: 'saved-outfits', icon: '❤️', label: 'Saved Outfits' },
+  { key: 'travel-packing', icon: '🧳', label: 'Travel Packing' },
+  { key: 'community-posts', icon: '👥', label: 'Community Posts' },
 ];
 
 const settingsLinks = [
-  { key: 'edit-profile', icon: '◠', label: 'Edit Profile' },
-  { key: 'notifications', icon: '◌', label: 'Notifications' },
-  { key: 'privacy', icon: '◍', label: 'Privacy' },
-  { key: 'app-settings', icon: '⚙', label: 'App Settings' },
+  { key: 'edit-profile', icon: '✏️', label: 'Edit Profile' },
+  { key: 'notifications', icon: '🔔', label: 'Notifications' },
+  { key: 'privacy', icon: '🔒', label: 'Privacy' },
+  { key: 'app-settings', icon: '⚙️', label: 'App Settings' },
 ];
 
 function buildSavedOutfits() {
@@ -107,7 +107,9 @@ function LinkSection({ title, links, onPress }) {
           ]}
         >
           <View style={styles.linkLeft}>
-            <Text style={styles.linkIcon}>{link.icon}</Text>
+            <View style={styles.linkIconWrap}>
+              <Text style={styles.linkIcon}>{link.icon}</Text>
+            </View>
             <Text style={styles.linkLabel}>{link.label}</Text>
           </View>
           <Text style={styles.linkArrow}>›</Text>
@@ -235,7 +237,9 @@ export default function ProfilePage({
   const [theme, setTheme] = useState('Cream');
 
   const savedCategories = useMemo(() => {
-    const tags = Array.from(new Set(savedOutfits.map(item => item.category)));
+    const tags = Array.from(
+      new Set(savedOutfits.map(item => item.category).filter(tag => tag !== 'Summer')),
+    );
     return ['All', ...tags];
   }, [savedOutfits]);
 
@@ -346,12 +350,6 @@ export default function ProfilePage({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentPadBottom}
       >
-        <View style={styles.topBar}>
-          <Pressable hitSlop={8} onPress={() => onNavigate('vault')}>
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
-        </View>
-
         <ProfileHeader profile={profile} />
 
         <LinkSection
@@ -882,7 +880,9 @@ export default function ProfilePage({
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
-      <View style={styles.screen}>{renderCurrentView()}</View>
+      <View style={styles.screen}>
+        {renderCurrentView()}
+      </View>
 
       <BottomTabBar selectedTab={selectedBottomTab} onNavigate={onNavigate} />
     </SafeAreaView>
@@ -899,12 +899,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#e8e4da',
     paddingHorizontal: 16,
     paddingTop: 8,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
   },
   backBtn: {
     width: 32,
@@ -1017,11 +1011,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  linkIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    backgroundColor: '#f3ede5',
+  },
   linkIcon: {
-    width: 22,
     color: '#3f362f',
-    fontSize: 20,
-    marginRight: 8,
+    fontSize: 17,
+    lineHeight: 20,
     textAlign: 'center',
   },
   linkLabel: {
