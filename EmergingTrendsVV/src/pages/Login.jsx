@@ -5,17 +5,17 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginPage({ onNavigate }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.container}>
         <View style={styles.logoSection}>
           <Image

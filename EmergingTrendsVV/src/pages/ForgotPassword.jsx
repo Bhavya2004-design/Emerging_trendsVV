@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
-import {
-  Alert,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ForgotPasswordPage({ onNavigate }) {
   const [email, setEmail] = useState('');
@@ -25,7 +18,7 @@ export default function ForgotPasswordPage({ onNavigate }) {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.container}>
         <TouchableOpacity style={styles.backWrap} onPress={() => onNavigate('login')}>
           <Text style={styles.backText}>← Back to Login</Text>

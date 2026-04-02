@@ -5,11 +5,11 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Image,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RegisterPage({ onNavigate }) {
   const [firstName, setFirstName] = useState('');
@@ -19,7 +19,7 @@ export default function RegisterPage({ onNavigate }) {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>

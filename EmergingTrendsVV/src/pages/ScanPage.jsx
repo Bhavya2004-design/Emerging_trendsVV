@@ -5,13 +5,13 @@ import {
   PermissionsAndroid,
   Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import BottomTabBar from '../components/BottomTabBar';
 import { vaultTabs } from '../data/vaultMockData';
@@ -268,7 +268,7 @@ export default function ScanPage({ onNavigate, onSaveOutfit, selectedBottomTab =
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.screen}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
