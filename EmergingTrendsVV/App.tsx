@@ -20,6 +20,7 @@ import CommunityPage from './src/pages/CommunityPage';
 import AddedToVaultPage from './src/pages/AddedToVaultPage';
 import ProfilePage from './src/pages/ProfilePage';
 import HomePage from './src/pages/HomePage';
+import TripPage from './src/pages/Trip';
 import SplashScreen from './src/components/SplashScreen';
 import { mockVaultItems } from './src/data/vaultMockData';
 import { saveOutfitToDatabase } from './src/services/outfitStorage';
@@ -38,12 +39,31 @@ type ScanOutfitPayload = {
 };
 
 function App() {
-  const [screen, setScreen] = useState<'splash' | 'login' | 'register' | 'forgot-password' | 'home' | 'vault' | 'scan' | 'community' | 'profile' | 'added-to-vault'>('splash');
+  const [screen, setScreen] = useState<
+    | 'splash'
+    | 'login'
+    | 'register'
+    | 'forgot-password'
+    | 'home'
+    | 'vault'
+    | 'scan'
+    | 'community'
+    | 'profile'
+    | 'added-to-vault'
+    | 'trip'
+  >('splash');
   const [vaultItems, setVaultItems] = useState(mockVaultItems);
   const [lastAddedSection, setLastAddedSection] = useState('your selected section');
 
   function handleBottomTabPress(tabKey: string) {
-    if (tabKey === 'home' || tabKey === 'vault' || tabKey === 'scan' || tabKey === 'community' || tabKey === 'profile') {
+    if (
+      tabKey === 'home' ||
+      tabKey === 'vault' ||
+      tabKey === 'scan' ||
+      tabKey === 'community' ||
+      tabKey === 'profile' ||
+      tabKey === 'trip'
+    ) {
       setScreen(tabKey);
       return;
     }
@@ -117,6 +137,12 @@ function App() {
         {screen === 'community' ? (
           <CommunityPage
             selectedBottomTab="community"
+            onNavigate={handleBottomTabPress}
+          />
+        ) : null}
+        {screen === 'trip' ? (
+          <TripPage
+            selectedBottomTab="home"
             onNavigate={handleBottomTabPress}
           />
         ) : null}
