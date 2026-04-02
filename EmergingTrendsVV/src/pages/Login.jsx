@@ -21,7 +21,6 @@ export default function LoginPage({ onNavigate }) {
         <ScreenBackButton onPress={() => onNavigate('splash')} />
       </View>
       <View style={styles.container}>
-        <PageBackButton onPress={() => onNavigate('splash')} />
         <View style={styles.logoSection}>
           <Image
             source={require('./VV_logo.png')}
