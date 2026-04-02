@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import PageBackButton from '../components/PageBackButton';
+import ScreenBackButton from '../components/ScreenBackButton';
 
 export default function RegisterPage({ onNavigate }) {
   const [firstName, setFirstName] = useState('');
@@ -21,7 +21,9 @@ export default function RegisterPage({ onNavigate }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
-      <PageBackButton onPress={() => onNavigate('login')} />
+      <View style={styles.topBack}>
+        <ScreenBackButton onPress={() => onNavigate('login')} />
+      </View>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
@@ -107,6 +109,12 @@ export default function RegisterPage({ onNavigate }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: '#e8e4da',
+  },
+  topBack: {
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 4,
     backgroundColor: '#e8e4da',
   },
   scrollContent: {

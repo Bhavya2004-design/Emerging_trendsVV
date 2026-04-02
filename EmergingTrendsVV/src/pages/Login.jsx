@@ -9,7 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import PageBackButton from '../components/PageBackButton';
+import ScreenBackButton from '../components/ScreenBackButton';
 
 export default function LoginPage({ onNavigate }) {
   const [email, setEmail] = useState('');
@@ -17,6 +17,9 @@ export default function LoginPage({ onNavigate }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={styles.topBack}>
+        <ScreenBackButton onPress={() => onNavigate('splash')} />
+      </View>
       <View style={styles.container}>
         <PageBackButton onPress={() => onNavigate('splash')} />
         <View style={styles.logoSection}>
@@ -97,6 +100,12 @@ export default function LoginPage({ onNavigate }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: '#e8e4da',
+  },
+  topBack: {
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 4,
     backgroundColor: '#e8e4da',
   },
   container: {
