@@ -12,7 +12,7 @@ import BottomTabBar from '../components/BottomTabBar';
 const quickActions = [
   { key: 'scan', label: 'Scan Outfit', icon: '📷' },
   { key: 'vault', label: 'My Vault', icon: '🧥' },
-  { key: 'community', label: 'Pack for Trip', icon: '🧳' },
+  { key: 'trip', label: 'Pack for Trip', icon: '🧳' },
 ];
 
 const posts = [
