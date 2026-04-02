@@ -4,12 +4,12 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   FlatList,
   TextInput,
   useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   communityUsers,
@@ -20,6 +20,7 @@ import {
 } from '../data/communityMockData';
 
 import BottomTabBar from '../components/BottomTabBar';
+import ScreenBackButton from '../components/ScreenBackButton';
 
 const userMap = communityUsers.reduce((acc, user) => {
   acc[user.id] = user;
@@ -444,10 +445,11 @@ export default function CommunityPage({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
         <View style={styles.topBar}>
-          <View>
+          <ScreenBackButton onPress={() => onNavigate('home')} />
+          <View style={styles.topBarCenter}>
             <Text style={styles.headerTitle}>Community</Text>
             <Text style={styles.headerSub}>
               Discover and follow style creators
@@ -668,14 +670,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#e8e4da',
     paddingHorizontal: 14,
-    paddingTop: 8,
+    paddingTop: 18,
     paddingBottom: 8,
   },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 6,
     marginBottom: 12,
+    gap: 6,
+  },
+  topBarCenter: {
+    flex: 1,
+    minWidth: 0,
   },
   headerTitle: {
     fontSize: 27,

@@ -5,17 +5,21 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenBackButton from '../components/ScreenBackButton';
 
 export default function LoginPage({ onNavigate }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={styles.topBack}>
+        <ScreenBackButton onPress={() => onNavigate('splash')} />
+      </View>
       <View style={styles.container}>
         <View style={styles.logoSection}>
           <Image
@@ -95,6 +99,12 @@ export default function LoginPage({ onNavigate }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: '#e8e4da',
+  },
+  topBack: {
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 4,
     backgroundColor: '#e8e4da',
   },
   container: {

@@ -7,7 +7,10 @@
 
 import React, { useState } from 'react';
 import { Alert, StatusBar, StyleSheet, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from 'react-native-safe-area-context';
 import LoginPage from './src/pages/Login';
 import RegisterPage from './src/pages/Register';
 import ForgotPasswordPage from './src/pages/ForgotPassword';
@@ -73,7 +76,7 @@ function App() {
   }
 
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.container}>
         {screen === 'splash' ? (
