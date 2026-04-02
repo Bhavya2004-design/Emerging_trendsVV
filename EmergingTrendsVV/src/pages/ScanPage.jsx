@@ -4,6 +4,7 @@ import {
   Image,
   PermissionsAndroid,
   Platform,
+  StatusBar,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,7 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import BottomTabBar from '../components/BottomTabBar';
 import ScreenBackButton from '../components/ScreenBackButton';
@@ -312,9 +313,7 @@ export default function ScanPage({
             <View style={styles.cropCornerBottomRight} />
           </View>
 
-          <Text style={styles.helperText}>
-            Not sure ? Start with gallery or searching
-          </Text>
+          <Text style={styles.helperText}>Start with gallery or camera</Text>
 
           <View style={styles.quickActionsRow}>
             <Pressable
@@ -521,59 +520,62 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-    marginTop: 6,
+    alignItems: 'center',
+    marginBottom: 14,
+    marginTop: 0,
   },
   headerTextWrap: {
     flex: 1,
     alignItems: 'center',
   },
   headerSpacer: {
-    width: 20,
+    width: 24,
   },
   headerTitle: {
-    fontSize: 50,
+    fontSize: 28,
     color: '#50433c',
     fontFamily: 'serif',
-    lineHeight: 56,
+    lineHeight: 33,
   },
   headerSubtitle: {
-    fontSize: 18,
+    fontSize: 12,
     color: '#5d5148',
     fontFamily: 'serif',
-    marginTop: -2,
+    marginTop: 2,
+    textAlign: 'center',
   },
   previewWrap: {
     backgroundColor: '#fdfaf5',
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 16,
+    borderRadius: 18,
+    padding: 10,
+    marginBottom: 14,
     position: 'relative',
+    borderWidth: 1,
+    borderColor: '#e8ddd0',
   },
   previewImage: {
     width: '100%',
-    height: 300,
-    borderRadius: 12,
+    height: 256,
+    borderRadius: 14,
   },
   previewPlaceholder: {
     width: '100%',
-    height: 300,
-    borderRadius: 12,
+    height: 256,
+    borderRadius: 14,
     backgroundColor: '#e3eee7',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
   previewPlaceholderText: {
-    fontSize: 26,
+    fontSize: 16,
     color: '#5f534a',
     fontFamily: 'serif',
-    marginBottom: 8,
+    marginBottom: 4,
     textAlign: 'center',
   },
   previewHintText: {
-    fontSize: 16,
+    fontSize: 13,
     color: '#6c6057',
     textAlign: 'center',
     fontFamily: 'serif',
@@ -622,36 +624,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#5f534a',
     fontFamily: 'serif',
-    fontSize: 28,
-    marginBottom: 16,
+    fontSize: 15,
+    marginBottom: 12,
   },
   quickActionsRow: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   quickActionButton: {
     flex: 1,
     backgroundColor: '#fbf7f0',
-    borderRadius: 12,
-    minHeight: 76,
+    borderRadius: 14,
+    minHeight: 62,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: '#e8ddd0',
   },
   quickActionIcon: {
     color: '#7fae9a',
     marginRight: 8,
-    fontSize: 17,
+    fontSize: 15,
   },
   quickActionText: {
     color: '#4f443c',
     fontFamily: 'serif',
-    fontSize: 18,
+    fontSize: 12,
   },
   assignTitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#5a4f46',
     marginBottom: 8,
     fontFamily: 'serif',
@@ -663,14 +667,17 @@ const styles = StyleSheet.create({
   },
   assignChip: {
     backgroundColor: '#f9f3ea',
-    borderRadius: 12,
+    borderRadius: 999,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 7,
     marginRight: 8,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e2d7ca',
   },
   assignChipActive: {
     backgroundColor: '#9cc8b8',
+    borderColor: '#9cc8b8',
   },
   assignChipText: {
     color: '#5d5148',
@@ -682,17 +689,18 @@ const styles = StyleSheet.create({
   },
   scanButton: {
     backgroundColor: '#7faf9b',
-    height: 56,
+    height: 52,
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   scanButtonText: {
     color: '#36433b',
-    fontSize: 28,
+    fontSize: 16,
     fontFamily: 'serif',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
+    fontWeight: '700',
   },
   aiButton: {
     marginBottom: 12,
