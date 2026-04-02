@@ -1,15 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import {
+  Platform,
+  StatusBar,
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   FlatList,
   TextInput,
   useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   communityUsers,
@@ -201,6 +203,9 @@ export default function CommunityPage({
   selectedBottomTab = 'community',
 }) {
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+  const topSpacing = Math.max(insets.top, statusBarHeight) + 14;
   const isSmall = width < 380;
 
   const [timelineTab, setTimelineTab] = useState('all');
@@ -444,7 +449,7 @@ export default function CommunityPage({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safeArea, { paddingTop: topSpacing }]}>
       <View style={styles.screen}>
         <View style={styles.topBar}>
           <View>
