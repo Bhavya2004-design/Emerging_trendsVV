@@ -21,6 +21,8 @@ import AddedToVaultPage from './src/pages/AddedToVaultPage';
 import ProfilePage from './src/pages/ProfilePage';
 import HomePage from './src/pages/HomePage';
 import TripPage from './src/pages/Trip';
+import TripOutfitPickerPage from './src/pages/TripOutfitPickerPage';
+import PackingProgressPage from './src/pages/PackingProgressPage';
 import SplashScreen from './src/components/SplashScreen';
 import { mockVaultItems } from './src/data/vaultMockData';
 import { saveOutfitToDatabase } from './src/services/outfitStorage';
@@ -38,6 +40,13 @@ type ScanOutfitPayload = {
   occasion?: string;
 };
 
+type TripPlan = {
+  destination: string;
+  tripType: 'Business' | 'Personal';
+  startDate: string | null;
+  endDate: string | null;
+};
+
 function App() {
   const [screen, setScreen] = useState<
     | 'splash'
@@ -51,9 +60,18 @@ function App() {
     | 'profile'
     | 'added-to-vault'
     | 'trip'
+    | 'trip-outfit-picker'
+    | 'packing-progress'
   >('splash');
   const [vaultItems, setVaultItems] = useState(mockVaultItems);
   const [lastAddedSection, setLastAddedSection] = useState('your selected section');
+  const [selectedTripOutfitIds, setSelectedTripOutfitIds] = useState<string[]>([]);
+  const [tripPlan, setTripPlan] = useState<TripPlan>({
+    destination: 'Paris, France',
+    tripType: 'Business',
+    startDate: null,
+    endDate: null,
+  });
 
   function handleBottomTabPress(tabKey: string) {
     if (
@@ -62,7 +80,8 @@ function App() {
       tabKey === 'scan' ||
       tabKey === 'community' ||
       tabKey === 'profile' ||
-      tabKey === 'trip'
+      tabKey === 'trip' ||
+      tabKey === 'trip-outfit-picker'
     ) {
       setScreen(tabKey);
       return;
@@ -144,6 +163,29 @@ function App() {
           <TripPage
             selectedBottomTab="home"
             onNavigate={handleBottomTabPress}
+            initialTripPlan={tripPlan}
+            onGeneratePacking={nextTripPlan => {
+              setTripPlan(nextTripPlan);
+              setScreen('trip-outfit-picker');
+            }}
+          />
+        ) : null}
+        {screen === 'trip-outfit-picker' ? (
+          <TripOutfitPickerPage
+            items={vaultItems}
+            onNavigate={handleBottomTabPress}
+            onContinuePacking={selectedIds => {
+              const selectedIdsList = Object.keys(selectedIds).filter(id => selectedIds[id]);
+              setSelectedTripOutfitIds(selectedIdsList);
+              setScreen('packing-progress');
+            }}
+          />
+        ) : null}
+        {screen === 'packing-progress' ? (
+          <PackingProgressPage
+            onNavigate={handleBottomTabPress}
+            selectedOutfits={vaultItems.filter(item => selectedTripOutfitIds.includes(item.id))}
+            onTripReady={() => setScreen('home')}
           />
         ) : null}
         {screen === 'added-to-vault' ? (

@@ -28,6 +28,13 @@ const settingsLinks = [
   { key: 'app-settings', icon: '⚙️', label: 'App Settings' },
 ];
 
+const notificationRows = [
+  { key: 'newFollowers', label: 'New Followers', icon: '👥' },
+  { key: 'outfitLikes', label: 'Outfit Likes', icon: '❤️' },
+  { key: 'styleReminders', label: 'Style Reminders', icon: '⏰' },
+  { key: 'communityAlerts', label: 'Community Alerts', icon: '🌐' },
+];
+
 function buildSavedOutfits() {
   return communityPosts.slice(0, 6).map((post, index) => ({
     id: `saved-${post.id}`,
@@ -668,39 +675,34 @@ export default function ProfilePage({
       >
         <ViewTitle title="Notifications" onBack={() => setView('home')} />
 
-        <View style={styles.sectionCard}>
-          <View style={styles.toggleRow}>
-            <Text style={styles.linkLabel}>New Followers</Text>
-            <Switch
-              value={notificationSettings.newFollowers}
-              onValueChange={() => toggleNotification('newFollowers')}
-              trackColor={{ false: '#d6cec2', true: '#9bc7b7' }}
-            />
-          </View>
-          <View style={styles.toggleRow}>
-            <Text style={styles.linkLabel}>Outfit Likes</Text>
-            <Switch
-              value={notificationSettings.outfitLikes}
-              onValueChange={() => toggleNotification('outfitLikes')}
-              trackColor={{ false: '#d6cec2', true: '#9bc7b7' }}
-            />
-          </View>
-          <View style={styles.toggleRow}>
-            <Text style={styles.linkLabel}>Style Reminders</Text>
-            <Switch
-              value={notificationSettings.styleReminders}
-              onValueChange={() => toggleNotification('styleReminders')}
-              trackColor={{ false: '#d6cec2', true: '#9bc7b7' }}
-            />
-          </View>
-          <View style={styles.toggleRow}>
-            <Text style={styles.linkLabel}>Community Alerts</Text>
-            <Switch
-              value={notificationSettings.communityAlerts}
-              onValueChange={() => toggleNotification('communityAlerts')}
-              trackColor={{ false: '#d6cec2', true: '#9bc7b7' }}
-            />
-          </View>
+        <View style={styles.notificationsCard}>
+          {notificationRows.map((row, index) => {
+            const enabled = notificationSettings[row.key];
+
+            return (
+              <View
+                key={row.key}
+                style={[
+                  styles.notificationRow,
+                  index === notificationRows.length - 1 && styles.notificationRowLast,
+                ]}
+              >
+                <View style={styles.notificationLeft}>
+                  <View style={[styles.notificationIconWrap, enabled && styles.notificationIconWrapActive]}>
+                    <Text style={styles.notificationIcon}>{row.icon}</Text>
+                  </View>
+                  <Text style={styles.notificationLabel}>{row.label}</Text>
+                </View>
+
+                <Switch
+                  value={enabled}
+                  onValueChange={() => toggleNotification(row.key)}
+                  trackColor={{ false: '#d6cec2', true: '#9bc7b7' }}
+                  thumbColor={enabled ? '#ffffff' : '#f6f2eb'}
+                />
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
     );
@@ -1321,6 +1323,61 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  notificationsCard: {
+    marginTop: 16,
+    backgroundColor: '#fbf7f0',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#ece2d5',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    shadowColor: '#2c2a24',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  notificationRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ede4d8',
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+  },
+  notificationRowLast: {
+    borderBottomWidth: 0,
+  },
+  notificationLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+    paddingRight: 8,
+  },
+  notificationIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    backgroundColor: '#f1eadd',
+    borderWidth: 1,
+    borderColor: '#e7ddcf',
+  },
+  notificationIconWrapActive: {
+    backgroundColor: '#e2efe8',
+    borderColor: '#b9d8cb',
+  },
+  notificationIcon: {
+    fontSize: 15,
+  },
+  notificationLabel: {
+    color: '#3f362f',
+    fontFamily: 'serif',
+    fontSize: 23,
   },
   blockedRow: {
     flexDirection: 'row',
