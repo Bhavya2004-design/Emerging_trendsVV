@@ -19,8 +19,8 @@ import {
   initialCommentsByPost,
 } from '../data/communityMockData';
 
+import AppScreenHeader from '../components/AppScreenHeader';
 import BottomTabBar from '../components/BottomTabBar';
-import ScreenBackButton from '../components/ScreenBackButton';
 
 const userMap = communityUsers.reduce((acc, user) => {
   acc[user.id] = user;
@@ -447,22 +447,19 @@ export default function CommunityPage({
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
-        <View style={styles.topBar}>
-          <ScreenBackButton onPress={() => onNavigate('home')} />
-          <View style={styles.topBarCenter}>
-            <Text style={styles.headerTitle}>Community</Text>
-            <Text style={styles.headerSub}>
-              Discover and follow style creators
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.notifyBtn}
-            onPress={() => setShowNotifications(prev => !prev)}
-          >
-            <Text style={styles.notifyBtnText}>🔔</Text>
-          </TouchableOpacity>
-        </View>
+        <AppScreenHeader
+          onBack={() => onNavigate('home')}
+          title="Community"
+          subtitle="Discover and follow style creators"
+          right={
+            <TouchableOpacity
+              style={styles.notifyBtn}
+              onPress={() => setShowNotifications(prev => !prev)}
+            >
+              <Text style={styles.notifyBtnText}>🔔</Text>
+            </TouchableOpacity>
+          }
+        />
 
         <View style={styles.tabRow}>
           <TouchableOpacity
@@ -669,34 +666,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#e8e4da',
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingTop: 18,
     paddingBottom: 8,
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 6,
-    marginBottom: 12,
-    gap: 6,
-  },
-  topBarCenter: {
-    flex: 1,
-    minWidth: 0,
-  },
-  headerTitle: {
-    fontSize: 27,
-    lineHeight: 33,
-    color: '#534740',
-    fontFamily: 'serif',
-    fontWeight: '500',
-  },
-  headerSub: {
-    marginTop: 2,
-    color: '#6e6258',
-    fontSize: 13,
-    fontFamily: 'serif',
   },
   notifyBtn: {
     backgroundColor: '#fbf7f0',

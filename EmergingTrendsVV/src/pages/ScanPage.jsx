@@ -4,7 +4,6 @@ import {
   Image,
   PermissionsAndroid,
   Platform,
-  StatusBar,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,10 +11,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import AppScreenHeader from '../components/AppScreenHeader';
 import BottomTabBar from '../components/BottomTabBar';
-import ScreenBackButton from '../components/ScreenBackButton';
 import { vaultTabs } from '../data/vaultMockData';
 import {
   analyzeOutfitImage,
@@ -280,16 +279,11 @@ export default function ScanPage({
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.headerRow}>
-            <ScreenBackButton onPress={() => onNavigate('home')} />
-            <View style={styles.headerTextWrap}>
-              <Text style={styles.headerTitle}>Scan Outfit</Text>
-              <Text style={styles.headerSubtitle}>
-                Tap to scan clothes and add to VogueVault
-              </Text>
-            </View>
-            <View style={styles.headerSpacer} />
-          </View>
+          <AppScreenHeader
+            onBack={() => onNavigate('home')}
+            title="Scan Outfit"
+            subtitle="Tap to scan clothes and add to VogueVault"
+          />
 
           <View style={styles.previewWrap}>
             {capturedImageUri ? (
@@ -515,34 +509,8 @@ const styles = StyleSheet.create({
     paddingTop: 18,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingBottom: 170,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
-    marginTop: 0,
-  },
-  headerTextWrap: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerSpacer: {
-    width: 24,
-  },
-  headerTitle: {
-    fontSize: 28,
-    color: '#50433c',
-    fontFamily: 'serif',
-    lineHeight: 33,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: '#5d5148',
-    fontFamily: 'serif',
-    marginTop: 2,
-    textAlign: 'center',
   },
   previewWrap: {
     backgroundColor: '#fdfaf5',

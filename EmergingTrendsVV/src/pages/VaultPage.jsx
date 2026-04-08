@@ -4,22 +4,17 @@ import {
   Alert,
   FlatList,
   Image,
-  Platform,
   Pressable,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AppScreenHeader from '../components/AppScreenHeader';
 import BottomTabBar from '../components/BottomTabBar';
-import ScreenBackButton from '../components/ScreenBackButton';
 import { getVaultItems, vaultTabs } from '../data/vaultMockData';
 
 export default function VaultPage({
@@ -29,10 +24,6 @@ export default function VaultPage({
   onBottomTabPress,
 }) {
   const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  const statusBarHeight =
-    Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
-  const topSpacing = Math.max(insets.top, statusBarHeight) + 14;
   const [activeTab, setActiveTab] = useState('all');
   const [loadedItems, setLoadedItems] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState({});
@@ -110,7 +101,7 @@ export default function VaultPage({
   }, [sourceItems]);
 
   const gutter = width < 380 ? 14 : 18;
-  const horizontalPadding = width < 380 ? 18 : 24;
+  const horizontalPadding = 16;
   const cardWidth = (width - horizontalPadding * 2 - gutter) / 2;
 
   function handleToggleFavorite(itemId) {
@@ -139,12 +130,10 @@ export default function VaultPage({
   function renderHeader() {
     return (
       <View style={styles.headerWrapper}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerTitleBlock}>
-            <ScreenBackButton onPress={() => handleBottomTabPress('home')} />
-            <Text style={styles.headerTitle}>My Vault</Text>
-          </View>
-          <View style={styles.headerActions}>
+        <AppScreenHeader
+          onBack={() => handleBottomTabPress('home')}
+          title="My Vault"
+          right={
             <Pressable
               hitSlop={10}
               onPress={() => {
@@ -162,8 +151,8 @@ export default function VaultPage({
                 ⌕
               </Text>
             </Pressable>
-          </View>
-        </View>
+          }
+        />
 
         {searchVisible ? (
           <View style={styles.searchBarWrap}>
@@ -290,10 +279,7 @@ export default function VaultPage({
   }
 
   return (
-    <SafeAreaView
-      edges={['top', 'left', 'right']}
-      style={[styles.safeArea, { paddingTop: topSpacing }]}
-    >
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.screen}>
         <FlatList
           data={filteredItems}
@@ -909,44 +895,19 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#e8e4da',
+    paddingTop: 18,
   },
   listContent: {
-    paddingTop: 10,
+    paddingTop: 0,
   },
   headerWrapper: {
     marginBottom: 8,
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  headerTitleBlock: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    minWidth: 0,
-    marginRight: 8,
-  },
-  headerTitle: {
-    fontSize: 27,
-    lineHeight: 33,
-    color: '#534740',
-    fontFamily: 'serif',
-    fontWeight: '500',
-    flexShrink: 1,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   headerIconButton: {
-    width: 28,
-    height: 28,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
   },
   headerIcon: {
     fontSize: 20,

@@ -10,8 +10,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AppScreenHeader from '../components/AppScreenHeader';
 import BottomTabBar from '../components/BottomTabBar';
-import ScreenBackButton from '../components/ScreenBackButton';
 import { communityPosts } from '../data/communityMockData';
 
 const activityLinks = [
@@ -201,11 +201,13 @@ export default function ProfilePage({
     userID: 'user-maria-01',
     name: 'Maria',
     bio: 'Sustainable fashion lover 🌿',
+    jobTitle: '',
     closetItems: 30,
     outfitPosted: 26,
     followers: 120,
     height: '',
     size: '',
+    linkedin: '',
     instagram: '',
     tiktok: '',
   });
@@ -351,9 +353,11 @@ export default function ProfilePage({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentPadBottom}
       >
-        <View style={styles.topBar}>
-          <ScreenBackButton onPress={() => onNavigate('home')} />
-        </View>
+        <AppScreenHeader
+          onBack={() => onNavigate('home')}
+          title="Profile"
+          subtitle="Your style & account"
+        />
 
         <ProfileHeader profile={profile} />
 
@@ -589,72 +593,149 @@ export default function ProfilePage({
     );
   }
 
+  function saveProfileEdits() {
+    Alert.alert('Profile saved', 'Your profile has been updated.');
+  }
+
   function renderEditProfile() {
     return (
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentPadBottom}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[
+          styles.contentPadBottom,
+          styles.editProfileScrollContent,
+        ]}
       >
         <ViewTitle title="Edit Profile" onBack={() => setView('home')} />
 
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, styles.editProfileCard]}>
+          <Text style={styles.editProfileIntro}>
+            Keep your public profile clear and up to date. Fit details stay
+            private unless you choose to share them.
+          </Text>
+
+          <Text style={styles.editProfileSectionLabel}>Photo</Text>
           <Pressable
-            style={styles.avatarEditRow}
+            style={styles.avatarEditBlock}
             onPress={() =>
               Alert.alert('Avatar Picker', 'Hook your image picker here.')
             }
           >
-            <View style={styles.avatarMini}>
-              <Text style={styles.avatarMiniText}>
-                {profile.name.charAt(0)}
+            <View style={styles.avatarEditLarge}>
+              <Text style={styles.avatarEditLargeText}>
+                {profile.name.charAt(0) || '?'}
               </Text>
             </View>
-            <Text style={styles.linkLabel}>Change Avatar</Text>
+            <View style={styles.avatarEditMeta}>
+              <Text style={styles.avatarEditTitle}>Profile photo</Text>
+              <Text style={styles.avatarEditHint}>Tap to change</Text>
+            </View>
           </Pressable>
 
-          <TextInput
-            value={profile.name}
-            onChangeText={text => updateProfileField('name', text)}
-            style={styles.input}
-            placeholder="Display Name"
-            placeholderTextColor="#a29a90"
-          />
-          <TextInput
-            value={profile.bio}
-            onChangeText={text => updateProfileField('bio', text)}
-            style={[styles.input, styles.inputTall]}
-            multiline
-            placeholder="Bio"
-            placeholderTextColor="#a29a90"
-          />
-          <TextInput
-            value={profile.height}
-            onChangeText={text => updateProfileField('height', text)}
-            style={styles.input}
-            placeholder="Height (optional/private)"
-            placeholderTextColor="#a29a90"
-          />
-          <TextInput
-            value={profile.size}
-            onChangeText={text => updateProfileField('size', text)}
-            style={styles.input}
-            placeholder="Size (optional/private)"
-            placeholderTextColor="#a29a90"
-          />
-          <TextInput
-            value={profile.instagram}
-            onChangeText={text => updateProfileField('instagram', text)}
-            style={styles.input}
-            placeholder="Instagram handle"
-            placeholderTextColor="#a29a90"
-          />
-          <TextInput
-            value={profile.tiktok}
-            onChangeText={text => updateProfileField('tiktok', text)}
-            style={styles.input}
-            placeholder="TikTok handle"
-            placeholderTextColor="#a29a90"
-          />
+          <Text style={styles.editProfileSectionLabel}>About you</Text>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Display name</Text>
+            <TextInput
+              value={profile.name}
+              onChangeText={text => updateProfileField('name', text)}
+              style={styles.inputPro}
+              placeholder="Your name"
+              placeholderTextColor="#8a8077"
+            />
+          </View>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Headline</Text>
+            <TextInput
+              value={profile.jobTitle}
+              onChangeText={text => updateProfileField('jobTitle', text)}
+              style={styles.inputPro}
+              placeholder="Role or one-line intro (optional)"
+              placeholderTextColor="#8a8077"
+            />
+          </View>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Bio</Text>
+            <TextInput
+              value={profile.bio}
+              onChangeText={text => updateProfileField('bio', text)}
+              style={[styles.inputPro, styles.inputProTall]}
+              multiline
+              placeholder="A short description for your profile"
+              placeholderTextColor="#8a8077"
+            />
+          </View>
+
+          <Text style={styles.editProfileSectionLabel}>
+            Fit & sizing (private)
+          </Text>
+          <Text style={styles.editProfileSectionHint}>
+            Used for recommendations. Not shown on your public profile.
+          </Text>
+          <View style={styles.fieldRow}>
+            <View style={styles.fieldRowItem}>
+              <Text style={styles.fieldLabel}>Height</Text>
+              <TextInput
+                value={profile.height}
+                onChangeText={text => updateProfileField('height', text)}
+                style={styles.inputPro}
+                placeholder="e.g. 5 ft 6 in"
+                placeholderTextColor="#8a8077"
+              />
+            </View>
+            <View style={styles.fieldRowItem}>
+              <Text style={styles.fieldLabel}>Size</Text>
+              <TextInput
+                value={profile.size}
+                onChangeText={text => updateProfileField('size', text)}
+                style={styles.inputPro}
+                placeholder="e.g. M"
+                placeholderTextColor="#8a8077"
+              />
+            </View>
+          </View>
+
+          <Text style={styles.editProfileSectionLabel}>Links</Text>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>LinkedIn</Text>
+            <TextInput
+              value={profile.linkedin}
+              onChangeText={text => updateProfileField('linkedin', text)}
+              style={styles.inputPro}
+              placeholder="Profile URL or username"
+              placeholderTextColor="#8a8077"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+          <View style={styles.fieldRow}>
+            <View style={styles.fieldRowItem}>
+              <Text style={styles.fieldLabel}>Instagram</Text>
+              <TextInput
+                value={profile.instagram}
+                onChangeText={text => updateProfileField('instagram', text)}
+                style={styles.inputPro}
+                placeholder="@handle"
+                placeholderTextColor="#8a8077"
+                autoCapitalize="none"
+              />
+            </View>
+            <View style={styles.fieldRowItem}>
+              <Text style={styles.fieldLabel}>TikTok</Text>
+              <TextInput
+                value={profile.tiktok}
+                onChangeText={text => updateProfileField('tiktok', text)}
+                style={styles.inputPro}
+                placeholder="@handle"
+                placeholderTextColor="#8a8077"
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+
+          <Pressable style={styles.saveProfileBtn} onPress={saveProfileEdits}>
+            <Text style={styles.saveProfileBtnText}>Save changes</Text>
+          </Pressable>
         </View>
       </ScrollView>
     );
@@ -903,7 +984,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#e8e4da',
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 18,
   },
   backBtn: {
     width: 32,
@@ -1278,24 +1359,126 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  avatarEditRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  editProfileScrollContent: {
+    flexGrow: 1,
+  },
+  editProfileCard: {
+    flex: 1,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+  },
+  editProfileIntro: {
+    color: '#5d5249',
+    fontFamily: 'serif',
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 20,
+  },
+  editProfileSectionLabel: {
+    color: '#1f1e1a',
+    fontFamily: 'serif',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginTop: 4,
     marginBottom: 10,
   },
-  avatarMini: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  editProfileSectionHint: {
+    color: '#6f655c',
+    fontFamily: 'serif',
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: -4,
+    marginBottom: 12,
+  },
+  avatarEditBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 20,
+    backgroundColor: '#f5f0e8',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e4dcd0',
+  },
+  avatarEditLarge: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: '#ffffff',
     borderWidth: 2,
-    borderColor: '#ddd4c8',
+    borderColor: '#d4cbc0',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
   },
-  avatarMiniText: {
-    color: '#5e544c',
+  avatarEditLargeText: {
+    color: '#3d3630',
+    fontFamily: 'serif',
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  avatarEditMeta: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  avatarEditTitle: {
+    color: '#1f1e1a',
+    fontFamily: 'serif',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  avatarEditHint: {
+    color: '#6f655c',
+    fontFamily: 'serif',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  fieldGroup: {
+    marginBottom: 16,
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  fieldRowItem: {
+    flex: 1,
+    minWidth: 0,
+  },
+  fieldLabel: {
+    color: '#3f362f',
+    fontFamily: 'serif',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  inputPro: {
+    borderWidth: 1,
+    borderColor: '#cfc4b6',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: '#1f1e1a',
+    fontFamily: 'serif',
+    fontSize: 16,
+  },
+  inputProTall: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+    paddingTop: 12,
+  },
+  saveProfileBtn: {
+    marginTop: 8,
+    backgroundColor: '#2f5c4a',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  saveProfileBtnText: {
+    color: '#fbf9f5',
     fontFamily: 'serif',
     fontSize: 17,
     fontWeight: '700',
