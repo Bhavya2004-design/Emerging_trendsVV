@@ -1,603 +1,545 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Switch,
   Modal,
   Alert,
   Pressable,
 } from 'react-native';
-import { Calendar } from 'react-native-calendars';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { CalendarList } from 'react-native-calendars';
 import ScreenBackButton from '../components/ScreenBackButton';
 import BottomTabBar from '../components/BottomTabBar';
 
+/* =========================
+   DATA
+========================= */
 const DESTINATIONS = ['Paris, France', 'London, UK', 'New York, USA'];
 
-const PERIOD_MAIN = '#6d9f8d';
-const PERIOD_MID = '#b8d9cc';
+const DESTINATION_EMOJI = {
+  'Paris, France': '🗼',
+  'London, UK': '🎡',
+  'New York, USA': '🗽',
+};
 
-function stripToLocalDay(d) {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
+const WEATHER_DATA = {
+  'Paris, France': {
+    temp: '24°C',
+    condition: 'Mostly Sunny',
+    humidity: '55%',
+    wind: '8 km/h',
+    feels: '26°C',
+    icon: '☀️',
+    bg: ['#f7971e', '#ffd200'],
+  },
+  'London, UK': {
+    temp: '18°C',
+    condition: 'Cloudy',
+    humidity: '65%',
+    wind: '12 km/h',
+    feels: '17°C',
+    icon: '☁️',
+    bg: ['#4b6cb7', '#182848'],
+  },
+  'New York, USA': {
+    temp: '28°C',
+    condition: 'Hot & Sunny',
+    humidity: '60%',
+    wind: '10 km/h',
+    feels: '30°C',
+    icon: '🌤️',
+    bg: ['#11998e', '#38ef7d'],
+  },
+};
 
-function toYMD(d) {
-  const x = stripToLocalDay(d);
-  const y = x.getFullYear();
-  const m = String(x.getMonth() + 1).padStart(2, '0');
-  const day = String(x.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
+const TRIP_TYPES = [
+  { label: 'Business', icon: '💼' },
+  { label: 'Personal', icon: '🌴' },
+];
 
-function formatDate(date) {
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-  });
-}
-
-function inclusiveTripDays(start, end) {
-  const a = stripToLocalDay(start);
-  const b = stripToLocalDay(end);
-  const diffMs = b.getTime() - a.getTime();
-  return Math.max(1, Math.round(diffMs / 86400000) + 1);
-}
-
-function buildPeriodMarkedDates(start, end) {
-  const marks = {};
-  const s = stripToLocalDay(start);
-  const e = stripToLocalDay(end);
-  if (e < s) {
-    return marks;
-  }
-  const cur = new Date(s);
-  while (cur <= e) {
-    const key = toYMD(cur);
-    const isFirst = key === toYMD(s);
-    const isLast = key === toYMD(e);
-    if (isFirst && isLast) {
-      marks[key] = {
-        startingDay: true,
-        endingDay: true,
-        color: PERIOD_MAIN,
-        textColor: '#fff',
-      };
-    } else if (isFirst) {
-      marks[key] = { startingDay: true, color: PERIOD_MAIN, textColor: '#fff' };
-    } else if (isLast) {
-      marks[key] = { endingDay: true, color: PERIOD_MAIN, textColor: '#fff' };
-    } else {
-      marks[key] = { color: PERIOD_MID, textColor: '#2b2b2b' };
-    }
-    cur.setDate(cur.getDate() + 1);
-  }
-  return marks;
-}
-
-export default function TripPage({ onNavigate, selectedBottomTab = 'home' }) {
-  const insets = useSafeAreaInsets();
-  const [destination, setDestination] = useState('Paris, France');
+/* =========================
+   COMPONENT
+========================= */
+export default function TripPage({
+  onNavigate,
+  selectedBottomTab = 'home',
+  initialTripPlan,
+  onGeneratePacking,
+}) {
+  const [destination, setDestination] = useState(initialTripPlan?.destination || 'Paris, France');
+  const [tripType, setTripType] = useState(initialTripPlan?.tripType || 'Business');
   const [showDest, setShowDest] = useState(false);
-  const [startDate, setStartDate] = useState(new Date(2026, 6, 12));
-  const [endDate, setEndDate] = useState(new Date(2026, 6, 18));
-  const [aiToggle, setAiToggle] = useState(true);
-
+  const [showTripType, setShowTripType] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [draftStart, setDraftStart] = useState(startDate);
-  const [draftEnd, setDraftEnd] = useState(endDate);
-  const [rangeStarted, setRangeStarted] = useState(false);
+  const [startDate, setStartDate] = useState(initialTripPlan?.startDate || null);
+  const [endDate, setEndDate] = useState(initialTripPlan?.endDate || null);
+  const [selectingEnd, setSelectingEnd] = useState(false);
 
-  const minDateStr = useMemo(() => toYMD(stripToLocalDay(new Date())), []);
+  const weather = WEATHER_DATA[destination];
+  const cityName = destination.split(',')[0];
+  const destEmoji = DESTINATION_EMOJI[destination];
+  const tripIcon = TRIP_TYPES.find(t => t.label === tripType)?.icon;
 
-  const markedDates = useMemo(
-    () => buildPeriodMarkedDates(draftStart, draftEnd),
-    [draftStart, draftEnd],
-  );
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Select';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
 
-  const tripDayCount = useMemo(
-    () => inclusiveTripDays(startDate, endDate),
-    [startDate, endDate],
-  );
+  const getTripNights = () => {
+    if (!startDate || !endDate) return null;
+    const diff = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
+    return diff > 0 ? diff : null;
+  };
 
-  function openCalendar() {
-    setDraftStart(startDate);
-    setDraftEnd(endDate);
-    setRangeStarted(false);
-    setShowCalendar(true);
-  }
-
-  function onCalendarDayPress(day) {
-    const d = stripToLocalDay(new Date(day.year, day.month - 1, day.day));
-    const minD = stripToLocalDay(new Date());
-    if (d < minD) {
-      return;
+  const getMarkedDates = () => {
+    if (!startDate) return {};
+    const marked = {};
+    marked[startDate] = { startingDay: true, color: '#6d9f8d', textColor: '#fff' };
+    if (endDate && endDate !== startDate) {
+      marked[endDate] = { endingDay: true, color: '#6d9f8d', textColor: '#fff' };
+      let cur = new Date(startDate);
+      cur.setDate(cur.getDate() + 1);
+      const end = new Date(endDate);
+      while (cur < end) {
+        const key = cur.toISOString().split('T')[0];
+        marked[key] = { color: '#c8e6c9', textColor: '#333' };
+        cur.setDate(cur.getDate() + 1);
+      }
     }
+    return marked;
+  };
 
-    if (!rangeStarted) {
-      setDraftStart(d);
-      setDraftEnd(d);
-      setRangeStarted(true);
-      return;
-    }
-
-    if (d < draftStart) {
-      setDraftEnd(stripToLocalDay(draftStart));
-      setDraftStart(d);
+  const handleDayPress = (day) => {
+    if (!startDate || selectingEnd === false) {
+      setStartDate(day.dateString);
+      setEndDate(null);
+      setSelectingEnd(true);
     } else {
-      setDraftEnd(d);
+      if (day.dateString < startDate) {
+        setStartDate(day.dateString);
+        setEndDate(null);
+        setSelectingEnd(true);
+      } else {
+        setEndDate(day.dateString);
+        setSelectingEnd(false);
+        setShowCalendar(false);
+      }
     }
-  }
-
-  function confirmCalendar() {
-    setStartDate(stripToLocalDay(draftStart));
-    setEndDate(stripToLocalDay(draftEnd));
-    setShowCalendar(false);
-  }
-
-  function resetCalendarRange() {
-    setRangeStarted(false);
-    const t = stripToLocalDay(new Date());
-    setDraftStart(t);
-    setDraftEnd(t);
-  }
+  };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea}>
       <View style={styles.screen}>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+          {/* HEADER */}
           <View style={styles.header}>
             <ScreenBackButton onPress={() => onNavigate('home')} />
-            <Text style={styles.title}>Pack For Trip</Text>
+            <View style={styles.headerTextWrap}>
+              <Text style={styles.title}>✈️ Pack For Trip</Text>
+              <Text style={styles.subtitle}>Smart packing, stress-free travel</Text>
+            </View>
           </View>
 
-          <Text style={styles.subtitle}>
-            Plan your trip & get smart packing suggestions
-          </Text>
+          {/* SECTION LABEL */}
+          <Text style={styles.sectionLabel}>WHERE ARE YOU GOING?</Text>
 
-          <TouchableOpacity style={styles.card} onPress={() => setShowDest(true)}>
-            <Text style={styles.label}>Destination</Text>
-            <View style={styles.row}>
-              <Text style={styles.rowIcon}>⌖</Text>
-              <Text style={[styles.value, styles.valueFlex]} numberOfLines={1}>
-                {destination}
+          {/* DESTINATION CARD */}
+          <TouchableOpacity style={styles.selectorCard} onPress={() => setShowDest(true)} activeOpacity={0.8}>
+            <View style={styles.selectorLeft}>
+              <Text style={styles.selectorEmoji}>{destEmoji}</Text>
+              <View>
+                <Text style={styles.selectorHint}>Destination</Text>
+                <Text style={styles.selectorValue}>{destination}</Text>
+              </View>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+
+          {/* TRAVEL DATES */}
+          <Text style={styles.sectionLabel}>TRAVEL DATES</Text>
+          <TouchableOpacity style={styles.dateCard} onPress={() => { setSelectingEnd(false); setShowCalendar(true); }} activeOpacity={0.8}>
+            <View style={styles.dateBox}>
+              <Text style={styles.dateHint}>📅  Departure</Text>
+              <Text style={[styles.dateValue, !startDate && styles.datePlaceholder]}>
+                {formatDate(startDate)}
               </Text>
-              <Text style={styles.chevron}>▼</Text>
             </View>
+            <View style={styles.dateDivider} />
+            <View style={styles.dateBox}>
+              <Text style={styles.dateHint}>🏁  Return</Text>
+              <Text style={[styles.dateValue, !endDate && styles.datePlaceholder]}>
+                {formatDate(endDate)}
+              </Text>
+            </View>
+            {getTripNights() && (
+              <View style={styles.nightsBadge}>
+                <Text style={styles.nightsText}>{getTripNights()}N</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.dateCardFull}
-            onPress={openCalendar}
-            activeOpacity={0.85}
-          >
-            <View style={styles.dateCardHeader}>
-              <Text style={styles.rowIcon}>▦</Text>
-              <Text style={styles.label}>Travel Dates</Text>
-            </View>
-            <Text style={styles.dateRangeText}>
-              {formatDate(startDate)} → {formatDate(endDate)}
-            </Text>
-            <Text style={styles.daysBadge}>{tripDayCount} days</Text>
-            <Text style={styles.daysHint}>Tap to open calendar</Text>
-          </TouchableOpacity>
-
-          <View style={styles.smallCard}>
-            <Text style={styles.rowIcon}>◫</Text>
-            <Text style={styles.label}>Trip Type</Text>
-            <Text style={styles.value}>Vacation</Text>
+          {/* TRIP TYPE CARD */}
+          <Text style={styles.sectionLabel}>TRIP TYPE</Text>
+          <View style={styles.tripTypeRow}>
+            {TRIP_TYPES.map(t => (
+              <TouchableOpacity
+                key={t.label}
+                style={[styles.tripTypeChip, tripType === t.label && styles.tripTypeChipActive]}
+                onPress={() => setTripType(t.label)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.tripTypeIcon}>{t.icon}</Text>
+                <Text style={[styles.tripTypeLabel, tripType === t.label && styles.tripTypeLabelActive]}>
+                  {t.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          <View style={styles.weather}>
-            <View style={styles.overlay}>
-              <Text style={styles.weatherTitle}>Weather in Paris</Text>
-              <View style={styles.weatherRow}>
-                <Text style={styles.temp}>24°C</Text>
-                <Text style={styles.sun}>☀</Text>
+          {/* WEATHER CARD */}
+          <Text style={styles.sectionLabel}>CURRENT WEATHER</Text>
+          <View style={styles.weatherCard}>
+            <View style={styles.weatherTop}>
+              <View>
+                <Text style={styles.weatherCity}>{cityName}</Text>
+                <Text style={styles.weatherCondition}>{weather.condition}</Text>
               </View>
-              <Text style={styles.weatherText}>Mostly Sunny</Text>
-              <View style={styles.weatherStats}>
-                <Text style={styles.stat}>💧 55%</Text>
-                <Text style={styles.stat}>🌬 8 km/h</Text>
-                <Text style={styles.stat}>🌡 26°C</Text>
+              <View style={styles.weatherTempWrap}>
+                <Text style={styles.weatherIcon}>{weather.icon}</Text>
+                <Text style={styles.weatherTemp}>{weather.temp}</Text>
               </View>
             </View>
+            <View style={styles.weatherDivider} />
+            <View style={styles.weatherStatsRow}>
+              <View style={styles.weatherStat}>
+                <Text style={styles.weatherStatIcon}>💧</Text>
+                <Text style={styles.weatherStatValue}>{weather.humidity}</Text>
+                <Text style={styles.weatherStatLabel}>Humidity</Text>
+              </View>
+              <View style={styles.weatherStat}>
+                <Text style={styles.weatherStatIcon}>🌬️</Text>
+                <Text style={styles.weatherStatValue}>{weather.wind}</Text>
+                <Text style={styles.weatherStatLabel}>Wind</Text>
+              </View>
+              <View style={styles.weatherStat}>
+                <Text style={styles.weatherStatIcon}>🌡️</Text>
+                <Text style={styles.weatherStatValue}>{weather.feels}</Text>
+                <Text style={styles.weatherStatLabel}>Feels Like</Text>
+              </View>
+            </View>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.label}>Packing Tips</Text>
-            <Text style={styles.tip}>Light clothes + jacket recommended</Text>
-          </View>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.switchText}>
-              Use AI to analyze my closet for this trip
-            </Text>
-            <Switch value={aiToggle} onValueChange={setAiToggle} />
-          </View>
-
+          {/* GENERATE BUTTON */}
           <TouchableOpacity
             style={styles.button}
-            onPress={() =>
-              Alert.alert(
-                'Packing list',
-                'Your smart packing list will appear here once the feature is connected.',
-              )
-            }
+            onPress={() => {
+              if (onGeneratePacking) {
+                onGeneratePacking({
+                  destination,
+                  tripType,
+                  startDate,
+                  endDate,
+                });
+                return;
+              }
+              onNavigate('trip-outfit-picker');
+            }}
+            activeOpacity={0.85}
           >
-            <Text style={styles.buttonText}>Generate Packing List →</Text>
+            <Text style={styles.buttonText}>Generate Packing List  →</Text>
           </TouchableOpacity>
+
         </ScrollView>
 
         <BottomTabBar selectedTab={selectedBottomTab} onNavigate={onNavigate} />
 
-        <Modal visible={showDest} transparent animationType="fade">
-          <TouchableOpacity
-            style={styles.modalBackdrop}
-            activeOpacity={1}
-            onPress={() => setShowDest(false)}
-          >
+        {/* CALENDAR MODAL */}
+        <Modal visible={showCalendar} transparent animationType="slide">
+          <Pressable style={styles.modalOverlay} onPress={() => setShowCalendar(false)}>
+            <Pressable style={[styles.modalSheet, styles.calendarSheet, { paddingHorizontal: 0 }]} onPress={() => {}}>
+              <View style={styles.modalHandle} />
+              <Text style={[styles.modalTitle, { paddingHorizontal: 24 }]}>
+                {selectingEnd ? '🏁 Select Return Date' : '📅 Select Departure Date'}
+              </Text>
+              <CalendarList
+                onDayPress={handleDayPress}
+                markingType="period"
+                markedDates={getMarkedDates()}
+                minDate={new Date().toISOString().split('T')[0]}
+                pastScrollRange={0}
+                futureScrollRange={12}
+                scrollEnabled
+                showScrollIndicator
+                theme={{
+                  todayTextColor: '#6d9f8d',
+                  arrowColor: '#6d9f8d',
+                  selectedDayBackgroundColor: '#6d9f8d',
+                  selectedDayTextColor: '#fff',
+                  dotColor: '#6d9f8d',
+                  textDayFontWeight: '500',
+                  textMonthFontWeight: '700',
+                  textMonthFontSize: 16,
+                  calendarBackground: '#fff',
+                }}
+                style={styles.calendarList}
+                calendarHeight={340}
+                staticHeader
+              />
+              <TouchableOpacity
+                style={[styles.button, { margin: 16 }]}
+                onPress={() => setShowCalendar(false)}
+              >
+                <Text style={styles.buttonText}>Done</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        {/* DESTINATION MODAL */}
+        <Modal visible={showDest} transparent animationType="slide">
+          <Pressable style={styles.modalOverlay} onPress={() => setShowDest(false)}>
             <View style={styles.modalSheet}>
-              {DESTINATIONS.map(city => (
+              <View style={styles.modalHandle} />
+              <Text style={styles.modalTitle}>Choose Destination</Text>
+              {DESTINATIONS.map(d => (
                 <TouchableOpacity
-                  key={city}
-                  style={styles.modalItemWrap}
-                  onPress={() => {
-                    setDestination(city);
-                    setShowDest(false);
-                  }}
+                  key={d}
+                  style={[styles.modalOption, destination === d && styles.modalOptionActive]}
+                  onPress={() => { setDestination(d); setShowDest(false); }}
                 >
-                  <Text style={styles.modalItem}>{city}</Text>
+                  <Text style={styles.modalOptionEmoji}>{DESTINATION_EMOJI[d]}</Text>
+                  <Text style={[styles.modalOptionText, destination === d && styles.modalOptionTextActive]}>
+                    {d}
+                  </Text>
+                  {destination === d && <Text style={styles.modalCheck}>✓</Text>}
                 </TouchableOpacity>
               ))}
             </View>
-          </TouchableOpacity>
+          </Pressable>
         </Modal>
 
-        <Modal
-          visible={showCalendar}
-          animationType="slide"
-          transparent
-          onRequestClose={() => setShowCalendar(false)}
-        >
-          <View style={styles.calModalRoot}>
-            <Pressable
-              style={styles.calModalBackdrop}
-              onPress={() => setShowCalendar(false)}
-            />
-            <View
-              style={[
-                styles.calModalSheet,
-                { paddingBottom: Math.max(insets.bottom, 16) },
-              ]}
-            >
-              <Text style={styles.calModalTitle}>Travel dates</Text>
-              <Text style={styles.calModalHint}>
-                {rangeStarted
-                  ? 'Tap the last day of your trip (or tap Reset to start over).'
-                  : 'Tap your first travel day to begin.'}
-              </Text>
-              <Calendar
-                current={toYMD(draftStart)}
-                minDate={minDateStr}
-                markingType="period"
-                markedDates={markedDates}
-                onDayPress={onCalendarDayPress}
-                enableSwipeMonths
-                theme={{
-                  backgroundColor: '#fff',
-                  calendarBackground: '#fff',
-                  textSectionTitleColor: '#534740',
-                  todayTextColor: PERIOD_MAIN,
-                  dayTextColor: '#2b2b2b',
-                  textDisabledColor: '#d0c9bf',
-                  arrowColor: PERIOD_MAIN,
-                  monthTextColor: '#2b2b2b',
-                  textDayHeaderFontSize: 12,
-                  textDayFontSize: 15,
-                  textMonthFontSize: 17,
-                }}
-              />
-              <View style={styles.calActions}>
+        {/* TRIP TYPE MODAL - replaced by chips, kept for safety */}
+        <Modal visible={showTripType} transparent animationType="slide">
+          <Pressable style={styles.modalOverlay} onPress={() => setShowTripType(false)}>
+            <View style={styles.modalSheet}>
+              <View style={styles.modalHandle} />
+              <Text style={styles.modalTitle}>Trip Type</Text>
+              {TRIP_TYPES.map(t => (
                 <TouchableOpacity
-                  style={styles.calSecondaryBtn}
-                  onPress={resetCalendarRange}
+                  key={t.label}
+                  style={[styles.modalOption, tripType === t.label && styles.modalOptionActive]}
+                  onPress={() => { setTripType(t.label); setShowTripType(false); }}
                 >
-                  <Text style={styles.calSecondaryBtnText}>Reset range</Text>
+                  <Text style={styles.modalOptionEmoji}>{t.icon}</Text>
+                  <Text style={[styles.modalOptionText, tripType === t.label && styles.modalOptionTextActive]}>
+                    {t.label}
+                  </Text>
+                  {tripType === t.label && <Text style={styles.modalCheck}>✓</Text>}
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.calPrimaryBtn}
-                  onPress={confirmCalendar}
-                >
-                  <Text style={styles.calPrimaryBtnText}>Done</Text>
-                </TouchableOpacity>
-              </View>
+              ))}
             </View>
-          </View>
+          </Pressable>
         </Modal>
+
       </View>
     </SafeAreaView>
   );
 }
 
+/* =========================
+   STYLES
+========================= */
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#e8e4da',
-  },
-  screen: {
-    flex: 1,
-    backgroundColor: '#e8e4da',
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 132,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 6,
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#2b2b2b',
-    fontFamily: 'serif',
-  },
-  subtitle: {
-    marginTop: 4,
-    color: '#666',
-    marginBottom: 14,
-    fontSize: 14,
-    fontFamily: 'serif',
-  },
-  card: {
-    backgroundColor: '#ede6dc',
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 12,
-  },
-  smallCard: {
-    backgroundColor: '#ede6dc',
-    padding: 12,
-    borderRadius: 14,
-    marginBottom: 12,
-  },
-  dateCardFull: {
-    backgroundColor: '#ede6dc',
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 12,
-  },
-  dateCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  safeArea: { flex: 1, backgroundColor: '#f0ede6' },
+  screen: { flex: 1 },
+  scrollContent: { padding: 20, paddingBottom: 100 },
+
+  /* HEADER */
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
+  headerTextWrap: { marginLeft: 12 },
+  title: { fontSize: 22, fontWeight: '700', color: '#6d9f8d', letterSpacing: 0.3 },
+  subtitle: { fontSize: 13, color: '#888', marginTop: 2 },
+
+  /* SECTION LABELS */
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#aaa',
+    letterSpacing: 1.2,
     marginBottom: 8,
-  },
-  dateRangeText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2b2b2b',
-    fontFamily: 'serif',
-  },
-  daysBadge: {
-    marginTop: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: '#d4ebe2',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    overflow: 'hidden',
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#3d6b5c',
-    fontFamily: 'serif',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-    gap: 8,
-  },
-  rowIcon: {
-    fontSize: 16,
-    color: '#534740',
-  },
-  chevron: {
-    marginLeft: 'auto',
-    fontSize: 12,
-    color: '#888',
-  },
-  label: {
-    color: '#666',
-    fontSize: 13,
-    fontFamily: 'serif',
-  },
-  value: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#2b2b2b',
-  },
-  valueFlex: {
-    flex: 1,
-    minWidth: 0,
-  },
-  daysHint: {
-    color: '#7faf9b',
-    fontSize: 11,
-    marginTop: 6,
-    fontFamily: 'serif',
-  },
-  weather: {
-    height: 140,
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 12,
-    backgroundColor: '#5a7a8e',
-  },
-  overlay: {
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    flex: 1,
-    padding: 12,
-    borderRadius: 20,
-    justifyContent: 'center',
-  },
-  weatherTitle: {
-    color: '#fff',
-    fontSize: 13,
-    fontFamily: 'serif',
-  },
-  weatherRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  sun: {
-    fontSize: 28,
-  },
-  temp: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: '600',
-  },
-  weatherText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-  weatherStats: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 6,
-  },
-  stat: {
-    color: '#fff',
-    fontSize: 11,
-  },
-  tip: {
-    fontSize: 13,
     marginTop: 4,
-    color: '#444',
-    fontFamily: 'serif',
   },
-  switchRow: {
+
+  /* SELECTOR CARD */
+  selectorCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  selectorLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  selectorEmoji: { fontSize: 32 },
+  selectorHint: { fontSize: 11, color: '#aaa', marginBottom: 2 },
+  selectorValue: { fontSize: 16, fontWeight: '600', color: '#6d9f8d' },
+  chevron: { fontSize: 26, color: '#ccc', fontWeight: '300' },
+
+  /* TRIP TYPE CHIPS */
+  tripTypeRow: { flexDirection: 'row', gap: 12, marginBottom: 18 },
+  tripTypeChip: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  tripTypeChipActive: {
+    backgroundColor: '#6d9f8d',
+    borderColor: '#6d9f8d',
+  },
+  tripTypeIcon: { fontSize: 24, marginBottom: 4 },
+  tripTypeLabel: { fontSize: 13, fontWeight: '600', color: '#555' },
+  tripTypeLabelActive: { color: '#fff' },
+
+  /* WEATHER CARD */
+  weatherCard: {
+    backgroundColor: '#2c3e50',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 22,
+    shadowColor: '#2c3e50',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  weatherTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: 12,
-    gap: 12,
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
-  switchText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#333',
-    fontFamily: 'serif',
-  },
+  weatherCity: { fontSize: 22, fontWeight: '700', color: '#fff' },
+  weatherCondition: { fontSize: 13, color: '#aac', marginTop: 4 },
+  weatherTempWrap: { alignItems: 'flex-end' },
+  weatherIcon: { fontSize: 36 },
+  weatherTemp: { fontSize: 28, fontWeight: '800', color: '#fff', marginTop: 2 },
+  weatherDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginBottom: 16 },
+  weatherStatsRow: { flexDirection: 'row', justifyContent: 'space-around' },
+  weatherStat: { alignItems: 'center', gap: 4 },
+  weatherStatIcon: { fontSize: 18 },
+  weatherStatValue: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  weatherStatLabel: { fontSize: 10, color: '#aac' },
+
+  /* BUTTON */
   button: {
     backgroundColor: '#6d9f8d',
-    padding: 14,
-    borderRadius: 25,
+    paddingVertical: 16,
+    borderRadius: 30,
     alignItems: 'center',
+    shadowColor: '#6d9f8d',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontFamily: 'serif',
-  },
-  modalBackdrop: {
+  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16, letterSpacing: 0.5 },
+
+  /* MODAL */
+  modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
   },
   modalSheet: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 36,
   },
-  modalItemWrap: {
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e0dcd4',
+  calendarSheet: {
+    minHeight: '78%',
   },
-  modalItem: {
-    fontSize: 17,
-    color: '#2b2b2b',
-    fontFamily: 'serif',
+  calendarList: {
+    borderTopWidth: 1,
+    borderTopColor: '#f0eee8',
+    paddingTop: 8,
   },
-  calModalRoot: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.45)',
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#ddd',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
   },
-  calModalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#6d9f8d',
+    marginBottom: 16,
   },
-  calModalSheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 16,
-    paddingTop: 18,
-    maxHeight: '88%',
-  },
-  calModalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#2b2b2b',
-    fontFamily: 'serif',
-    marginBottom: 6,
-  },
-  calModalHint: {
-    fontSize: 13,
-    color: '#666',
-    fontFamily: 'serif',
-    marginBottom: 12,
-    lineHeight: 18,
-  },
-  calActions: {
+  modalOption: {
     flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginBottom: 6,
+    backgroundColor: '#f8f8f8',
     gap: 12,
-    marginTop: 8,
-    marginBottom: 4,
   },
-  calSecondaryBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#c5bdb3',
+  modalOptionActive: { backgroundColor: '#eef0ff' },
+  modalOptionEmoji: { fontSize: 22 },
+  modalOptionText: { flex: 1, fontSize: 15, color: '#333', fontWeight: '500' },
+  modalOptionTextActive: { color: '#6d9f8d', fontWeight: '700' },
+  modalCheck: { fontSize: 16, color: '#4f46e5', fontWeight: '700' },
+
+  /* DATE CARD */
+  dateCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  calSecondaryBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#534740',
-    fontFamily: 'serif',
-  },
-  calPrimaryBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
+  dateBox: { flex: 1, alignItems: 'center' },
+  dateHint: { fontSize: 11, color: '#aaa', marginBottom: 4 },
+  dateValue: { fontSize: 15, fontWeight: '700', color: '#333' },
+  datePlaceholder: { color: '#ccc', fontWeight: '400' },
+  dateDivider: { width: 1, height: 36, backgroundColor: '#eee', marginHorizontal: 8 },
+  nightsBadge: {
     backgroundColor: '#6d9f8d',
-    alignItems: 'center',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginLeft: 8,
   },
-  calPrimaryBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
-    fontFamily: 'serif',
-  },
+  nightsText: { color: '#fff', fontWeight: '700', fontSize: 12 },
 });
