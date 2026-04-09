@@ -194,6 +194,7 @@ function SavedOutfitCard({ item, onToggleSave }) {
 
 export default function ProfilePage({
   onNavigate,
+  onLogout,
   selectedBottomTab = 'profile',
 }) {
   const [view, setView] = useState('home');
@@ -926,7 +927,13 @@ export default function ProfilePage({
 
           <Pressable
             style={styles.logoutBtn}
-            onPress={() => onNavigate('login')}
+            onPress={() => {
+              if (onLogout) {
+                onLogout();
+                return;
+              }
+              onNavigate('home');
+            }}
           >
             <Text style={styles.logoutBtnText}>Logout</Text>
           </Pressable>
