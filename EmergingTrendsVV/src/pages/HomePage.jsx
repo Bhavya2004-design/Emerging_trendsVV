@@ -41,7 +41,10 @@ function OutfitPreview({ compact = false }) {
   );
 }
 
-export default function HomePage({ onNavigate, selectedBottomTab = 'home' }) {
+export default function HomePage({ onNavigate, selectedBottomTab = 'home', userName = '' }) {
+  const displayName = userName && userName.trim() ? userName.trim() : 'Maria';
+  const avatarInitial = displayName.charAt(0).toUpperCase();
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
@@ -53,11 +56,11 @@ export default function HomePage({ onNavigate, selectedBottomTab = 'home' }) {
           <View style={styles.headerRow}>
             <View>
               <Text style={styles.greeting}>Good morning,</Text>
-              <Text style={styles.userName}>Maria</Text>
+              <Text style={styles.userName}>{displayName}</Text>
               <Text style={styles.subtitle}>Ready to style today?</Text>
             </View>
             <View style={styles.profileAvatar}>
-              <Text style={styles.profileAvatarText}>M</Text>
+              <Text style={styles.profileAvatarText}>{avatarInitial}</Text>
             </View>
           </View>
 
