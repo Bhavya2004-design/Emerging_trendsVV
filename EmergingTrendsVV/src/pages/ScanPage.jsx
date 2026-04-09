@@ -319,7 +319,7 @@ export default function ScanPage({
             </Pressable>
             <Pressable
               style={styles.quickActionButton}
-              onPress={handleOpenCamera}
+              onPress={() => onNavigate('vault')}
             >
               <Text style={styles.quickActionIcon}>⌕</Text>
               <Text style={styles.quickActionText}>Search clothing</Text>

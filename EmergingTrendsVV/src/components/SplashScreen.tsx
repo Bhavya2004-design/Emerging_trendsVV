@@ -20,7 +20,7 @@ type SplashScreenProps = {
 export default function SplashScreen({
   onFinish,
   durationMs = 4000,
-  logoSize = 220,
+  logoSize = 280,
   logoSource = null,
 }: SplashScreenProps) {
   const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
