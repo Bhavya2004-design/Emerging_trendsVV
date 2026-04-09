@@ -53,7 +53,9 @@ function App() {
     | 'trip'
   >('splash');
   const [vaultItems, setVaultItems] = useState(mockVaultItems);
-  const [lastAddedSection, setLastAddedSection] = useState('your selected section');
+  const [lastAddedSection, setLastAddedSection] = useState(
+    'your selected section',
+  );
 
   function handleBottomTabPress(tabKey: string) {
     if (
@@ -68,30 +70,42 @@ function App() {
       return;
     }
 
-    Alert.alert('Coming soon', `${tabKey[0].toUpperCase()}${tabKey.slice(1)} page is not built yet.`);
+    Alert.alert(
+      'Coming soon',
+      `${tabKey[0].toUpperCase()}${tabKey.slice(1)} page is not built yet.`,
+    );
+  }
+
+  function handleLogout() {
+    Alert.alert('Logout', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: () => setScreen('login'),
+      },
+    ]);
   }
 
   async function handleAddOutfit(outfitPayload: ScanOutfitPayload) {
     const newOutfit = {
       id: `scan-${Date.now()}`,
       title: outfitPayload.title || 'Scanned Outfit',
-      subtitle: outfitPayload.subtitle,
+      subtitle: outfitPayload.subtitle || '',
       category: outfitPayload.category,
       isFavorite: false,
-      imageUri: outfitPayload.imageUri,
-      aiMeta: {
-        itemType: outfitPayload.itemType,
-        color: outfitPayload.color,
-        material: outfitPayload.material,
-        style: outfitPayload.style,
-        features: outfitPayload.features,
-        occasion: outfitPayload.occasion,
+      mockImage: {
+        background: '#f0f0f0',
+        accents: ['#999999', '#cccccc'],
+        layout: 'scanned-item',
       },
     };
 
     setVaultItems(currentItems => [newOutfit, ...currentItems]);
     await saveOutfitToDatabase(newOutfit);
-    setLastAddedSection(outfitPayload.category === 'travel' ? 'travel section' : 'work section');
+    setLastAddedSection(
+      outfitPayload.category === 'travel' ? 'travel section' : 'work section',
+    );
     setScreen('added-to-vault');
   }
 
@@ -105,12 +119,8 @@ function App() {
             logoSource={require('./src/pages/VV_logo.png')}
           />
         ) : null}
-        {screen === 'login' ? (
-          <LoginPage onNavigate={setScreen} />
-        ) : null}
-        {screen === 'register' ? (
-          <RegisterPage onNavigate={setScreen} />
-        ) : null}
+        {screen === 'login' ? <LoginPage onNavigate={setScreen} /> : null}
+        {screen === 'register' ? <RegisterPage onNavigate={setScreen} /> : null}
         {screen === 'forgot-password' ? (
           <ForgotPasswordPage onNavigate={setScreen} />
         ) : null}
@@ -118,6 +128,7 @@ function App() {
           <HomePage
             selectedBottomTab="home"
             onNavigate={handleBottomTabPress}
+            onLogout={handleLogout}
           />
         ) : null}
         {screen === 'vault' ? (
@@ -144,6 +155,8 @@ function App() {
           <TripPage
             selectedBottomTab="home"
             onNavigate={handleBottomTabPress}
+            initialTripPlan={undefined}
+            onGeneratePacking={() => {}}
           />
         ) : null}
         {screen === 'added-to-vault' ? (
@@ -159,6 +172,7 @@ function App() {
           <ProfilePage
             selectedBottomTab="profile"
             onNavigate={handleBottomTabPress}
+            onLogout={handleLogout}
           />
         ) : null}
       </View>

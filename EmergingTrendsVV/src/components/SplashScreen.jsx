@@ -18,7 +18,6 @@ export default function SplashScreen({ onFinish, logoSource }) {
         {logoSource ? (
           <Image source={logoSource} style={styles.logo} resizeMode="contain" />
         ) : null}
-        <Text style={styles.brand}>VogueVault</Text>
       </View>
     </SafeAreaView>
   );
@@ -27,17 +26,17 @@ export default function SplashScreen({ onFinish, logoSource }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
   },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f0e5',
+    backgroundColor: '#e8e4da',
   },
   logo: {
-    width: 150,
-    height: 150,
+    width: 400,
+    height: 400,
   },
   brand: {
     marginTop: 10,
