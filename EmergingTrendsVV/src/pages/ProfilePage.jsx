@@ -1,6 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
+  Image,
+  Linking,
+  PermissionsAndroid,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,9 +14,30 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import AppScreenHeader from '../components/AppScreenHeader';
 import BottomTabBar from '../components/BottomTabBar';
 import { communityPosts } from '../data/communityMockData';
+import { logoutUser, updateAuthDisplayName } from '../services/firebaseAuth';
+
+const PROFILE_STORAGE_PREFIX = 'profile:custom:';
+
+const DEFAULT_PROFILE = {
+  userID: 'user-maria-01',
+  name: 'Maria',
+  bio: 'Sustainable fashion lover 🌿',
+  jobTitle: '',
+  closetItems: 30,
+  outfitPosted: 26,
+  followers: 120,
+  avatarUri: '',
+  height: '',
+  size: '',
+  linkedin: '',
+  instagram: '',
+  tiktok: '',
+};
 
 const activityLinks = [
   { key: 'my-vault', icon: '🗂', label: 'My Vault' },
@@ -66,10 +91,16 @@ function buildPostHistory() {
 }
 
 function ProfileHeader({ profile }) {
+  const initial = profile.name?.charAt(0)?.toUpperCase() || '?';
+
   return (
     <View style={styles.profileHeaderWrap}>
       <View style={styles.avatarFrame}>
-        <Text style={styles.avatarText}>{profile.name.charAt(0)}</Text>
+        {profile.avatarUri ? (
+          <Image source={{ uri: profile.avatarUri }} style={styles.avatarImage} />
+        ) : (
+          <Text style={styles.avatarText}>{initial}</Text>
+        )}
       </View>
       <Text style={styles.profileName}>{profile.name}</Text>
       <Text style={styles.profileBio}>{profile.bio}</Text>
@@ -196,26 +227,16 @@ export default function ProfilePage({
   onNavigate,
   onLogout,
   selectedBottomTab = 'profile',
+  userName = '',
+  userId = '',
+  onUserNameChange,
 }) {
   const [view, setView] = useState('home');
-  const [profile, setProfile] = useState({
-    userID: 'user-maria-01',
-    name: 'Maria',
-    bio: 'Sustainable fashion lover 🌿',
-    jobTitle: '',
-    closetItems: 30,
-    outfitPosted: 26,
-    followers: 120,
-    height: '',
-    size: '',
-    linkedin: '',
-    instagram: '',
-    tiktok: '',
-  });
+  const [profile, setProfile] = useState(DEFAULT_PROFILE);
 
   const [savedOutfits, setSavedOutfits] = useState(buildSavedOutfits());
   const [savedFilter, setSavedFilter] = useState('All');
-  const [tripCards, setTripCards] = useState([
+  const [tripCards] = useState([
     { id: 't-1', name: 'Paris 2026', itemCount: 18, weight: 11.2 },
     { id: 't-2', name: 'Mumbai Weekend', itemCount: 9, weight: 5.1 },
   ]);
@@ -239,6 +260,76 @@ export default function ProfilePage({
   });
 
   const [theme, setTheme] = useState('Cream');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSavedProfile() {
+      try {
+        if (!userId) {
+          if (isMounted) {
+            setProfile(DEFAULT_PROFILE);
+          }
+          return;
+        }
+
+        const key = `${PROFILE_STORAGE_PREFIX}${userId}`;
+        const raw = await AsyncStorage.getItem(key);
+        if (!isMounted) {
+          return;
+        }
+
+        if (!raw) {
+          setProfile((current) => ({
+            ...current,
+            userID: userId,
+          }));
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+        setProfile((current) => ({
+          ...current,
+          ...parsed,
+          userID: userId,
+        }));
+      } catch (error) {
+        if (isMounted) {
+          setProfile((current) => ({
+            ...current,
+            userID: userId || current.userID,
+          }));
+        }
+      }
+    }
+
+    loadSavedProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userName || !userName.trim()) {
+      return;
+    }
+
+    setProfile((current) => {
+      if (current.name === userName.trim()) {
+        return current;
+      }
+
+      if (current.name === 'Maria') {
+        return {
+          ...current,
+          name: userName.trim(),
+        };
+      }
+
+      return current;
+    });
+  }, [userName]);
 
   const savedCategories = useMemo(() => {
     const tags = Array.from(
@@ -594,8 +685,132 @@ export default function ProfilePage({
     );
   }
 
-  function saveProfileEdits() {
-    Alert.alert('Profile saved', 'Your profile has been updated.');
+  async function saveProfileEdits() {
+    const trimmedName = profile.name.trim();
+    if (!trimmedName) {
+      Alert.alert('Missing name', 'Display name cannot be empty.');
+      return;
+    }
+
+    try {
+      const nextProfile = {
+        ...profile,
+        name: trimmedName,
+        userID: userId || profile.userID,
+      };
+
+      if (userId) {
+        const key = `${PROFILE_STORAGE_PREFIX}${userId}`;
+        await AsyncStorage.setItem(key, JSON.stringify(nextProfile));
+      }
+
+      await updateAuthDisplayName(trimmedName);
+      setProfile(nextProfile);
+      if (onUserNameChange) {
+        onUserNameChange(trimmedName);
+      }
+      Alert.alert('Profile saved', 'Your profile has been updated.');
+    } catch (error) {
+      Alert.alert('Save failed', 'Unable to save profile right now. Please try again.');
+    }
+  }
+
+  async function handleLogout() {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await logoutUser();
+          } catch (error) {
+            Alert.alert('Logout failed', 'Please try again.');
+          }
+        },
+      },
+    ]);
+  }
+
+  async function selectProfileImage(source) {
+    try {
+      if (source === 'camera' && Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: 'Camera Permission',
+            message: 'We need camera access so you can take a profile photo.',
+            buttonPositive: 'Allow',
+            buttonNegative: 'Deny',
+          },
+        );
+
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert(
+            'Permission required',
+            'Camera permission is required to take a photo.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Go to Settings',
+                onPress: () => {
+                  Linking.openSettings().catch(() => {
+                    Alert.alert('Unable to open settings', 'Please open app settings manually.');
+                  });
+                },
+              },
+            ],
+          );
+          return;
+        }
+      }
+
+      const picker = source === 'camera' ? launchCamera : launchImageLibrary;
+      const result = await picker({
+        mediaType: 'photo',
+        quality: 0.9,
+        selectionLimit: 1,
+      });
+
+      if (result.didCancel) {
+        return;
+      }
+
+      if (result.errorCode) {
+        Alert.alert('Image selection failed', result.errorMessage || 'Please try again.');
+        return;
+      }
+
+      const uri = result.assets?.[0]?.uri;
+      if (!uri) {
+        Alert.alert('Image selection failed', 'No image was selected.');
+        return;
+      }
+
+      setProfile((current) => ({
+        ...current,
+        avatarUri: uri,
+      }));
+    } catch (error) {
+      Alert.alert('Image selection failed', 'Please try again.');
+    }
+  }
+
+  function openPhotoPickerMenu() {
+    Alert.alert('Profile photo', 'Choose photo source', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Camera', onPress: () => selectProfileImage('camera') },
+      { text: 'Gallery', onPress: () => selectProfileImage('gallery') },
+      {
+        text: 'Remove photo',
+        style: 'destructive',
+        onPress: () =>
+          setProfile((current) => ({
+            ...current,
+            avatarUri: '',
+          })),
+      },
+    ]);
   }
 
   function renderEditProfile() {
@@ -619,18 +834,20 @@ export default function ProfilePage({
           <Text style={styles.editProfileSectionLabel}>Photo</Text>
           <Pressable
             style={styles.avatarEditBlock}
-            onPress={() =>
-              Alert.alert('Avatar Picker', 'Hook your image picker here.')
-            }
+            onPress={openPhotoPickerMenu}
           >
             <View style={styles.avatarEditLarge}>
-              <Text style={styles.avatarEditLargeText}>
-                {profile.name.charAt(0) || '?'}
-              </Text>
+              {profile.avatarUri ? (
+                <Image source={{ uri: profile.avatarUri }} style={styles.avatarEditLargeImage} />
+              ) : (
+                <Text style={styles.avatarEditLargeText}>
+                  {profile.name.charAt(0) || '?'}
+                </Text>
+              )}
             </View>
             <View style={styles.avatarEditMeta}>
               <Text style={styles.avatarEditTitle}>Profile photo</Text>
-              <Text style={styles.avatarEditHint}>Tap to change</Text>
+              <Text style={styles.avatarEditHint}>Tap to use camera or gallery</Text>
             </View>
           </Pressable>
 
@@ -1023,6 +1240,11 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
     color: '#5e544c',
     fontWeight: '700',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 43,
   },
   profileName: {
     marginTop: 8,
@@ -1425,6 +1647,11 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
     fontSize: 28,
     fontWeight: '700',
+  },
+  avatarEditLargeImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 36,
   },
   avatarEditMeta: {
     flex: 1,

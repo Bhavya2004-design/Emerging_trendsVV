@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
-  Alert,
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -81,7 +80,6 @@ export default function TripPage({
   const weather = WEATHER_DATA[destination];
   const cityName = destination.split(',')[0];
   const destEmoji = DESTINATION_EMOJI[destination];
-  const tripIcon = TRIP_TYPES.find(t => t.label === tripType)?.icon;
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Select';

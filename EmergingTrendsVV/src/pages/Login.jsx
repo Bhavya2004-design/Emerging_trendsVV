@@ -10,10 +10,33 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenBackButton from '../components/ScreenBackButton';
+import { formatAuthError, loginWithEmail } from '../services/firebaseAuth';
 
-export default function LoginPage({ onNavigate }) {
+export default function LoginPage({ onNavigate, onAuthSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleLogin() {
+    if (!email.trim() || !password) {
+      Alert.alert('Missing details', 'Please enter both email and password.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await loginWithEmail(email, password);
+      if (onAuthSuccess) {
+        onAuthSuccess();
+      } else {
+        onNavigate('home');
+      }
+    } catch (error) {
+      Alert.alert('Login failed', formatAuthError(error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
@@ -56,13 +79,9 @@ export default function LoginPage({ onNavigate }) {
 
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() =>
-            Alert.alert(
-              'Authentication not ready',
-              'Use Continue as Guest until the backend is connected.',
-            )
-          }>
-          <Text style={styles.loginButtonText}>Login</Text>
+          disabled={isSubmitting}
+          onPress={handleLogin}>
+          <Text style={styles.loginButtonText}>{isSubmitting ? 'Logging in...' : 'Login'}</Text>
         </TouchableOpacity>
 
         <Text style={styles.orText}>or login with</Text>

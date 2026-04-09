@@ -205,7 +205,7 @@ export default function CommunityPage({
   const isSmall = width < 380;
 
   const [timelineTab, setTimelineTab] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
+  const [followingView, setFollowingView] = useState('my-feed');
   const [followedIds, setFollowedIds] = useState(initialFollowedUserIds);
   const [likedPostIds, setLikedPostIds] = useState([]);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
@@ -221,12 +221,15 @@ export default function CommunityPage({
     },
   ]);
 
-  const filteredPosts = useMemo(() => {
-    if (timelineTab === 'following') {
-      return communityPosts.filter(post => followedIds.includes(post.userId));
-    }
-    return communityPosts;
-  }, [timelineTab, followedIds]);
+  const followingPosts = useMemo(
+    () => communityPosts.filter(post => followedIds.includes(post.userId)),
+    [followedIds],
+  );
+
+  const followedUsers = useMemo(
+    () => communityUsers.filter(user => followedIds.includes(user.id)),
+    [followedIds],
+  );
 
   const selectedProfilePosts = useMemo(() => {
     if (!selectedProfileId) {
@@ -322,34 +325,9 @@ export default function CommunityPage({
     setDraftComment('');
   };
 
-  const renderGrid = () => (
-    <View style={styles.gridWrap}>
-      {filteredPosts.map(post => {
-        const user = userMap[post.userId];
-        return (
-          <TouchableOpacity
-            key={post.id}
-            style={[styles.gridCard, isSmall && styles.gridCardSmall]}
-            onPress={() => openProfile(user.id)}
-            activeOpacity={0.9}
-          >
-            <MockOutfitImage mockImage={post.mockImage} compact />
-            <View style={styles.gridCardBottom}>
-              <Avatar user={user} size={28} />
-              <View style={styles.gridTextWrap}>
-                <Text style={styles.gridName}>{user.name}</Text>
-                <Text style={styles.gridSub}>{post.category}</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-
   const renderFeed = () => (
     <View style={styles.feedWrap}>
-      {filteredPosts.map(post => {
+      {communityPosts.map(post => {
         const user = userMap[post.userId];
         return (
           <PostCard
@@ -367,6 +345,32 @@ export default function CommunityPage({
           />
         );
       })}
+    </View>
+  );
+
+  const renderPeopleIFollow = () => (
+    <View style={styles.followingPeopleWrap}>
+      {followedUsers.map(user => (
+        <View key={user.id} style={styles.followingUserRow}>
+          <TouchableOpacity
+            style={styles.followingUserInfo}
+            onPress={() => openProfile(user.id)}
+          >
+            <Avatar user={user} size={46} />
+            <View style={styles.followingUserTextWrap}>
+              <Text style={styles.followingUserName}>{user.name}</Text>
+              <Text style={styles.followingUserHandle}>{user.handle}</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.unfollowBtn}
+            onPress={() => toggleFollow(user.id)}
+          >
+            <Text style={styles.unfollowBtnText}>Unfollow</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
     </View>
   );
 
@@ -465,23 +469,6 @@ export default function CommunityPage({
           <TouchableOpacity
             style={[
               styles.segmentBtn,
-              timelineTab === 'following' && styles.segmentBtnActive,
-            ]}
-            onPress={() => setTimelineTab('following')}
-          >
-            <Text
-              style={[
-                styles.segmentBtnText,
-                timelineTab === 'following' && styles.segmentBtnTextActive,
-              ]}
-            >
-              Following
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.segmentBtn,
               timelineTab === 'all' && styles.segmentBtnActive,
             ]}
             onPress={() => setTimelineTab('all')}
@@ -495,59 +482,109 @@ export default function CommunityPage({
               All
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.segmentBtn,
+              timelineTab === 'following' && styles.segmentBtnActive,
+            ]}
+            onPress={() => {
+              setTimelineTab('following');
+              setFollowingView('my-feed');
+            }}
+          >
+            <Text
+              style={[
+                styles.segmentBtnText,
+                timelineTab === 'following' && styles.segmentBtnTextActive,
+              ]}
+            >
+              Following
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.modeRow}>
-          <TouchableOpacity
-            style={[
-              styles.modeBtn,
-              viewMode === 'grid' && styles.modeBtnActive,
-            ]}
-            onPress={() => setViewMode('grid')}
-          >
-            <Text
+        {timelineTab === 'following' ? (
+          <View style={styles.modeRow}>
+            <TouchableOpacity
               style={[
-                styles.modeText,
-                viewMode === 'grid' && styles.modeTextActive,
+                styles.modeBtn,
+                followingView === 'people' && styles.modeBtnActive,
               ]}
+              onPress={() => setFollowingView('people')}
             >
-              Grid
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.modeBtn,
-              viewMode === 'feed' && styles.modeBtnActive,
-            ]}
-            onPress={() => setViewMode('feed')}
-          >
-            <Text
+              <Text
+                style={[
+                  styles.modeText,
+                  followingView === 'people' && styles.modeTextActive,
+                ]}
+              >
+                People I Follow
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={[
-                styles.modeText,
-                viewMode === 'feed' && styles.modeTextActive,
+                styles.modeBtn,
+                followingView === 'my-feed' && styles.modeBtnActive,
               ]}
+              onPress={() => setFollowingView('my-feed')}
             >
-              Feed
-            </Text>
-          </TouchableOpacity>
-        </View>
+              <Text
+                style={[
+                  styles.modeText,
+                  followingView === 'my-feed' && styles.modeTextActive,
+                ]}
+              >
+                My Feed
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
         <ScrollView
           style={styles.scrollArea}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {filteredPosts.length === 0 ? (
+          {timelineTab === 'all' ? (
+            renderFeed()
+          ) : followingView === 'people' ? (
+            followedUsers.length === 0 ? (
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyTitle}>You are not following anyone</Text>
+                <Text style={styles.emptySub}>
+                  Follow creators from All tab to build your following list.
+                </Text>
+              </View>
+            ) : (
+              renderPeopleIFollow()
+            )
+          ) : followingPosts.length === 0 ? (
             <View style={styles.emptyBox}>
-              <Text style={styles.emptyTitle}>No posts here yet</Text>
+              <Text style={styles.emptyTitle}>No posts in My Feed</Text>
               <Text style={styles.emptySub}>
-                Follow creators to see posts in your Following timeline.
+                Your feed will show posts only from people you follow.
               </Text>
             </View>
-          ) : viewMode === 'grid' ? (
-            renderGrid()
           ) : (
-            renderFeed()
+            <View style={styles.feedWrap}>{followingPosts.map(post => {
+              const user = userMap[post.userId];
+              return (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  user={user}
+                  isFollowing={followedIds.includes(user.id)}
+                  isLiked={likedPostIds.includes(post.id)}
+                  commentCount={(commentsByPost[post.id] || []).length}
+                  commentPreview={(commentsByPost[post.id] || []).slice(-1)[0]}
+                  onToggleLike={toggleLike}
+                  onToggleFollow={toggleFollow}
+                  onOpenProfile={openProfile}
+                  onOpenComments={openComments}
+                />
+              );
+            })}</View>
           )}
         </ScrollView>
 
@@ -799,6 +836,59 @@ const styles = StyleSheet.create({
   },
   feedWrap: {
     gap: 10,
+  },
+  followingPeopleWrap: {
+    gap: 10,
+  },
+  followingUserRow: {
+    backgroundColor: '#fbf7f0',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#b49e84',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  followingUserInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    paddingRight: 8,
+  },
+  followingUserTextWrap: {
+    flex: 1,
+  },
+  followingUserName: {
+    color: '#4e423c',
+    fontWeight: '800',
+    fontSize: 14,
+    fontFamily: 'serif',
+  },
+  followingUserHandle: {
+    color: '#6e6258',
+    marginTop: 2,
+    fontSize: 12,
+    fontFamily: 'serif',
+  },
+  unfollowBtn: {
+    backgroundColor: '#e8f2ed',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#d3e3dc',
+  },
+  unfollowBtnText: {
+    color: '#64594e',
+    fontWeight: '700',
+    fontSize: 12,
+    fontFamily: 'serif',
   },
   postCard: {
     backgroundColor: '#fbf7f0',

@@ -9,20 +9,28 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenBackButton from '../components/ScreenBackButton';
+import { formatAuthError, sendResetForEmail } from '../services/firebaseAuth';
 
 export default function ForgotPasswordPage({ onNavigate }) {
   const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSendReset() {
+  async function handleResetPassword() {
     if (!email.trim()) {
-      Alert.alert('Email required', 'Please enter your email to continue.');
+      Alert.alert('Missing email', 'Please enter your email address.');
       return;
     }
 
-    Alert.alert(
-      'Reset Link Sent',
-      'If this email exists, a password reset link will be sent shortly.',
-    );
+    setIsSubmitting(true);
+    try {
+      await sendResetForEmail(email);
+      Alert.alert('Email sent', 'Check your inbox for password reset instructions.');
+      onNavigate('login');
+    } catch (error) {
+      Alert.alert('Reset failed', formatAuthError(error));
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -46,8 +54,11 @@ export default function ForgotPasswordPage({ onNavigate }) {
           autoCapitalize="none"
         />
 
-        <TouchableOpacity style={styles.sendButton} onPress={handleSendReset}>
-          <Text style={styles.sendButtonText}>Send Reset Link</Text>
+        <TouchableOpacity
+          style={styles.sendButton}
+          disabled={isSubmitting}
+          onPress={handleResetPassword}>
+          <Text style={styles.sendButtonText}>{isSubmitting ? 'Sending...' : 'Reset Password'}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

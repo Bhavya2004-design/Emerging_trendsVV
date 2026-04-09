@@ -5,7 +5,7 @@
  * @format
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, StatusBar, StyleSheet, View } from 'react-native';
 import {
   SafeAreaProvider,
@@ -23,6 +23,7 @@ import HomePage from './src/pages/HomePage';
 import TripPage from './src/pages/Trip';
 import SplashScreen from './src/components/SplashScreen';
 import { mockVaultItems } from './src/data/vaultMockData';
+import { subscribeAuthState } from './src/services/firebaseAuth';
 import { saveOutfitToDatabase } from './src/services/outfitStorage';
 
 type ScanOutfitPayload = {
@@ -52,10 +53,32 @@ function App() {
     | 'added-to-vault'
     | 'trip'
   >('splash');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUserName, setCurrentUserName] = useState('');
+  const [currentUserId, setCurrentUserId] = useState('');
   const [vaultItems, setVaultItems] = useState(mockVaultItems);
   const [lastAddedSection, setLastAddedSection] = useState(
     'your selected section',
   );
+
+  useEffect(() => {
+    const unsubscribe = subscribeAuthState((user: any) => {
+      const nextIsAuthenticated = Boolean(user);
+      setIsAuthenticated(nextIsAuthenticated);
+      const fallbackName = user?.email ? String(user.email).split('@')[0] : '';
+      setCurrentUserName(user?.displayName?.trim() || fallbackName);
+      setCurrentUserId(user?.uid || '');
+
+      setScreen((current) => {
+        if (current === 'splash') {
+          return current;
+        }
+        return nextIsAuthenticated ? 'home' : 'login';
+      });
+    });
+
+    return unsubscribe;
+  }, []);
 
   function handleBottomTabPress(tabKey: string) {
     if (
@@ -115,7 +138,7 @@ function App() {
       <View style={styles.container}>
         {screen === 'splash' ? (
           <SplashScreen
-            onFinish={() => setScreen('login')}
+            onFinish={() => setScreen(isAuthenticated ? 'home' : 'login')}
             logoSource={require('./src/pages/VV_logo.png')}
           />
         ) : null}
@@ -126,6 +149,7 @@ function App() {
         ) : null}
         {screen === 'home' ? (
           <HomePage
+            userName={currentUserName}
             selectedBottomTab="home"
             onNavigate={handleBottomTabPress}
             onLogout={handleLogout}
@@ -170,6 +194,9 @@ function App() {
         ) : null}
         {screen === 'profile' ? (
           <ProfilePage
+            userId={currentUserId}
+            userName={currentUserName}
+            onUserNameChange={setCurrentUserName}
             selectedBottomTab="profile"
             onNavigate={handleBottomTabPress}
             onLogout={handleLogout}

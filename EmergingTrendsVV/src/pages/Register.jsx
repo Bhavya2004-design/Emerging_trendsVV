@@ -11,13 +11,43 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenBackButton from '../components/ScreenBackButton';
+import { formatAuthError, registerWithEmail } from '../services/firebaseAuth';
 
-export default function RegisterPage({ onNavigate }) {
+export default function RegisterPage({ onNavigate, onAuthSuccess }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleRegister() {
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password || !confirmPassword) {
+      Alert.alert('Missing details', 'Please complete all fields.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Password mismatch', 'Password and confirm password must match.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const displayName = `${firstName.trim()} ${lastName.trim()}`.trim();
+      await registerWithEmail(email, password, displayName);
+      Alert.alert('Account created', 'Your account has been created successfully.');
+      if (onAuthSuccess) {
+        onAuthSuccess();
+      } else {
+        onNavigate('home');
+      }
+    } catch (error) {
+      Alert.alert('Registration failed', formatAuthError(error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
@@ -84,13 +114,9 @@ export default function RegisterPage({ onNavigate }) {
 
           <TouchableOpacity
             style={styles.registerButton}
-            onPress={() =>
-              Alert.alert(
-                'Registration not ready',
-                'Backend setup is still pending. Please use Login or Continue as Guest for now.',
-              )
-            }>
-            <Text style={styles.registerButtonText}>Register</Text>
+            disabled={isSubmitting}
+            onPress={handleRegister}>
+            <Text style={styles.registerButtonText}>{isSubmitting ? 'Creating...' : 'Register'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
