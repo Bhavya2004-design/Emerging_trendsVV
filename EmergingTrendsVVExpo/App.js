@@ -72,6 +72,9 @@ export default function App() {
           try {
             await logoutUser();
           } catch {
+            // e.g. Firebase misconfigured — still end the session in the app
+          } finally {
+            // Guests never sign in, so auth state may not change; always go to login
             setScreen('login');
           }
         },
@@ -178,6 +181,7 @@ export default function App() {
             onUserNameChange={setCurrentUserName}
             selectedBottomTab="profile"
             onNavigate={handleBottomTabPress}
+            onLoggedOut={() => setScreen('login')}
           />
         ) : null}
       </View>
