@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import PasswordField from '../components/PasswordField';
 import ScreenBackButton from '../components/ScreenBackButton';
 import { formatAuthError, registerWithEmail } from '../services/firebaseAuth';
 import {
@@ -131,26 +132,18 @@ export default function RegisterPage({ onNavigate, onAuthSuccess }) {
 
           <Text style={styles.fieldHint}>{PASSWORD_REQUIREMENTS_HINT}</Text>
 
-          <TextInput
-            style={styles.input}
+          <PasswordField
             placeholder="Enter password"
-            placeholderTextColor="#4A4A4A"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
             maxLength={INPUT_LIMITS.password}
-            autoCorrect={false}
           />
 
-          <TextInput
-            style={styles.input}
+          <PasswordField
             placeholder="Confirm password"
-            placeholderTextColor="#4A4A4A"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            secureTextEntry
             maxLength={INPUT_LIMITS.password}
-            autoCorrect={false}
           />
 
           <TouchableOpacity

@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import PasswordField from '../components/PasswordField';
 import ScreenBackButton from '../components/ScreenBackButton';
 import { formatAuthError, loginWithEmail } from '../services/firebaseAuth';
 import { INPUT_LIMITS, validateEmailFormat } from '../utils/inputValidation';
@@ -81,15 +82,11 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
           autoCorrect={false}
         />
 
-        <TextInput
-          style={styles.input}
+        <PasswordField
           placeholder="Enter your password"
-          placeholderTextColor="#4A4A4A"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
           maxLength={INPUT_LIMITS.password}
-          autoCorrect={false}
         />
 
         <TouchableOpacity style={styles.forgotWrap} onPress={() => onNavigate('forgot-password')}>
