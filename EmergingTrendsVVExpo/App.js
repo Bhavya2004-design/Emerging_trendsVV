@@ -16,7 +16,7 @@ import HomePage from './src/pages/HomePage';
 import TripPage from './src/pages/Trip';
 import SplashScreen from './src/components/SplashScreen';
 import { mockVaultItems } from './src/data/vaultMockData';
-import { subscribeAuthState } from './src/services/firebaseAuth';
+import { logoutUser, subscribeAuthState } from './src/services/firebaseAuth';
 import { saveOutfitToDatabase } from './src/services/outfitStorage';
 
 export default function App() {
@@ -60,6 +60,23 @@ export default function App() {
     }
 
     Alert.alert('Coming soon', `${tabKey[0].toUpperCase()}${tabKey.slice(1)} page is not built yet.`);
+  }
+
+  function handleLogout() {
+    Alert.alert('Logout', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await logoutUser();
+          } catch {
+            setScreen('login');
+          }
+        },
+      },
+    ]);
   }
 
   async function handleAddOutfit(outfitPayload) {
@@ -116,6 +133,7 @@ export default function App() {
             userName={currentUserName}
             selectedBottomTab="home"
             onNavigate={handleBottomTabPress}
+            onLogout={handleLogout}
           />
         ) : null}
         {screen === 'vault' ? (

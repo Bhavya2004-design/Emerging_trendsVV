@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -13,6 +13,7 @@ const quickActions = [
   { key: 'scan', label: 'Scan Outfit', icon: '📷' },
   { key: 'vault', label: 'My Vault', icon: '🧥' },
   { key: 'trip', label: 'Pack for Trip', icon: '🧳' },
+  { key: 'my-trip', label: 'My Trip', icon: '✈️' },
 ];
 
 const posts = [
@@ -32,22 +33,60 @@ const posts = [
   },
 ];
 
-function OutfitPreview({ compact = false }) {
-  return (
-    <View style={compact ? styles.previewImageCompact : styles.previewImage}>
-      <View style={compact ? styles.previewJacketCompact : styles.previewJacket} />
-      <View style={compact ? styles.previewDenimCompact : styles.previewDenim} />
-    </View>
-  );
-}
-
-export default function HomePage({ onNavigate, selectedBottomTab = 'home', userName = '' }) {
+export default function HomePage({
+  onNavigate,
+  onLogout,
+  selectedBottomTab = 'home',
+  userName = '',
+}) {
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const displayName = userName && userName.trim() ? userName.trim() : 'Maria';
   const avatarInitial = displayName.charAt(0).toUpperCase();
+
+  function handleProfileMenuAction(target) {
+    setIsProfileMenuOpen(false);
+    if (target) {
+      onNavigate(target);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
+        {isProfileMenuOpen ? (
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => setIsProfileMenuOpen(false)}
+            style={styles.menuBackdrop}
+          />
+        ) : null}
+        {isProfileMenuOpen ? (
+          <View style={styles.profileMenu}>
+            <TouchableOpacity
+              style={styles.profileMenuItem}
+              onPress={() => handleProfileMenuAction('profile')}
+            >
+              <Text style={styles.profileMenuItemText}>View Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.profileMenuItem}
+              onPress={() => handleProfileMenuAction('vault')}
+            >
+              <Text style={styles.profileMenuItemText}>My Vault</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.profileMenuItem}
+              onPress={() => {
+                setIsProfileMenuOpen(false);
+                if (onLogout) {
+                  onLogout();
+                }
+              }}
+            >
+              <Text style={styles.profileMenuItemText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
         <ScrollView
           style={styles.scrollArea}
           contentContainerStyle={styles.scrollContent}
@@ -59,23 +98,17 @@ export default function HomePage({ onNavigate, selectedBottomTab = 'home', userN
               <Text style={styles.userName}>{displayName}</Text>
               <Text style={styles.subtitle}>Ready to style today?</Text>
             </View>
-            <View style={styles.profileAvatar}>
+            <TouchableOpacity
+              style={styles.profileAvatar}
+              activeOpacity={0.85}
+              onPress={() => setIsProfileMenuOpen((open) => !open)}
+            >
               <Text style={styles.profileAvatarText}>{avatarInitial}</Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.suggestionCard}>
             <Text style={styles.suggestionTitle}>AI Outfit Suggestion</Text>
-            <View style={styles.suggestionTopRow}>
-              <Text
-                style={styles.suggestionText}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                Beige jacket + White Shirt + Denim
-              </Text>
-              <OutfitPreview compact />
-            </View>
             <TouchableOpacity style={styles.viewButton} onPress={() => onNavigate('vault')}>
               <Text style={styles.viewButtonText}>View Outfit</Text>
             </TouchableOpacity>
@@ -87,7 +120,12 @@ export default function HomePage({ onNavigate, selectedBottomTab = 'home', userN
               <TouchableOpacity
                 key={action.key}
                 style={styles.quickActionCard}
-                onPress={() => onNavigate(action.key)}
+                onPress={() => {
+                  if (action.key === 'my-trip') {
+                    return;
+                  }
+                  onNavigate(action.key);
+                }}
               >
                 <Text style={styles.quickActionIcon} allowFontScaling={false}>
                   {action.icon}
@@ -141,6 +179,38 @@ const styles = StyleSheet.create({
   },
   scrollArea: {
     flex: 1,
+  },
+  menuBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 20,
+  },
+  profileMenu: {
+    position: 'absolute',
+    top: 84,
+    right: 22,
+    width: 168,
+    backgroundColor: '#fbf7f0',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#ddd4c8',
+    zIndex: 30,
+    shadowColor: '#1a1814',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  profileMenuItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ece2d5',
+  },
+  profileMenuItemText: {
+    color: '#3b332d',
+    fontFamily: 'serif',
+    fontSize: 15,
+    fontWeight: '600',
   },
   scrollContent: {
     paddingHorizontal: 14,
@@ -209,23 +279,9 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
     marginBottom: 12,
   },
-  suggestionTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    minHeight: 72,
-  },
-  suggestionText: {
-    flex: 1,
-    minWidth: 0,
-    color: '#2b2b2b',
-    fontSize: 13,
-    lineHeight: 18,
-    fontFamily: 'serif',
-  },
   viewButton: {
     alignSelf: 'flex-start',
-    marginTop: 16,
+    marginTop: 0,
     backgroundColor: '#7faf9b',
     borderRadius: 999,
     paddingVertical: 12,
@@ -238,51 +294,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'serif',
     fontWeight: '600',
-  },
-  previewImage: {
-    width: 134,
-    height: 134,
-    borderRadius: 10,
-    backgroundColor: '#ece4d8',
-    padding: 10,
-    justifyContent: 'space-between',
-  },
-  previewImageCompact: {
-    width: 72,
-    height: 72,
-    borderRadius: 10,
-    backgroundColor: '#ece4d8',
-    padding: 8,
-    justifyContent: 'space-between',
-    flexShrink: 0,
-  },
-  previewJacket: {
-    width: '92%',
-    height: 56,
-    borderRadius: 8,
-    backgroundColor: '#d8c9b5',
-    alignSelf: 'center',
-  },
-  previewJacketCompact: {
-    width: '90%',
-    height: 30,
-    borderRadius: 5,
-    backgroundColor: '#d8c9b5',
-    alignSelf: 'center',
-  },
-  previewDenim: {
-    width: '58%',
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: '#a7bfd1',
-    alignSelf: 'flex-end',
-  },
-  previewDenimCompact: {
-    width: '55%',
-    height: 24,
-    borderRadius: 5,
-    backgroundColor: '#a7bfd1',
-    alignSelf: 'flex-end',
   },
   sectionTitle: {
     color: '#2b2b2b',

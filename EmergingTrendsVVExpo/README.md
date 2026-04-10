@@ -7,7 +7,7 @@ This is the Expo version of your app for easy QR testing on phone and emulator.
 From this folder:
 
 ```bash
-cd "c:/Users/manra/OneDrive/Desktop/4thsem/Emerging app/Emerging_trendsVV/EmergingTrendsVVExpo"
+cd "c:/Users/Emerging_trendsVV/EmergingTrendsVVExpo"
 npm.cmd install
 ```
 
