@@ -23,7 +23,7 @@ import HomePage from './src/pages/HomePage';
 import TripPage from './src/pages/Trip';
 import SplashScreen from './src/components/SplashScreen';
 import { mockVaultItems } from './src/data/vaultMockData';
-import { subscribeAuthState } from './src/services/firebaseAuth';
+import { logoutUser, subscribeAuthState } from './src/services/firebaseAuth';
 import { saveOutfitToDatabase } from './src/services/outfitStorage';
 
 type ScanOutfitPayload = {
@@ -105,7 +105,15 @@ function App() {
       {
         text: 'Logout',
         style: 'destructive',
-        onPress: () => setScreen('login'),
+        onPress: async () => {
+          try {
+            await logoutUser();
+          } catch {
+            // Guest or misconfigured Firebase — still leave session
+          } finally {
+            setScreen('login');
+          }
+        },
       },
     ]);
   }
@@ -142,8 +150,18 @@ function App() {
             logoSource={require('./src/pages/VV_logo.png')}
           />
         ) : null}
-        {screen === 'login' ? <LoginPage onNavigate={setScreen} /> : null}
-        {screen === 'register' ? <RegisterPage onNavigate={setScreen} /> : null}
+        {screen === 'login' ? (
+          <LoginPage
+            onNavigate={setScreen}
+            onAuthSuccess={() => setScreen('home')}
+          />
+        ) : null}
+        {screen === 'register' ? (
+          <RegisterPage
+            onNavigate={setScreen}
+            onAuthSuccess={() => setScreen('home')}
+          />
+        ) : null}
         {screen === 'forgot-password' ? (
           <ForgotPasswordPage onNavigate={setScreen} />
         ) : null}
@@ -200,6 +218,7 @@ function App() {
             selectedBottomTab="profile"
             onNavigate={handleBottomTabPress}
             onLogout={handleLogout}
+            onLoggedOut={() => setScreen('login')}
           />
         ) : null}
       </View>

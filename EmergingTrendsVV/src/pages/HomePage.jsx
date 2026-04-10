@@ -37,8 +37,11 @@ export default function HomePage({
   onNavigate,
   onLogout,
   selectedBottomTab = 'home',
+  userName = '',
 }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const displayName = userName && userName.trim() ? userName.trim() : 'Maria';
+  const avatarInitial = displayName.charAt(0).toUpperCase();
 
   function handleProfileMenuAction(target) {
     setIsProfileMenuOpen(false);
@@ -80,7 +83,7 @@ export default function HomePage({
                 }
               }}
             >
-              <Text style={styles.profileMenuItemText}>Logout</Text>https://github.com/Bhavya2004-design/Emerging_trendsVV/pull/9/conflict?name=EmergingTrendsVV%252Fsrc%252Fpages%252FHomePage.jsx&ancestor_oid=63e6d7f51f4f1856b8556a6f14adb721028ac3c5&base_oid=5be54f79325c242a1a42753557ab96de90e485dc&head_oid=28d57e6908fba5cb2be32a94f6e373c0c84a5cfd
+              <Text style={styles.profileMenuItemText}>Logout</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -100,7 +103,7 @@ export default function HomePage({
               activeOpacity={0.85}
               onPress={() => setIsProfileMenuOpen((open) => !open)}
             >
-              <Text style={styles.profileAvatarText}>M</Text>
+              <Text style={styles.profileAvatarText}>{avatarInitial}</Text>
             </TouchableOpacity>
           </View>
 

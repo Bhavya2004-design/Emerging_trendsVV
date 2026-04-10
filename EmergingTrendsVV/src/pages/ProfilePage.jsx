@@ -226,6 +226,7 @@ function SavedOutfitCard({ item, onToggleSave }) {
 export default function ProfilePage({
   onNavigate,
   onLogout,
+  onLoggedOut,
   selectedBottomTab = 'profile',
   userName = '',
   userId = '',
@@ -726,6 +727,10 @@ export default function ProfilePage({
             await logoutUser();
           } catch (error) {
             Alert.alert('Logout failed', 'Please try again.');
+          } finally {
+            if (onLoggedOut) {
+              onLoggedOut();
+            }
           }
         },
       },
