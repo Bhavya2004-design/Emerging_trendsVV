@@ -80,7 +80,9 @@ export function formatAuthError(error) {
   if (code.includes('operation-not-allowed')) return 'Email/Password sign-in is disabled in Firebase. Enable it in Authentication > Sign-in method.';
   if (code.includes('network-request-failed')) return 'Network error. Check emulator internet connection and try again.';
   if (code.includes('missing-password')) return 'Please enter your password.';
-  if (code.includes('weak-password')) return 'Password must be at least 6 characters.';
+  if (code.includes('weak-password')) {
+    return 'Password is too weak for Firebase. Use at least 12 characters with upper and lowercase letters, a number, and a special character.';
+  }
   if (code.includes('email-already-in-use')) return 'This email is already registered.';
   if (code.includes('invalid-credential')) return 'Incorrect email or password.';
   if (code.includes('user-not-found')) return 'No account found with this email.';

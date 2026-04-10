@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenBackButton from '../components/ScreenBackButton';
 import { formatAuthError, loginWithEmail } from '../services/firebaseAuth';
+import { INPUT_LIMITS, validateEmailFormat } from '../utils/inputValidation';
 
 export default function LoginPage({ onNavigate, onAuthSuccess }) {
   const [email, setEmail] = useState('');
@@ -20,6 +21,20 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
   async function handleLogin() {
     if (!email.trim() || !password) {
       Alert.alert('Missing details', 'Please enter both email and password.');
+      return;
+    }
+
+    const emailError = validateEmailFormat(email);
+    if (emailError) {
+      Alert.alert('Invalid email', emailError);
+      return;
+    }
+
+    if (password.length > INPUT_LIMITS.password) {
+      Alert.alert(
+        'Password too long',
+        `Password must be at most ${INPUT_LIMITS.password} characters.`,
+      );
       return;
     }
 
@@ -62,6 +77,8 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          maxLength={INPUT_LIMITS.email}
+          autoCorrect={false}
         />
 
         <TextInput
@@ -71,6 +88,8 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
           value={password}
           onChangeText={setPassword}
           secureTextEntry
+          maxLength={INPUT_LIMITS.password}
+          autoCorrect={false}
         />
 
         <TouchableOpacity style={styles.forgotWrap} onPress={() => onNavigate('forgot-password')}>

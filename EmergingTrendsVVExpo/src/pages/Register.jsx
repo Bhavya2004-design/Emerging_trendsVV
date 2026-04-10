@@ -12,6 +12,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenBackButton from '../components/ScreenBackButton';
 import { formatAuthError, registerWithEmail } from '../services/firebaseAuth';
+import {
+  getPasswordPolicyErrors,
+  INPUT_LIMITS,
+  PASSWORD_REQUIREMENTS_HINT,
+  validateEmailFormat,
+} from '../utils/inputValidation';
 
 export default function RegisterPage({ onNavigate, onAuthSuccess }) {
   const [firstName, setFirstName] = useState('');
@@ -27,8 +33,31 @@ export default function RegisterPage({ onNavigate, onAuthSuccess }) {
       return;
     }
 
+    if (firstName.trim().length > INPUT_LIMITS.name || lastName.trim().length > INPUT_LIMITS.name) {
+      Alert.alert(
+        'Name too long',
+        `First and last name must be at most ${INPUT_LIMITS.name} characters each.`,
+      );
+      return;
+    }
+
+    const emailError = validateEmailFormat(email);
+    if (emailError) {
+      Alert.alert('Invalid email', emailError);
+      return;
+    }
+
+    const passwordErrors = getPasswordPolicyErrors(password);
+    if (passwordErrors.length > 0) {
+      Alert.alert('Password requirements', passwordErrors.join('\n\n'));
+      return;
+    }
+
     if (password !== confirmPassword) {
-      Alert.alert('Password mismatch', 'Password and confirm password must match.');
+      Alert.alert(
+        'Password mismatch',
+        'Password and confirm password must match exactly.',
+      );
       return;
     }
 
@@ -74,6 +103,8 @@ export default function RegisterPage({ onNavigate, onAuthSuccess }) {
             placeholderTextColor="#4A4A4A"
             value={firstName}
             onChangeText={setFirstName}
+            maxLength={INPUT_LIMITS.name}
+            autoCorrect={false}
           />
 
           <TextInput
@@ -82,6 +113,8 @@ export default function RegisterPage({ onNavigate, onAuthSuccess }) {
             placeholderTextColor="#4A4A4A"
             value={lastName}
             onChangeText={setLastName}
+            maxLength={INPUT_LIMITS.name}
+            autoCorrect={false}
           />
 
           <TextInput
@@ -92,7 +125,11 @@ export default function RegisterPage({ onNavigate, onAuthSuccess }) {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            maxLength={INPUT_LIMITS.email}
+            autoCorrect={false}
           />
+
+          <Text style={styles.fieldHint}>{PASSWORD_REQUIREMENTS_HINT}</Text>
 
           <TextInput
             style={styles.input}
@@ -101,6 +138,8 @@ export default function RegisterPage({ onNavigate, onAuthSuccess }) {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            maxLength={INPUT_LIMITS.password}
+            autoCorrect={false}
           />
 
           <TextInput
@@ -110,6 +149,8 @@ export default function RegisterPage({ onNavigate, onAuthSuccess }) {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
+            maxLength={INPUT_LIMITS.password}
+            autoCorrect={false}
           />
 
           <TouchableOpacity
@@ -167,6 +208,14 @@ const styles = StyleSheet.create({
     marginBottom: 28,
     fontFamily: 'serif',
     fontWeight: '600',
+  },
+  fieldHint: {
+    color: '#5c534c',
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: 'serif',
+    marginBottom: 10,
+    marginTop: -4,
   },
   input: {
     height: 52,

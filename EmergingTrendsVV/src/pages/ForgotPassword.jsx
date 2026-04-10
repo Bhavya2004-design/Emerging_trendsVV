@@ -10,14 +10,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenBackButton from '../components/ScreenBackButton';
 import { formatAuthError, sendResetForEmail } from '../services/firebaseAuth';
+import { INPUT_LIMITS, validateEmailFormat } from '../utils/inputValidation';
 
 export default function ForgotPasswordPage({ onNavigate }) {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleResetPassword() {
-    if (!email.trim()) {
-      Alert.alert('Missing email', 'Please enter your email address.');
+    const emailError = validateEmailFormat(email);
+    if (emailError) {
+      Alert.alert('Invalid email', emailError);
       return;
     }
 
@@ -52,6 +54,8 @@ export default function ForgotPasswordPage({ onNavigate }) {
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          maxLength={INPUT_LIMITS.email}
+          autoCorrect={false}
         />
 
         <TouchableOpacity
