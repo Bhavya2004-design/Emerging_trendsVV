@@ -166,6 +166,7 @@ export default function VaultPage({
               style={styles.searchInput}
               returnKeyType="search"
               clearButtonMode="while-editing"
+              maxLength={14}
             />
             {searchQuery.length > 0 && (
               <Pressable hitSlop={8} onPress={() => setSearchQuery('')}>
