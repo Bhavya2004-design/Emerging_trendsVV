@@ -21,6 +21,9 @@ import AddedToVaultPage from './src/pages/AddedToVaultPage';
 import ProfilePage from './src/pages/ProfilePage';
 import HomePage from './src/pages/HomePage';
 import TripPage from './src/pages/Trip';
+import TripOutfitPickerPage from './src/pages/TripOutfitPickerPage';
+import TripAiSuggestionsPage from './src/pages/TripAiSuggestionsPage';
+import PackingProgressPage from './src/pages/PackingProgressPage';
 import SplashScreen from './src/components/SplashScreen';
 import { mockVaultItems } from './src/data/vaultMockData';
 import { logoutUser, subscribeAuthState } from './src/services/firebaseAuth';
@@ -39,6 +42,13 @@ type ScanOutfitPayload = {
   occasion?: string;
 };
 
+type TripPlan = {
+  destination: string;
+  tripType: 'Business' | 'Personal';
+  startDate: string | null;
+  endDate: string | null;
+};
+
 function App() {
   const [screen, setScreen] = useState<
     | 'splash'
@@ -52,6 +62,9 @@ function App() {
     | 'profile'
     | 'added-to-vault'
     | 'trip'
+    | 'trip-outfit-picker'
+    | 'trip-ai-suggestions'
+    | 'packing-progress'
   >('splash');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUserName, setCurrentUserName] = useState('');
@@ -60,6 +73,15 @@ function App() {
   const [lastAddedSection, setLastAddedSection] = useState(
     'your selected section',
   );
+
+  const [selectedTripOutfitIds, setSelectedTripOutfitIds] = useState<string[]>([]);
+  const [selectedTripOutfits, setSelectedTripOutfits] = useState<any[]>([]);
+  const [tripPlan, setTripPlan] = useState<TripPlan>({
+    destination: 'Paris, France',
+    tripType: 'Business',
+    startDate: null,
+    endDate: null,
+  });
 
   useEffect(() => {
     const unsubscribe = subscribeAuthState((user: any) => {
@@ -197,8 +219,42 @@ function App() {
           <TripPage
             selectedBottomTab="home"
             onNavigate={handleBottomTabPress}
-            initialTripPlan={undefined}
-            onGeneratePacking={() => {}}
+            initialTripPlan={tripPlan}
+            onGeneratePacking={nextTripPlan => {
+              setTripPlan(nextTripPlan);
+              setScreen('trip-outfit-picker');
+            }}
+          />
+        ) : null}
+        {screen === 'trip-outfit-picker' ? (
+          <TripOutfitPickerPage
+            items={vaultItems}
+            onNavigate={handleBottomTabPress}
+            onOpenAiSuggestions={() => setScreen('trip-ai-suggestions')}
+            onContinuePacking={selectedIds => {
+              const selectedIdsList = Object.keys(selectedIds).filter(id => selectedIds[id]);
+              setSelectedTripOutfitIds(selectedIdsList);
+              setSelectedTripOutfits(vaultItems.filter(item => selectedIdsList.includes(item.id)));
+              setScreen('packing-progress');
+            }}
+          />
+        ) : null}
+        {screen === 'trip-ai-suggestions' ? (
+          <TripAiSuggestionsPage
+            tripPlan={tripPlan}
+            onBack={() => setScreen('trip-outfit-picker')}
+            onUseSuggestions={suggestedOutfits => {
+              setSelectedTripOutfitIds([]);
+              setSelectedTripOutfits(suggestedOutfits);
+              setScreen('packing-progress');
+            }}
+          />
+        ) : null}
+        {screen === 'packing-progress' ? (
+          <PackingProgressPage
+            onNavigate={handleBottomTabPress}
+            selectedOutfits={selectedTripOutfits}
+            onTripReady={() => setScreen('home')}
           />
         ) : null}
         {screen === 'added-to-vault' ? (

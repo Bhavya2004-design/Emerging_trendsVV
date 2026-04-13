@@ -21,14 +21,35 @@ const INITIAL_CHECKLIST = [
   { id: 'meds', label: 'Medicines', packed: true },
 ];
 
-const HARD_CODED_PROGRESS = 67;
-
 export default function PackingProgressPage({ onNavigate, onTripReady, selectedOutfits = [] }) {
   const [checklist, setChecklist] = useState(INITIAL_CHECKLIST);
   const packedCount = useMemo(
     () => checklist.filter(item => item.packed).length,
     [checklist],
   );
+  const progressPercentage = useMemo(() => {
+    if (checklist.length === 0) {
+      return 0;
+    }
+
+    return Math.round((packedCount / checklist.length) * 100);
+  }, [packedCount, checklist.length]);
+  const progressHint = useMemo(() => {
+    if (progressPercentage === 100) {
+      return 'Everything is packed. You are ready to go.';
+    }
+
+    if (progressPercentage >= 75) {
+      return 'Almost there. Just a few final items left.';
+    }
+
+    if (progressPercentage >= 40) {
+      return 'Good progress so far. Keep checking items off.';
+    }
+
+    return 'Start with the essentials so your trip prep stays easy.';
+  }, [progressPercentage]);
+  const tripStatusLabel = progressPercentage === 100 ? 'Ready' : progressPercentage >= 60 ? 'On Track' : 'In Progress';
 
   function toggleChecklistItem(itemId) {
     setChecklist(current =>
@@ -48,7 +69,7 @@ export default function PackingProgressPage({ onNavigate, onTripReady, selectedO
             <Text style={styles.subtitle}>Final checklist before your trip</Text>
           </View>
           <View style={styles.headerBadge}>
-            <Text style={styles.headerBadgeText}>On Track</Text>
+            <Text style={styles.headerBadgeText}>{tripStatusLabel}</Text>
           </View>
         </View>
 
@@ -58,11 +79,11 @@ export default function PackingProgressPage({ onNavigate, onTripReady, selectedO
               <Text style={styles.progressTitle}>Packing Completion</Text>
               <Text style={styles.progressMiniLabel}>{packedCount}/{checklist.length} packed</Text>
             </View>
-            <Text style={styles.progressValue}>{HARD_CODED_PROGRESS}%</Text>
+            <Text style={styles.progressValue}>{progressPercentage}%</Text>
             <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${HARD_CODED_PROGRESS}%` }]} />
+              <View style={[styles.progressFill, { width: `${progressPercentage}%` }]} />
             </View>
-            <Text style={styles.progressHint}>You are almost ready. Just a few items left.</Text>
+            <Text style={styles.progressHint}>{progressHint}</Text>
           </View>
 
           <View style={styles.selectedCard}>
@@ -86,7 +107,7 @@ export default function PackingProgressPage({ onNavigate, onTripReady, selectedO
                       <View
                         style={[
                           styles.selectedThumb,
-                          { backgroundColor: '#dfe7e1' },
+                          { backgroundColor: '#ece2d6' },
                           styles.selectedThumbPlaceholder,
                         ]}
                       >
@@ -118,7 +139,9 @@ export default function PackingProgressPage({ onNavigate, onTripReady, selectedO
                 style={[styles.checkRow, item.packed && styles.checkRowPacked]}
                 onPress={() => toggleChecklistItem(item.id)}
               >
-                <Text style={styles.checkIcon}>{item.packed ? '✅' : '⬜'}</Text>
+                <View style={[styles.checkIconBox, item.packed && styles.checkIconBoxPacked]}>
+                  {item.packed ? <Text style={styles.checkIconMark}>✓</Text> : null}
+                </View>
                 <Text style={styles.checkText}>{item.label}</Text>
                 <Text style={[styles.checkStatus, item.packed && styles.checkStatusPacked]}>
                   {item.packed ? 'Packed' : 'Pending'}
@@ -319,15 +342,15 @@ const styles = StyleSheet.create({
   },
   headerTextWrap: { flex: 1 },
   headerBadge: {
-    backgroundColor: '#e5f2eb',
+    backgroundColor: '#efe6da',
     borderWidth: 1,
-    borderColor: '#cfe3d8',
+    borderColor: '#dfd0bb',
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
     marginLeft: 8,
   },
-  headerBadgeText: { color: '#4f7f6f', fontSize: 11, fontWeight: '700' },
+  headerBadgeText: { color: '#8f7458', fontSize: 11, fontWeight: '700' },
   title: { fontSize: 22, fontWeight: '700', color: '#2c3e50' },
   subtitle: { marginTop: 2, fontSize: 13, color: '#808b86' },
   scrollContent: { padding: 20, paddingTop: 8, paddingBottom: 130 },
@@ -337,9 +360,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#e5ebe7',
+    borderColor: '#e4ddd2',
     marginBottom: 14,
-    shadowColor: '#21342f',
+    shadowColor: '#2c3e50',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 10,
@@ -350,31 +373,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  progressTitle: { fontSize: 14, fontWeight: '700', color: '#57635e' },
-  progressMiniLabel: { fontSize: 12, color: '#6c7c75', fontWeight: '600' },
-  progressValue: { fontSize: 36, fontWeight: '800', color: '#6d9f8d', marginTop: 8 },
+  progressTitle: { fontSize: 14, fontWeight: '700', color: '#5c5247' },
+  progressMiniLabel: { fontSize: 12, color: '#8a7d70', fontWeight: '600' },
+  progressValue: { fontSize: 36, fontWeight: '800', color: '#2c3e50', marginTop: 8 },
   progressTrack: {
     marginTop: 10,
     height: 10,
     borderRadius: 999,
-    backgroundColor: '#e8efea',
+    backgroundColor: '#ece5da',
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#6d9f8d',
+    backgroundColor: '#cfa97f',
     borderRadius: 999,
   },
-  progressHint: { marginTop: 10, color: '#73807a', fontSize: 12 },
+  progressHint: { marginTop: 10, color: '#8a7d70', fontSize: 12 },
 
   selectedCard: {
     backgroundColor: '#fff',
     borderRadius: 18,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#e5ebe7',
+    borderColor: '#e4ddd2',
     marginBottom: 14,
-    shadowColor: '#21342f',
+    shadowColor: '#2c3e50',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 9,
@@ -387,13 +410,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   countPill: {
-    backgroundColor: '#e5f2eb',
+    backgroundColor: '#f1e8dc',
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  countPillText: { color: '#4f7f6f', fontSize: 12, fontWeight: '700' },
-  emptySelectedText: { color: '#73807a', fontSize: 13 },
+  countPillText: { color: '#8f7458', fontSize: 12, fontWeight: '700' },
+  emptySelectedText: { color: '#8a7d70', fontSize: 13 },
   selectedRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -417,7 +440,7 @@ const styles = StyleSheet.create({
   selectedThumbText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#2c3e50',
+    color: '#6c5b4d',
   },
   outfitMockSmall: {
     width: '100%',
@@ -435,15 +458,15 @@ const styles = StyleSheet.create({
   },
   selectedTextWrap: { flex: 1 },
   selectedTitle: { fontSize: 15, fontWeight: '700', color: '#2c3e50' },
-  selectedSubtitle: { fontSize: 12, color: '#73807a', marginTop: 2 },
+  selectedSubtitle: { fontSize: 12, color: '#8a7d70', marginTop: 2 },
 
   checklistCard: {
     backgroundColor: '#fff',
     borderRadius: 18,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#e5ebe7',
-    shadowColor: '#21342f',
+    borderColor: '#e4ddd2',
+    shadowColor: '#2c3e50',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 9,
@@ -456,16 +479,36 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderRadius: 12,
-    backgroundColor: '#f7faf8',
+    backgroundColor: '#f7f1e8',
     marginBottom: 8,
   },
   checkRowPacked: {
-    backgroundColor: '#eef6f2',
+    backgroundColor: '#efe4d7',
   },
-  checkIcon: { fontSize: 18, marginRight: 10 },
-  checkText: { fontSize: 15, color: '#4d5b55', flex: 1 },
-  checkStatus: { fontSize: 12, color: '#9aa7a1', fontWeight: '600' },
-  checkStatusPacked: { color: '#5d8d7d' },
+  checkIconBox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#d4c5b2',
+    backgroundColor: '#f4ede3',
+    marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkIconBoxPacked: {
+    backgroundColor: '#cfa97f',
+    borderColor: '#c79a67',
+  },
+  checkIconMark: {
+    color: '#fffaf4',
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 14,
+  },
+  checkText: { fontSize: 15, color: '#5e5043', flex: 1 },
+  checkStatus: { fontSize: 12, color: '#a09182', fontWeight: '600' },
+  checkStatusPacked: { color: '#8f7458' },
 
   footer: {
     position: 'absolute',
@@ -477,14 +520,14 @@ const styles = StyleSheet.create({
     paddingBottom: 22,
     backgroundColor: '#f0ede6',
     borderTopWidth: 1,
-    borderTopColor: '#e3e8e4',
+    borderTopColor: '#e1d8ca',
   },
   tripReadyButton: {
-    backgroundColor: '#6d9f8d',
+    backgroundColor: '#7c9a8b',
     borderRadius: 28,
     paddingVertical: 15,
     alignItems: 'center',
-    shadowColor: '#31584d',
+    shadowColor: '#2f4f45',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.24,
     shadowRadius: 10,
