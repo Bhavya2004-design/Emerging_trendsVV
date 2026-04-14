@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   Modal,
+  Alert,
   Pressable,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CalendarList } from 'react-native-calendars';
@@ -16,48 +19,106 @@ import BottomTabBar from '../components/BottomTabBar';
 /* =========================
    DATA
 ========================= */
-const DESTINATIONS = ['Paris, France', 'London, UK', 'New York, USA'];
-
-const DESTINATION_EMOJI = {
-  'Paris, France': '🗼',
-  'London, UK': '🎡',
-  'New York, USA': '🗽',
+const DEFAULT_DESTINATION = {
+  label: 'Paris, France',
+  latitude: 48.8566,
+  longitude: 2.3522,
+  emoji: '📍',
 };
 
-const WEATHER_DATA = {
-  'Paris, France': {
-    temp: '24°C',
-    condition: 'Mostly Sunny',
-    humidity: '55%',
-    wind: '8 km/h',
-    feels: '26°C',
-    icon: '☀️',
-    bg: ['#f7971e', '#ffd200'],
-  },
-  'London, UK': {
-    temp: '18°C',
-    condition: 'Cloudy',
-    humidity: '65%',
-    wind: '12 km/h',
-    feels: '17°C',
-    icon: '☁️',
-    bg: ['#4b6cb7', '#182848'],
-  },
-  'New York, USA': {
-    temp: '28°C',
-    condition: 'Hot & Sunny',
-    humidity: '60%',
-    wind: '10 km/h',
-    feels: '30°C',
-    icon: '🌤️',
-    bg: ['#11998e', '#38ef7d'],
-  },
+const WEATHER_CODE_LOOKUP = {
+  0: { condition: 'Clear Sky', icon: '☀️' },
+  1: { condition: 'Mostly Clear', icon: '🌤️' },
+  2: { condition: 'Partly Cloudy', icon: '⛅' },
+  3: { condition: 'Cloudy', icon: '☁️' },
+  45: { condition: 'Foggy', icon: '🌫️' },
+  48: { condition: 'Foggy', icon: '🌫️' },
+  51: { condition: 'Light Drizzle', icon: '🌦️' },
+  53: { condition: 'Drizzle', icon: '🌦️' },
+  55: { condition: 'Heavy Drizzle', icon: '🌧️' },
+  61: { condition: 'Light Rain', icon: '🌦️' },
+  63: { condition: 'Rain', icon: '🌧️' },
+  65: { condition: 'Heavy Rain', icon: '🌧️' },
+  66: { condition: 'Freezing Rain', icon: '🌨️' },
+  67: { condition: 'Freezing Rain', icon: '🌨️' },
+  71: { condition: 'Light Snow', icon: '🌨️' },
+  73: { condition: 'Snow', icon: '🌨️' },
+  75: { condition: 'Heavy Snow', icon: '❄️' },
+  77: { condition: 'Snow Grains', icon: '❄️' },
+  80: { condition: 'Rain Showers', icon: '🌦️' },
+  81: { condition: 'Rain Showers', icon: '🌧️' },
+  82: { condition: 'Heavy Showers', icon: '⛈️' },
+  85: { condition: 'Snow Showers', icon: '🌨️' },
+  86: { condition: 'Snow Showers', icon: '❄️' },
+  95: { condition: 'Thunderstorm', icon: '⛈️' },
+  96: { condition: 'Storm and Hail', icon: '⛈️' },
+  99: { condition: 'Storm and Hail', icon: '⛈️' },
 };
 
 const TRIP_TYPES = [
   { label: 'Business', icon: '💼' },
   { label: 'Personal', icon: '🌴' },
 ];
+
+const createDestinationLabel = (result) => {
+  const locality =
+    result.name ||
+    result.city ||
+    result.admin1 ||
+    result.admin2 ||
+    result.admin3 ||
+    'Unknown place';
+  const country = result.country || '';
+
+  if (!country || locality.toLowerCase() === country.toLowerCase()) {
+    return locality;
+  }
+
+  return `${locality}, ${country}`;
+};
+
+const createDestinationOption = (result) => ({
+  label: createDestinationLabel(result),
+  latitude: Number(result.latitude),
+  longitude: Number(result.longitude),
+  emoji: '📍',
+});
+
+const normalizeDestination = (value) => {
+  if (value && typeof value === 'object') {
+    return {
+      label: value.label || value.destination || DEFAULT_DESTINATION.label,
+      latitude:
+        value.latitude === null || value.latitude === undefined
+          ? null
+          : Number(value.latitude),
+      longitude:
+        value.longitude === null || value.longitude === undefined
+          ? null
+          : Number(value.longitude),
+      emoji: value.emoji || '📍',
+    };
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    if (value.trim().toLowerCase() === DEFAULT_DESTINATION.label.toLowerCase()) {
+      return { ...DEFAULT_DESTINATION };
+    }
+
+    return {
+      label: value.trim(),
+      latitude: null,
+      longitude: null,
+      emoji: '📍',
+    };
+  }
+
+  return { ...DEFAULT_DESTINATION };
+};
+
+const getWeatherPresentation = (weatherCode) => {
+  return WEATHER_CODE_LOOKUP[weatherCode] || { condition: 'Weather Update', icon: '🌤️' };
+};
 
 /* =========================
    COMPONENT
@@ -68,7 +129,8 @@ export default function TripPage({
   initialTripPlan,
   onGeneratePacking,
 }) {
-  const [destination, setDestination] = useState(initialTripPlan?.destination || 'Paris, France');
+  const initialDestination = normalizeDestination(initialTripPlan?.destination);
+  const [selectedDestination, setSelectedDestination] = useState(initialDestination);
   const [tripType, setTripType] = useState(initialTripPlan?.tripType || 'Business');
   const [showDest, setShowDest] = useState(false);
   const [showTripType, setShowTripType] = useState(false);
@@ -76,10 +138,189 @@ export default function TripPage({
   const [startDate, setStartDate] = useState(initialTripPlan?.startDate || null);
   const [endDate, setEndDate] = useState(initialTripPlan?.endDate || null);
   const [selectingEnd, setSelectingEnd] = useState(false);
+  const [destinationQuery, setDestinationQuery] = useState(initialDestination.label);
+  const [destinationResults, setDestinationResults] = useState([]);
+  const [destinationLoading, setDestinationLoading] = useState(false);
+  const [destinationError, setDestinationError] = useState('');
+  const [weather, setWeather] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState('');
 
-  const weather = WEATHER_DATA[destination];
+  const destination = selectedDestination.label;
   const cityName = destination.split(',')[0];
-  const destEmoji = DESTINATION_EMOJI[destination];
+  const destEmoji = selectedDestination.emoji || '📍';
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const hydrateDestinationCoordinates = async () => {
+      if (selectedDestination.latitude !== null && selectedDestination.longitude !== null) {
+        return;
+      }
+
+      const query = selectedDestination.label.trim();
+      if (!query) {
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&format=json&name=${encodeURIComponent(query)}`
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to resolve destination');
+        }
+
+        const data = await response.json();
+        if (!isCancelled && Array.isArray(data.results) && data.results[0]) {
+          const resolvedDestination = createDestinationOption(data.results[0]);
+          setSelectedDestination(currentDestination => {
+            if (currentDestination.label !== query) {
+              return currentDestination;
+            }
+
+            return {
+              ...currentDestination,
+              ...resolvedDestination,
+            };
+          });
+        }
+      } catch (error) {
+        // Leave the selected label intact even if coordinates cannot be resolved.
+      }
+    };
+
+    hydrateDestinationCoordinates();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedDestination]);
+
+  useEffect(() => {
+    if (!showDest) {
+      return undefined;
+    }
+
+    const query = destinationQuery.trim();
+    if (query.length < 2) {
+      setDestinationResults([]);
+      setDestinationLoading(false);
+      setDestinationError('');
+      return undefined;
+    }
+
+    let isCancelled = false;
+    const timeoutId = setTimeout(async () => {
+      try {
+        setDestinationLoading(true);
+        setDestinationError('');
+
+        const response = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?count=8&language=en&format=json&name=${encodeURIComponent(query)}`
+        );
+
+        if (!response.ok) {
+          throw new Error('Destination search failed');
+        }
+
+        const data = await response.json();
+        const seen = new Set();
+        const results = Array.isArray(data.results)
+          ? data.results
+              .map(createDestinationOption)
+              .filter(option => {
+                const key = `${option.label}-${option.latitude}-${option.longitude}`;
+                if (seen.has(key)) {
+                  return false;
+                }
+                seen.add(key);
+                return true;
+              })
+          : [];
+
+        if (!isCancelled) {
+          setDestinationResults(results);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          setDestinationResults([]);
+          setDestinationError('Unable to load destinations right now.');
+        }
+      } finally {
+        if (!isCancelled) {
+          setDestinationLoading(false);
+        }
+      }
+    }, 350);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [destinationQuery, showDest]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadWeather = async () => {
+      if (selectedDestination.latitude === null || selectedDestination.longitude === null) {
+        setWeather(null);
+        setWeatherLoading(false);
+        setWeatherError('');
+        return;
+      }
+
+      try {
+        setWeatherLoading(true);
+        setWeatherError('');
+
+        const response = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${selectedDestination.latitude}&longitude=${selectedDestination.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
+        );
+
+        if (!response.ok) {
+          throw new Error('Weather request failed');
+        }
+
+        const data = await response.json();
+        const currentWeather = data.current;
+
+        if (!currentWeather) {
+          throw new Error('Weather data missing');
+        }
+
+        const presentation = getWeatherPresentation(currentWeather.weather_code);
+
+        if (!isCancelled) {
+          setWeather({
+            temp: `${Math.round(currentWeather.temperature_2m)}°C`,
+            condition: presentation.condition,
+            humidity: `${currentWeather.relative_humidity_2m ?? '--'}%`,
+            wind: `${Math.round(currentWeather.wind_speed_10m ?? 0)} km/h`,
+            feels: `${Math.round(currentWeather.apparent_temperature ?? currentWeather.temperature_2m)}°C`,
+            icon: presentation.icon,
+          });
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          setWeather(null);
+          setWeatherError('Live weather unavailable right now.');
+        }
+      } finally {
+        if (!isCancelled) {
+          setWeatherLoading(false);
+        }
+      }
+    };
+
+    loadWeather();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedDestination.latitude, selectedDestination.longitude]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Select';
@@ -87,10 +328,16 @@ export default function TripPage({
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
-  const getTripNights = () => {
+  const getTripDays = () => {
     if (!startDate || !endDate) return null;
     const diff = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
     return diff > 0 ? diff : null;
+  };
+
+  const getTripDurationLabel = () => {
+    const tripDays = getTripDays();
+    if (!tripDays) return null;
+    return tripDays === 1 ? '1 day' : `${tripDays} days`;
   };
 
   const getMarkedDates = () => {
@@ -121,6 +368,9 @@ export default function TripPage({
         setStartDate(day.dateString);
         setEndDate(null);
         setSelectingEnd(true);
+      } else if (day.dateString === startDate) {
+        Alert.alert('Invalid return date', 'Return date must be after the departure date.');
+        setSelectingEnd(true);
       } else {
         setEndDate(day.dateString);
         setSelectingEnd(false);
@@ -129,8 +379,32 @@ export default function TripPage({
     }
   };
 
+  const handleOpenDestinationModal = () => {
+    setDestinationQuery(destination);
+    setDestinationResults([]);
+    setDestinationError('');
+    setShowDest(true);
+  };
+
+  const handleSelectDestination = (nextDestination) => {
+    setSelectedDestination(nextDestination);
+    setDestinationQuery(nextDestination.label);
+    setDestinationResults([]);
+    setDestinationError('');
+    setShowDest(false);
+  };
+
+  const weatherCardData = weather || {
+    temp: '--',
+    condition: weatherLoading ? 'Loading live weather...' : weatherError || 'Weather will appear here',
+    humidity: '--',
+    wind: '--',
+    feels: '--',
+    icon: weatherLoading ? '⏳' : weatherError ? '⚠️' : '🌤️',
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
@@ -147,7 +421,7 @@ export default function TripPage({
           <Text style={styles.sectionLabel}>WHERE ARE YOU GOING?</Text>
 
           {/* DESTINATION CARD */}
-          <TouchableOpacity style={styles.selectorCard} onPress={() => setShowDest(true)} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.selectorCard} onPress={handleOpenDestinationModal} activeOpacity={0.8}>
             <View style={styles.selectorLeft}>
               <Text style={styles.selectorEmoji}>{destEmoji}</Text>
               <View>
@@ -160,7 +434,14 @@ export default function TripPage({
 
           {/* TRAVEL DATES */}
           <Text style={styles.sectionLabel}>TRAVEL DATES</Text>
-          <TouchableOpacity style={styles.dateCard} onPress={() => { setSelectingEnd(false); setShowCalendar(true); }} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.dateCard}
+            onPress={() => {
+              setSelectingEnd(false);
+              setShowCalendar(true);
+            }}
+            activeOpacity={0.8}
+          >
             <View style={styles.dateBox}>
               <Text style={styles.dateHint}>📅  Departure</Text>
               <Text style={[styles.dateValue, !startDate && styles.datePlaceholder]}>
@@ -174,9 +455,9 @@ export default function TripPage({
                 {formatDate(endDate)}
               </Text>
             </View>
-            {getTripNights() && (
+            {getTripDurationLabel() && (
               <View style={styles.nightsBadge}>
-                <Text style={styles.nightsText}>{getTripNights()}N</Text>
+                <Text style={styles.nightsText}>{getTripDurationLabel()}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -205,28 +486,28 @@ export default function TripPage({
             <View style={styles.weatherTop}>
               <View>
                 <Text style={styles.weatherCity}>{cityName}</Text>
-                <Text style={styles.weatherCondition}>{weather.condition}</Text>
+                <Text style={styles.weatherCondition}>{weatherCardData.condition}</Text>
               </View>
               <View style={styles.weatherTempWrap}>
-                <Text style={styles.weatherIcon}>{weather.icon}</Text>
-                <Text style={styles.weatherTemp}>{weather.temp}</Text>
+                <Text style={styles.weatherIcon}>{weatherCardData.icon}</Text>
+                <Text style={styles.weatherTemp}>{weatherCardData.temp}</Text>
               </View>
             </View>
             <View style={styles.weatherDivider} />
             <View style={styles.weatherStatsRow}>
               <View style={styles.weatherStat}>
                 <Text style={styles.weatherStatIcon}>💧</Text>
-                <Text style={styles.weatherStatValue}>{weather.humidity}</Text>
+                <Text style={styles.weatherStatValue}>{weatherCardData.humidity}</Text>
                 <Text style={styles.weatherStatLabel}>Humidity</Text>
               </View>
               <View style={styles.weatherStat}>
                 <Text style={styles.weatherStatIcon}>🌬️</Text>
-                <Text style={styles.weatherStatValue}>{weather.wind}</Text>
+                <Text style={styles.weatherStatValue}>{weatherCardData.wind}</Text>
                 <Text style={styles.weatherStatLabel}>Wind</Text>
               </View>
               <View style={styles.weatherStat}>
                 <Text style={styles.weatherStatIcon}>🌡️</Text>
-                <Text style={styles.weatherStatValue}>{weather.feels}</Text>
+                <Text style={styles.weatherStatValue}>{weatherCardData.feels}</Text>
                 <Text style={styles.weatherStatLabel}>Feels Like</Text>
               </View>
             </View>
@@ -239,6 +520,7 @@ export default function TripPage({
               if (onGeneratePacking) {
                 onGeneratePacking({
                   destination,
+                  destinationDetails: selectedDestination,
                   tripType,
                   startDate,
                   endDate,
@@ -261,7 +543,7 @@ export default function TripPage({
           <Pressable style={styles.modalOverlay} onPress={() => setShowCalendar(false)}>
             <Pressable style={[styles.modalSheet, styles.calendarSheet, { paddingHorizontal: 0 }]} onPress={() => {}}>
               <View style={styles.modalHandle} />
-              <Text style={[styles.modalTitle, { paddingHorizontal: 24 }]}>
+              <Text style={[styles.modalTitle, { paddingHorizontal: 24 }]}> 
                 {selectingEnd ? '🏁 Select Return Date' : '📅 Select Departure Date'}
               </Text>
               <CalendarList
@@ -301,27 +583,63 @@ export default function TripPage({
         {/* DESTINATION MODAL */}
         <Modal visible={showDest} transparent animationType="slide">
           <Pressable style={styles.modalOverlay} onPress={() => setShowDest(false)}>
-            <View style={styles.modalSheet}>
+            <Pressable style={[styles.modalSheet, styles.destinationSheet]} onPress={() => {}}>
               <View style={styles.modalHandle} />
               <Text style={styles.modalTitle}>Choose Destination</Text>
-              {DESTINATIONS.map(d => (
-                <TouchableOpacity
-                  key={d}
-                  style={[styles.modalOption, destination === d && styles.modalOptionActive]}
-                  onPress={() => { setDestination(d); setShowDest(false); }}
-                >
-                  <Text style={styles.modalOptionEmoji}>{DESTINATION_EMOJI[d]}</Text>
-                  <Text style={[styles.modalOptionText, destination === d && styles.modalOptionTextActive]}>
-                    {d}
-                  </Text>
-                  {destination === d && <Text style={styles.modalCheck}>✓</Text>}
-                </TouchableOpacity>
-              ))}
-            </View>
+              <TextInput
+                value={destinationQuery}
+                onChangeText={setDestinationQuery}
+                placeholder="Search any city or country"
+                placeholderTextColor="#b8b1a6"
+                style={styles.destinationInput}
+                autoCapitalize="words"
+                autoCorrect={false}
+                autoFocus
+              />
+              <Text style={styles.destinationHelper}>Results powered by Open-Meteo geocoding.</Text>
+              <ScrollView style={styles.destinationResults} keyboardShouldPersistTaps="handled">
+                {destinationLoading && (
+                  <View style={styles.destinationStatusRow}>
+                    <ActivityIndicator color="#6d9f8d" />
+                    <Text style={styles.destinationStatusText}>Searching destinations...</Text>
+                  </View>
+                )}
+
+                {!destinationLoading && destinationError ? (
+                  <Text style={styles.destinationEmptyText}>{destinationError}</Text>
+                ) : null}
+
+                {!destinationLoading && !destinationError && destinationQuery.trim().length < 2 ? (
+                  <Text style={styles.destinationEmptyText}>Type at least 2 characters to search.</Text>
+                ) : null}
+
+                {!destinationLoading && !destinationError && destinationQuery.trim().length >= 2 && destinationResults.length === 0 ? (
+                  <Text style={styles.destinationEmptyText}>No destinations found for this search.</Text>
+                ) : null}
+
+                {destinationResults.map(option => {
+                  const isActive = destination === option.label;
+
+                  return (
+                    <TouchableOpacity
+                      key={`${option.label}-${option.latitude}-${option.longitude}`}
+                      style={[styles.modalOption, isActive && styles.modalOptionActive]}
+                      onPress={() => handleSelectDestination(option)}
+                    >
+                      <Text style={styles.modalOptionEmoji}>{option.emoji}</Text>
+                      <Text style={[styles.modalOptionText, isActive && styles.modalOptionTextActive]}>
+                        {option.label}
+                      </Text>
+                      {isActive ? <Text style={styles.modalCheck}>✓</Text> : null}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </Pressable>
           </Pressable>
         </Modal>
 
-        {/* TRIP TYPE MODAL - replaced by chips, kept for safety */}
+        {/* TRIP TYPE MODAL - kept for safety */}
         <Modal visible={showTripType} transparent animationType="slide">
           <Pressable style={styles.modalOverlay} onPress={() => setShowTripType(false)}>
             <View style={styles.modalSheet}>
@@ -331,13 +649,16 @@ export default function TripPage({
                 <TouchableOpacity
                   key={t.label}
                   style={[styles.modalOption, tripType === t.label && styles.modalOptionActive]}
-                  onPress={() => { setTripType(t.label); setShowTripType(false); }}
+                  onPress={() => {
+                    setTripType(t.label);
+                    setShowTripType(false);
+                  }}
                 >
                   <Text style={styles.modalOptionEmoji}>{t.icon}</Text>
                   <Text style={[styles.modalOptionText, tripType === t.label && styles.modalOptionTextActive]}>
                     {t.label}
                   </Text>
-                  {tripType === t.label && <Text style={styles.modalCheck}>✓</Text>}
+                  {tripType === t.label ? <Text style={styles.modalCheck}>✓</Text> : null}
                 </TouchableOpacity>
               ))}
             </View>
@@ -354,7 +675,7 @@ export default function TripPage({
 ========================= */
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#f0ede6' },
-  screen: { flex: 1 },
+  screen: { flex: 1, backgroundColor: '#f0ede6' },
   scrollContent: { padding: 20, paddingBottom: 100 },
 
   /* HEADER */
@@ -437,7 +758,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   weatherCity: { fontSize: 22, fontWeight: '700', color: '#fff' },
-  weatherCondition: { fontSize: 13, color: '#aac', marginTop: 4 },
+  weatherCondition: { fontSize: 13, color: '#aac', marginTop: 4, maxWidth: 180 },
   weatherTempWrap: { alignItems: 'flex-end' },
   weatherIcon: { fontSize: 36 },
   weatherTemp: { fontSize: 28, fontWeight: '800', color: '#fff', marginTop: 2 },
@@ -475,6 +796,9 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 36,
   },
+  destinationSheet: {
+    maxHeight: '76%',
+  },
   calendarSheet: {
     minHeight: '78%',
   },
@@ -496,6 +820,41 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#6d9f8d',
     marginBottom: 16,
+  },
+  destinationInput: {
+    borderWidth: 1,
+    borderColor: '#e3ddd3',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#333',
+    backgroundColor: '#fcfbf8',
+    marginBottom: 8,
+  },
+  destinationHelper: {
+    fontSize: 12,
+    color: '#938b80',
+    marginBottom: 12,
+  },
+  destinationResults: {
+    maxHeight: 320,
+  },
+  destinationStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+  },
+  destinationStatusText: {
+    fontSize: 14,
+    color: '#6d9f8d',
+    fontWeight: '500',
+  },
+  destinationEmptyText: {
+    fontSize: 14,
+    color: '#938b80',
+    paddingVertical: 12,
   },
   modalOption: {
     flexDirection: 'row',
