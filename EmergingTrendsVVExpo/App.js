@@ -14,6 +14,8 @@ import AddedToVaultPage from './src/pages/AddedToVaultPage';
 import ProfilePage from './src/pages/ProfilePage';
 import HomePage from './src/pages/HomePage';
 import TripPage from './src/pages/Trip';
+import TripOutfitPickerPage from './src/pages/TripOutfitPickerPage';
+import PackingProgressPage from './src/pages/PackingProgressPage';
 import SplashScreen from './src/components/SplashScreen';
 import { mockVaultItems } from './src/data/vaultMockData';
 import { logoutUser, subscribeAuthState } from './src/services/firebaseAuth';
@@ -28,6 +30,13 @@ export default function App() {
   const [currentUserId, setCurrentUserId] = useState('');
   const [vaultItems, setVaultItems] = useState(mockVaultItems);
   const [lastAddedSection, setLastAddedSection] = useState('');
+  const [tripPlan, setTripPlan] = useState({
+    destination: 'Paris, France',
+    tripType: 'Business',
+    startDate: null,
+    endDate: null,
+  });
+  const [selectedTripOutfits, setSelectedTripOutfits] = useState([]);
 
   useEffect(() => {
     screenRef.current = screen;
@@ -219,6 +228,38 @@ export default function App() {
             selectedBottomTab="home"
             onNavigate={handleBottomTabPress}
             onGoBack={goBack}
+            initialTripPlan={tripPlan}
+            onGeneratePacking={(nextTripPlan) => {
+              setTripPlan({
+                destination: nextTripPlan.destination,
+                tripType: nextTripPlan.tripType,
+                startDate: nextTripPlan.startDate,
+                endDate: nextTripPlan.endDate,
+              });
+              navigateTo('trip-outfit-picker');
+            }}
+          />
+        ) : null}
+        {screen === 'trip-outfit-picker' ? (
+          <TripOutfitPickerPage
+            items={vaultItems}
+            onNavigate={navigateTo}
+            onContinuePacking={(selectedIds) => {
+              const selectedIdsList = Object.keys(selectedIds).filter(
+                id => selectedIds[id],
+              );
+              setSelectedTripOutfits(
+                vaultItems.filter(item => selectedIdsList.includes(item.id)),
+              );
+              navigateTo('packing-progress');
+            }}
+          />
+        ) : null}
+        {screen === 'packing-progress' ? (
+          <PackingProgressPage
+            onNavigate={navigateTo}
+            selectedOutfits={selectedTripOutfits}
+            onTripReady={() => navigateTo('home', { resetHistory: true })}
           />
         ) : null}
         {screen === 'added-to-vault' ? (
