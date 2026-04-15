@@ -8,11 +8,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { launchCamera, launchImageLibrary } from '../services/expoImagePickerAdapter';
+import { launchCamera } from '../services/expoImagePickerAdapter';
 import AppScreenHeader from '../components/AppScreenHeader';
 import BottomTabBar from '../components/BottomTabBar';
 import { vaultTabs } from '../data/vaultMockData';
@@ -32,6 +31,7 @@ const subtitleByCategory = {
 
 export default function ScanPage({
   onNavigate,
+  onGoBack,
   onSaveOutfit,
   selectedBottomTab = 'scan',
 }) {
@@ -41,7 +41,6 @@ export default function ScanPage({
   const [isSaving, setIsSaving] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
-  const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [aiDetails, setAiDetails] = useState({
     itemType: '',
     color: '',
@@ -123,46 +122,6 @@ export default function ScanPage({
       features: [],
       occasion: '',
     });
-    setIsEditingDetails(false);
-  }
-
-  async function handlePickFromGallery() {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      selectionLimit: 1,
-      quality: 0.9,
-    });
-
-    if (result.didCancel) {
-      return;
-    }
-
-    if (result.errorCode) {
-      Alert.alert(
-        'Gallery error',
-        result.errorMessage || 'Could not open gallery.',
-      );
-      return;
-    }
-
-    const uri = result.assets?.[0]?.uri;
-
-    if (!uri) {
-      Alert.alert('Selection failed', 'No image selected. Try again.');
-      return;
-    }
-
-    setCapturedImageUri(uri);
-    setProcessedImageUri('');
-    setAiDetails({
-      itemType: '',
-      color: '',
-      material: '',
-      style: '',
-      features: [],
-      occasion: '',
-    });
-    setIsEditingDetails(false);
   }
 
   function handleDiscard() {
@@ -180,7 +139,6 @@ export default function ScanPage({
       features: [],
       occasion: '',
     });
-    setIsEditingDetails(false);
   }
 
   async function handleRunAiDetection() {
@@ -212,7 +170,6 @@ export default function ScanPage({
       });
 
       setAiDetails(analysis);
-      setIsEditingDetails(false);
     } catch (error) {
       Alert.alert(
         'AI detection failed',
@@ -266,7 +223,6 @@ export default function ScanPage({
         features: [],
         occasion: '',
       });
-      setIsEditingDetails(false);
     } finally {
       setIsSaving(false);
     }
@@ -280,7 +236,7 @@ export default function ScanPage({
           showsVerticalScrollIndicator={false}
         >
           <AppScreenHeader
-            onBack={() => onNavigate('home')}
+            onBack={onGoBack}
             title="Scan Outfit"
             subtitle="Tap to scan clothes and add to VogueVault"
           />
@@ -297,7 +253,7 @@ export default function ScanPage({
                   No outfit scanned yet
                 </Text>
                 <Text style={styles.previewHintText}>
-                  Tap SCAN ITEM or Select from Gallery
+                  Tap SCAN ITEM to capture an outfit
                 </Text>
               </View>
             )}
@@ -307,16 +263,9 @@ export default function ScanPage({
             <View style={styles.cropCornerBottomRight} />
           </View>
 
-          <Text style={styles.helperText}>Start with gallery or camera</Text>
+          <Text style={styles.helperText}>Use the camera to scan an item</Text>
 
           <View style={styles.quickActionsRow}>
-            <Pressable
-              style={styles.quickActionButton}
-              onPress={handlePickFromGallery}
-            >
-              <Text style={styles.quickActionIcon}>⌂</Text>
-              <Text style={styles.quickActionText}>Select from Gallery</Text>
-            </Pressable>
             <Pressable
               style={styles.quickActionButton}
               onPress={() => onNavigate('vault')}
@@ -370,7 +319,7 @@ export default function ScanPage({
                   ? 'PROCESSING IMAGE...'
                   : isAnalyzing
                   ? 'ANALYZING OUTFIT...'
-                  : 'RUN AI DETECTION'}
+                  : 'Detect'}
               </Text>
             </Pressable>
           ) : null}
@@ -380,70 +329,24 @@ export default function ScanPage({
               <View style={styles.detailsRow}>
                 <View style={styles.detailCard}>
                   <Text style={styles.detailLabel}>CATEGORY</Text>
-                  {isEditingDetails ? (
-                    <TextInput
-                      style={styles.detailInput}
-                      value={aiDetails.itemType}
-                      onChangeText={value =>
-                        setAiDetails(prev => ({ ...prev, itemType: value }))
-                      }
-                    />
-                  ) : (
-                    <Text style={styles.detailValue}>{aiDetails.itemType}</Text>
-                  )}
+                  <Text style={styles.detailValue}>{aiDetails.itemType}</Text>
                 </View>
                 <View style={styles.detailCard}>
                   <Text style={styles.detailLabel}>COLOR</Text>
-                  {isEditingDetails ? (
-                    <TextInput
-                      style={styles.detailInput}
-                      value={aiDetails.color}
-                      onChangeText={value =>
-                        setAiDetails(prev => ({ ...prev, color: value }))
-                      }
-                    />
-                  ) : (
-                    <Text style={styles.detailValue}>{aiDetails.color}</Text>
-                  )}
+                  <Text style={styles.detailValue}>{aiDetails.color}</Text>
                 </View>
               </View>
 
               <View style={styles.detailsRow}>
                 <View style={styles.detailCard}>
                   <Text style={styles.detailLabel}>MATERIAL</Text>
-                  {isEditingDetails ? (
-                    <TextInput
-                      style={styles.detailInput}
-                      value={aiDetails.material}
-                      onChangeText={value =>
-                        setAiDetails(prev => ({ ...prev, material: value }))
-                      }
-                    />
-                  ) : (
-                    <Text style={styles.detailValue}>{aiDetails.material}</Text>
-                  )}
+                  <Text style={styles.detailValue}>{aiDetails.material}</Text>
                 </View>
                 <View style={styles.detailCard}>
                   <Text style={styles.detailLabel}>STYLE</Text>
-                  {isEditingDetails ? (
-                    <TextInput
-                      style={styles.detailInput}
-                      value={aiDetails.style}
-                      onChangeText={value =>
-                        setAiDetails(prev => ({ ...prev, style: value }))
-                      }
-                    />
-                  ) : (
-                    <Text style={styles.detailValue}>{aiDetails.style}</Text>
-                  )}
+                  <Text style={styles.detailValue}>{aiDetails.style}</Text>
                 </View>
               </View>
-
-              {aiDetails.occasion ? (
-                <Text style={styles.occasionText}>
-                  Best use: {aiDetails.occasion}
-                </Text>
-              ) : null}
 
               <Pressable
                 style={[styles.scanButton, styles.confirmButton]}
@@ -452,15 +355,6 @@ export default function ScanPage({
               >
                 <Text style={styles.confirmButtonText}>
                   {isSaving ? 'ADDING...' : 'CONFIRM AND ADD TO VAULT'}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.scanButton, styles.editDetailsButton]}
-                onPress={() => setIsEditingDetails(current => !current)}
-              >
-                <Text style={styles.editDetailsButtonText}>
-                  {isEditingDetails ? 'SAVE DETAILS' : 'EDIT DETAILS'}
                 </Text>
               </Pressable>
             </View>
@@ -476,17 +370,6 @@ export default function ScanPage({
               </Pressable>
               <Pressable style={styles.secondaryButton} onPress={handleDiscard}>
                 <Text style={styles.secondaryButtonText}>Discard</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.secondaryButton, styles.addButton]}
-                onPress={handleRunAiDetection}
-                disabled={isAnalyzing || isProcessingImage}
-              >
-                <Text
-                  style={[styles.secondaryButtonText, styles.addButtonText]}
-                >
-                  {isAnalyzing || isProcessingImage ? 'Analyzing...' : 'Detect'}
-                </Text>
               </Pressable>
             </View>
           ) : null}
@@ -598,9 +481,11 @@ const styles = StyleSheet.create({
   quickActionsRow: {
     flexDirection: 'row',
     marginBottom: 14,
+    justifyContent: 'center',
   },
   quickActionButton: {
-    flex: 1,
+    flexGrow: 1,
+    maxWidth: 360,
     backgroundColor: '#fbf7f0',
     borderRadius: 14,
     minHeight: 62,
@@ -701,40 +586,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
   },
-  detailInput: {
-    marginTop: 2,
-    color: '#2d2925',
-    fontSize: 16,
-    fontFamily: 'serif',
-    fontWeight: '700',
-    paddingVertical: 0,
-  },
-  occasionText: {
-    marginTop: 4,
-    marginBottom: 10,
-    fontFamily: 'serif',
-    color: '#564a42',
-    fontSize: 14,
-  },
   confirmButton: {
     height: 48,
     marginBottom: 10,
   },
   confirmButtonText: {
-    color: '#2f4338',
-    fontSize: 16,
-    fontFamily: 'serif',
-    letterSpacing: 0.4,
-    fontWeight: '700',
-  },
-  editDetailsButton: {
-    height: 48,
-    backgroundColor: '#e8e4da',
-    borderWidth: 3,
-    borderColor: '#7faf9b',
-    marginBottom: 4,
-  },
-  editDetailsButtonText: {
     color: '#2f4338',
     fontSize: 16,
     fontFamily: 'serif',
@@ -757,12 +613,5 @@ const styles = StyleSheet.create({
     color: '#5a4f46',
     fontFamily: 'serif',
     fontSize: 14,
-  },
-  addButton: {
-    backgroundColor: '#9cc8b8',
-  },
-  addButtonText: {
-    color: '#2f4338',
-    fontWeight: '700',
   },
 });

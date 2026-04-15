@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StatusBar, StyleSheet, View } from 'react-native';
 import {
   SafeAreaProvider,
@@ -21,11 +21,49 @@ import { saveOutfitToDatabase } from './src/services/outfitStorage';
 
 export default function App() {
   const [screen, setScreen] = useState('splash');
+  const screenRef = useRef('splash');
+  const [screenHistory, setScreenHistory] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUserName, setCurrentUserName] = useState('');
   const [currentUserId, setCurrentUserId] = useState('');
   const [vaultItems, setVaultItems] = useState(mockVaultItems);
-  const [lastAddedSection, setLastAddedSection] = useState('your selected section');
+  const [lastAddedSection, setLastAddedSection] = useState('');
+
+  useEffect(() => {
+    screenRef.current = screen;
+  }, [screen]);
+
+  const navigateTo = useCallback((next, options = {}) => {
+    if (options.resetHistory) {
+      setScreenHistory([]);
+      setScreen(next);
+      return;
+    }
+
+    const from = screenRef.current;
+    if (!options.skipHistory && from !== next) {
+      setScreenHistory(history => {
+        if (history.length > 0 && history[history.length - 1] === from) {
+          return history;
+        }
+        return [...history, from];
+      });
+    }
+
+    setScreen(next);
+  }, []);
+
+  const goBack = useCallback(() => {
+    setScreenHistory(history => {
+      if (history.length === 0) {
+        setScreen('home');
+        return history;
+      }
+      const previousScreen = history[history.length - 1];
+      setScreen(previousScreen);
+      return history.slice(0, -1);
+    });
+  }, []);
 
   useEffect(() => {
     const unsubscribe = subscribeAuthState((user) => {
@@ -35,12 +73,24 @@ export default function App() {
       setCurrentUserName(user?.displayName?.trim() || fallbackName);
       setCurrentUserId(user?.uid || '');
 
-      setScreen((current) => {
-        if (current === 'splash') {
-          return current;
+      const current = screenRef.current;
+      if (current === 'splash') {
+        return;
+      }
+
+      if (!nextIsAuthenticated) {
+        if (['login', 'register', 'forgot-password'].includes(current)) {
+          return;
         }
-        return nextIsAuthenticated ? 'home' : 'login';
-      });
+        setScreenHistory([]);
+        setScreen('login');
+        return;
+      }
+
+      if (['login', 'register', 'forgot-password'].includes(current)) {
+        setScreenHistory([]);
+        setScreen('home');
+      }
     });
 
     return unsubscribe;
@@ -55,7 +105,7 @@ export default function App() {
       tabKey === 'profile' ||
       tabKey === 'trip'
     ) {
-      setScreen(tabKey);
+      navigateTo(tabKey);
       return;
     }
 
@@ -75,7 +125,7 @@ export default function App() {
             // e.g. Firebase misconfigured — still end the session in the app
           } finally {
             // Guests never sign in, so auth state may not change; always go to login
-            setScreen('login');
+            navigateTo('login', { resetHistory: true });
           }
         },
       },
@@ -103,7 +153,7 @@ export default function App() {
     setVaultItems(currentItems => [newOutfit, ...currentItems]);
     await saveOutfitToDatabase(newOutfit);
     setLastAddedSection(outfitPayload.category === 'travel' ? 'travel section' : 'work section');
-    setScreen('added-to-vault');
+    navigateTo('added-to-vault');
   }
 
   return (
@@ -112,24 +162,26 @@ export default function App() {
       <View style={styles.container}>
         {screen === 'splash' ? (
           <SplashScreen
-            onFinish={() => setScreen(isAuthenticated ? 'home' : 'login')}
+            onFinish={() =>
+              navigateTo(isAuthenticated ? 'home' : 'login', { skipHistory: true })
+            }
             logoSource={require('./src/pages/VV_logo.png')}
           />
         ) : null}
         {screen === 'login' ? (
           <LoginPage
-            onNavigate={setScreen}
-            onAuthSuccess={() => setScreen('home')}
+            onNavigate={navigateTo}
+            onAuthSuccess={() => navigateTo('home', { resetHistory: true })}
           />
         ) : null}
         {screen === 'register' ? (
           <RegisterPage
-            onNavigate={setScreen}
-            onAuthSuccess={() => setScreen('home')}
+            onNavigate={navigateTo}
+            onAuthSuccess={() => navigateTo('home', { resetHistory: true })}
           />
         ) : null}
         {screen === 'forgot-password' ? (
-          <ForgotPasswordPage onNavigate={setScreen} />
+          <ForgotPasswordPage onNavigate={navigateTo} />
         ) : null}
         {screen === 'home' ? (
           <HomePage
@@ -144,12 +196,14 @@ export default function App() {
             items={vaultItems}
             selectedBottomTab="vault"
             onBottomTabPress={handleBottomTabPress}
+            onGoBack={goBack}
           />
         ) : null}
         {screen === 'scan' ? (
           <ScanPage
             selectedBottomTab="scan"
             onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
             onSaveOutfit={handleAddOutfit}
           />
         ) : null}
@@ -157,12 +211,14 @@ export default function App() {
           <CommunityPage
             selectedBottomTab="community"
             onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
           />
         ) : null}
         {screen === 'trip' ? (
           <TripPage
             selectedBottomTab="home"
             onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
           />
         ) : null}
         {screen === 'added-to-vault' ? (
@@ -170,8 +226,8 @@ export default function App() {
             sectionLabel={lastAddedSection}
             selectedBottomTab="vault"
             onNavigate={handleBottomTabPress}
-            onGoToVault={() => setScreen('vault')}
-            onViewSuggestions={() => setScreen('community')}
+            onGoBack={goBack}
+            onGoToVault={() => navigateTo('vault')}
           />
         ) : null}
         {screen === 'profile' ? (
@@ -181,7 +237,8 @@ export default function App() {
             onUserNameChange={setCurrentUserName}
             selectedBottomTab="profile"
             onNavigate={handleBottomTabPress}
-            onLoggedOut={() => setScreen('login')}
+            onGoBack={goBack}
+            onLoggedOut={() => navigateTo('login', { resetHistory: true })}
           />
         ) : null}
       </View>

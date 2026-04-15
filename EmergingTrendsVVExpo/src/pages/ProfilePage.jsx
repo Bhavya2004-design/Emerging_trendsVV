@@ -225,6 +225,7 @@ function SavedOutfitCard({ item, onToggleSave }) {
 
 export default function ProfilePage({
   onNavigate,
+  onGoBack,
   onLoggedOut,
   selectedBottomTab = 'profile',
   userName = '',
@@ -446,7 +447,7 @@ export default function ProfilePage({
         contentContainerStyle={styles.contentPadBottom}
       >
         <AppScreenHeader
-          onBack={() => onNavigate('home')}
+          onBack={onGoBack}
           title="Profile"
           subtitle="Your style & account"
         />

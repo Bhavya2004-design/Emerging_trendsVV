@@ -199,6 +199,7 @@ function PostCard({
 
 export default function CommunityPage({
   onNavigate,
+  onGoBack,
   selectedBottomTab = 'community',
 }) {
   const { width } = useWindowDimensions();
@@ -452,7 +453,7 @@ export default function CommunityPage({
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
         <AppScreenHeader
-          onBack={() => onNavigate('home')}
+          onBack={onGoBack}
           title="Community"
           subtitle="Discover and follow style creators"
           right={

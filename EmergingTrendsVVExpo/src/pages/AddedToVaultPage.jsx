@@ -6,16 +6,21 @@ import ScreenBackButton from '../components/ScreenBackButton';
 
 export default function AddedToVaultPage({
   onNavigate,
+  onGoBack,
   onGoToVault,
-  onViewSuggestions,
-  sectionLabel = 'your selected section',
+  sectionLabel,
   selectedBottomTab = 'vault',
 }) {
+  const normalizedSectionLabel = sectionLabel ? sectionLabel.toUpperCase() : '';
+  const description = normalizedSectionLabel
+    ? `YOUR OUTFIT ANALYSIS HAS BEEN ADDED TO ${normalizedSectionLabel} AND IS READY FOR MATCHING.`
+    : 'YOUR OUTFIT ANALYSIS HAS BEEN ADDED AND IS READY FOR MATCHING.';
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
         <View style={styles.topBack}>
-          <ScreenBackButton onPress={() => onNavigate('home')} />
+          <ScreenBackButton onPress={onGoBack} />
         </View>
         <View style={styles.contentWrap}>
           <View style={styles.titleWrap}>
@@ -27,20 +32,12 @@ export default function AddedToVaultPage({
           </View>
 
           <Text style={styles.confirmedText}>CONFIRMED!</Text>
-          <Text style={styles.descriptionText}>
-            YOUR OUTFIT ANALYSIS HAS BEEN ADDED TO {sectionLabel.toUpperCase()}{' '}
-            AND IS READY FOR MATCHING.
-          </Text>
+          <Text style={styles.descriptionText}>{description}</Text>
 
           <Pressable style={styles.primaryButton} onPress={onGoToVault}>
             <Text style={styles.primaryButtonText}>GO TO MY VAULT</Text>
           </Pressable>
 
-          <Pressable style={styles.secondaryButton} onPress={onViewSuggestions}>
-            <Text style={styles.secondaryButtonText}>
-              VIEW MY OUTFIT SUGGESTIONS
-            </Text>
-          </Pressable>
         </View>
 
         <BottomTabBar selectedTab={selectedBottomTab} onNavigate={onNavigate} />
@@ -128,23 +125,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0.5,
-  },
-  secondaryButton: {
-    marginTop: 16,
-    minWidth: 250,
-    borderWidth: 3,
-    borderColor: '#79b39b',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 999,
-    alignItems: 'center',
-    backgroundColor: '#e8e4da',
-  },
-  secondaryButtonText: {
-    color: '#2b3430',
-    fontFamily: 'serif',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.4,
   },
 });

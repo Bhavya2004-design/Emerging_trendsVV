@@ -70,7 +70,7 @@ export default function RegisterPage({ onNavigate, onAuthSuccess }) {
       if (onAuthSuccess) {
         onAuthSuccess();
       } else {
-        onNavigate('home');
+        onNavigate('home', { resetHistory: true });
       }
     } catch (error) {
       Alert.alert('Registration failed', formatAuthError(error));

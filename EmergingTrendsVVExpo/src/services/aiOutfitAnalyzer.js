@@ -17,7 +17,7 @@ const ITEM_FEATURES = {
 };
 
 const MATERIAL_BY_ITEM = {
-  coat: 'cotton blend',
+  coat: 'wool blend',
   shirt: 'cotton',
   skirt: 'linen blend',
   pants: 'denim',
@@ -26,11 +26,12 @@ const MATERIAL_BY_ITEM = {
 };
 
 const STYLE_BY_CATEGORY = {
-  travel: 'relaxed minimal',
-  work: 'classic, minimalist',
+  travel: 'casual layered',
+  work: 'smart tailored',
 };
 
-const COLOR_POOL = ['beige', 'black', 'white', 'blue', 'olive', 'brown', 'cream', 'grey'];
+const COLOR_POOL = ['beige', 'white', 'blue', 'olive', 'brown', 'cream', 'grey', 'navy'];
+const FALLBACK_ITEM_POOL = ['shirt', 'pants', 'dress', 'skirt', 'shoes'];
 
 function hashValue(text) {
   let hash = 0;
@@ -51,7 +52,8 @@ function detectItemTypeFromUri(uri) {
     }
   }
 
-  return 'coat';
+  const hash = hashValue(normalized || 'outfit');
+  return FALLBACK_ITEM_POOL[hash % FALLBACK_ITEM_POOL.length];
 }
 
 function detectColorFromUri(uri) {
@@ -78,8 +80,8 @@ export async function analyzeOutfitImage({ imageUri, category }) {
 
   const itemType = detectItemTypeFromUri(imageUri);
   const color = detectColorFromUri(imageUri);
-  const material = MATERIAL_BY_ITEM[itemType] || 'cotton blend';
-  const style = STYLE_BY_CATEGORY[category] || 'casual smart';
+  const material = MATERIAL_BY_ITEM[itemType] || 'fabric blend';
+  const style = STYLE_BY_CATEGORY[category] || 'everyday casual';
   const features = ITEM_FEATURES[itemType] || ['versatile', 'closet essential'];
 
   return {
