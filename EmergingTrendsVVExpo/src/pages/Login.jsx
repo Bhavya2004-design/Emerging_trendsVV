@@ -42,6 +42,7 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
     setIsSubmitting(true);
     try {
       await loginWithEmail(email, password);
+
       if (onAuthSuccess) {
         onAuthSuccess();
       } else {
@@ -97,7 +98,9 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
           style={styles.loginButton}
           disabled={isSubmitting}
           onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>{isSubmitting ? 'Logging in...' : 'Login'}</Text>
+          <Text style={styles.loginButtonText}>
+            {isSubmitting ? 'Logging in...' : 'Login'}
+          </Text>
         </TouchableOpacity>
 
         <Text style={styles.orText}>or login with</Text>

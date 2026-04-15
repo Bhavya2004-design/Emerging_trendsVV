@@ -1,15 +1,25 @@
-export const firebaseConfig = {
-  apiKey: 'AIzaSyAXxwmiiuICHpBTXEGt67kQMGp5JavJO_4',
-  authDomain: 'voguevault-dcd9d.firebaseapp.com',
-  projectId: 'voguevault-dcd9d',
-  storageBucket: 'voguevault-dcd9d.firebasestorage.app',
-  messagingSenderId: '4517007795',
-  appId: '1:4517007795:web:d4dd4ff56bd29d01d8fbc6',
+// firebaseConfig.js
+
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database";
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAXxwmiiuICHpBTXEGt67kQMGp5JavJO_4",
+  authDomain: "voguevault-dcd9d.firebaseapp.com",
+  databaseURL: "https://voguevault-dcd9d-default-rtdb.firebaseio.com",
+  projectId: "voguevault-dcd9d",
+  storageBucket: "voguevault-dcd9d.firebasestorage.app",
+  messagingSenderId: "4517007795",
+  appId: "1:4517007795:web:d4dd4ff56bd29d01d8fbc6"
 };
 
-const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-export const isFirebaseConfigured = requiredKeys.every((key) => {
-  const value = firebaseConfig[key];
-  return typeof value === 'string' && value.length > 0 && !value.startsWith('YOUR_');
-});
+// Initialize services
+export const auth = getAuth(app);
+export const db = getDatabase(app);
+
+export default app;
