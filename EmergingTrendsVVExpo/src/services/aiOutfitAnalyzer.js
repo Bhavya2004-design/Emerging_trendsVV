@@ -1,95 +1,123 @@
-const ITEM_KEYWORDS = {
-  coat: ['coat', 'trench', 'overcoat', 'jacket'],
-  shirt: ['shirt', 'tee', 'tshirt', 'top', 'blouse'],
-  skirt: ['skirt'],
-  pants: ['pant', 'jean', 'trouser', 'denim'],
-  dress: ['dress', 'gown'],
-  shoes: ['shoe', 'sneaker', 'heel', 'boot'],
-};
+import * as FileSystem from 'expo-file-system';
+import { aiApiBaseUrl, aiServerApiKey } from '../config/aiConfig';
 
-const ITEM_FEATURES = {
-  coat: ['layering-ready', 'structured silhouette', 'outerwear staple'],
-  shirt: ['breathable', 'easy to style', 'smart-casual friendly'],
-  skirt: ['feminine silhouette', 'day-to-evening', 'light movement'],
-  pants: ['versatile base', 'balanced structure', 'daily comfort'],
-  dress: ['one-piece styling', 'occasion-flexible', 'polished look'],
-  shoes: ['look-finishing piece', 'style-defining', 'comfort critical'],
-};
+const DEFAULT_TIMEOUT_MS = 30000;
 
-const MATERIAL_BY_ITEM = {
-  coat: 'wool blend',
-  shirt: 'cotton',
-  skirt: 'linen blend',
-  pants: 'denim',
-  dress: 'viscose blend',
-  shoes: 'leather mix',
-};
+function inferMimeTypeFromUri(uri) {
+  const normalized = String(uri || '').toLowerCase();
 
-const STYLE_BY_CATEGORY = {
-  travel: 'casual layered',
-  work: 'smart tailored',
-};
-
-const COLOR_POOL = ['beige', 'white', 'blue', 'olive', 'brown', 'cream', 'grey', 'navy'];
-const FALLBACK_ITEM_POOL = ['shirt', 'pants', 'dress', 'skirt', 'shoes'];
-
-function hashValue(text) {
-  let hash = 0;
-
-  for (let i = 0; i < text.length; i += 1) {
-    hash = (hash * 31 + text.charCodeAt(i)) % 2147483647;
+  if (normalized.endsWith('.png')) {
+    return 'image/png';
   }
 
-  return Math.abs(hash);
-}
-
-function detectItemTypeFromUri(uri) {
-  const normalized = (uri || '').toLowerCase();
-
-  for (const [itemType, keywords] of Object.entries(ITEM_KEYWORDS)) {
-    if (keywords.some(keyword => normalized.includes(keyword))) {
-      return itemType;
-    }
+  if (normalized.endsWith('.webp')) {
+    return 'image/webp';
   }
 
-  const hash = hashValue(normalized || 'outfit');
-  return FALLBACK_ITEM_POOL[hash % FALLBACK_ITEM_POOL.length];
+  return 'image/jpeg';
 }
 
-function detectColorFromUri(uri) {
-  const hash = hashValue(uri || 'outfit');
-  return COLOR_POOL[hash % COLOR_POOL.length];
+function toTitleCase(value) {
+  const normalized = String(value || '').trim();
+  if (!normalized) {
+    return '';
+  }
+
+  return normalized
+    .split(' ')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function withTimeoutSignal(ms) {
+  if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+    return AbortSignal.timeout(ms);
+  }
+
+  return undefined;
+}
+
+async function readImageAsBase64(imageUri) {
+  if (!imageUri) {
+    throw new Error('Image URI is required for AI detection');
+  }
+
+  return FileSystem.readAsStringAsync(imageUri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+}
+
+async function postAnalyzeRequest(body) {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (aiServerApiKey) {
+    headers['x-api-key'] = aiServerApiKey;
+  }
+
+  const response = await fetch(`${aiApiBaseUrl}/api/analyze-outfit`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+    signal: withTimeoutSignal(DEFAULT_TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    const failureBody = await response.text();
+    throw new Error(`AI service failed (${response.status}): ${failureBody}`);
+  }
+
+  return response.json();
+}
+
+function normalizeAnalyzerResponse(apiResponse, category) {
+  const result = apiResponse?.result || {};
+  const secondaryColors = Array.isArray(result.secondaryColors)
+    ? result.secondaryColors.filter(Boolean)
+    : [];
+
+  const color = [result.color, ...secondaryColors].filter(Boolean).join(', ');
+  const materialNotes = String(result.materialNotes || '').trim();
+
+  return {
+    itemType: String(result.itemType || '').trim().toLowerCase(),
+    color: color || 'unknown',
+    material: materialNotes ? `${result.material} (${materialNotes})` : result.material || 'unknown',
+    style: String(result.style || '').trim() || 'everyday',
+    features: Array.isArray(result.features) && result.features.length > 0
+      ? result.features
+      : ['unspecified'],
+    occasion: String(result.occasion || '').trim() || category || 'other',
+    pattern: String(result.pattern || '').trim(),
+    confidence: Number.isFinite(result.confidence) ? result.confidence : null,
+    reasoning: String(result.reasoning || '').trim(),
+    warnings: Array.isArray(result.warnings) ? result.warnings : [],
+    provider: String(apiResponse?.provider || '').trim(),
+    model: String(apiResponse?.model || '').trim(),
+    detectedAt: String(apiResponse?.detectedAt || '').trim(),
+    displayItemType: toTitleCase(result.itemType),
+  };
 }
 
 export async function processOutfitImage(imageUri) {
-  // Placeholder for real AI image pipeline (crop + background removal).
-  // Replace this with your backend (e.g. remove.bg, segmentation model, or custom CV API).
-  await new Promise(resolve => setTimeout(resolve, 600));
-
+  // Future extension point for image preprocessing APIs.
   return {
     processedImageUri: imageUri,
-    backgroundRemoved: true,
-    cropApplied: true,
+    backgroundRemoved: false,
+    cropApplied: false,
   };
 }
 
 export async function analyzeOutfitImage({ imageUri, category }) {
-  // Placeholder for production AI classification and attribute extraction.
-  // Replace with your model/API response when backend is connected.
-  await new Promise(resolve => setTimeout(resolve, 750));
+  const imageBase64 = await readImageAsBase64(imageUri);
+  const mimeType = inferMimeTypeFromUri(imageUri);
 
-  const itemType = detectItemTypeFromUri(imageUri);
-  const color = detectColorFromUri(imageUri);
-  const material = MATERIAL_BY_ITEM[itemType] || 'fabric blend';
-  const style = STYLE_BY_CATEGORY[category] || 'everyday casual';
-  const features = ITEM_FEATURES[itemType] || ['versatile', 'closet essential'];
+  const apiResponse = await postAnalyzeRequest({
+    imageBase64,
+    mimeType,
+    categoryHint: category,
+  });
 
-  return {
-    itemType,
-    color,
-    material,
-    style,
-    features,
-    occasion: category === 'work' ? 'workday' : 'travel and casual day',
-  };
+  return normalizeAnalyzerResponse(apiResponse, category);
 }

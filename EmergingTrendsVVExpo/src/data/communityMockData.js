@@ -1,11 +1,11 @@
 export const currentUser = {
   id: 'u-you',
-  name: 'You',
-  handle: '@you',
-  bio: 'Building a smarter digital wardrobe.',
+  name: 'Maria',
+  handle: '@maria.voguevault',
+  bio: 'Building a smarter digital wardrobe. Fashion meets AI. 🌿',
   avatarColor: '#7fae9a',
-  followers: 124,
-  following: 58,
+  followers: 348,
+  following: 92,
 };
 
 export const communityUsers = [
@@ -69,9 +69,9 @@ export const communityPosts = [
   {
     id: 'p-1',
     userId: 'u-priya',
-    caption: 'Love this neutral outfit! Perfect for spring.',
-    likes: 45,
-    comments: 12,
+    caption: 'Love this neutral outfit! Perfect for spring travel.',
+    likes: 87,
+    comments: 21,
     createdAt: '2h',
     category: 'Travel',
     mockImage: { background: '#d7e9ef', accents: ['#8f8a7a', '#cfa082', '#ece4d8', '#7f97aa'] },
@@ -79,9 +79,9 @@ export const communityPosts = [
   {
     id: 'p-2',
     userId: 'u-jenny',
-    caption: 'Bringing out my summer dresses.',
-    likes: 36,
-    comments: 15,
+    caption: 'Bringing out my summer dresses. AI said: cotton, floral, casual 🌸',
+    likes: 64,
+    comments: 28,
     createdAt: '3h',
     category: 'Casual',
     mockImage: { background: '#f2ebe3', accents: ['#d9a887', '#f6d6c9', '#c7d9e7', '#967f67'] },
@@ -89,9 +89,9 @@ export const communityPosts = [
   {
     id: 'p-3',
     userId: 'u-hamid',
-    caption: 'Layered fit for a breezy evening walk.',
-    likes: 28,
-    comments: 9,
+    caption: 'Layered fit for a breezy evening walk. Olive jacket + white base.',
+    likes: 53,
+    comments: 14,
     createdAt: '5h',
     category: 'Street',
     mockImage: { background: '#ece6df', accents: ['#8e7c68', '#b8a593', '#d6d5cf', '#5e6669'] },
@@ -99,9 +99,9 @@ export const communityPosts = [
   {
     id: 'p-4',
     userId: 'u-mark',
-    caption: 'Weekend city outfit with simple essentials.',
-    likes: 40,
-    comments: 11,
+    caption: 'Weekend city outfit with simple essentials. Less is more.',
+    likes: 71,
+    comments: 18,
     createdAt: '7h',
     category: 'Weekend',
     mockImage: { background: '#e5ebee', accents: ['#768798', '#d9d9d6', '#5f6d71', '#c9baa8'] },
@@ -109,9 +109,9 @@ export const communityPosts = [
   {
     id: 'p-5',
     userId: 'u-laura',
-    caption: 'Mountain day look with light layers.',
-    likes: 33,
-    comments: 10,
+    caption: 'Mountain day look with light layers. Pack smart, not heavy.',
+    likes: 59,
+    comments: 16,
     createdAt: '9h',
     category: 'Travel',
     mockImage: { background: '#dceaf2', accents: ['#8ca1b0', '#f2efe9', '#7291ad', '#99b9cf'] },
@@ -119,12 +119,32 @@ export const communityPosts = [
   {
     id: 'p-6',
     userId: 'u-steven',
-    caption: 'Office-ready smart casual combo.',
-    likes: 52,
-    comments: 19,
+    caption: 'Office-ready smart casual combo. Blazer makes everything work.',
+    likes: 92,
+    comments: 31,
     createdAt: '11h',
     category: 'Work',
     mockImage: { background: '#e9e4dc', accents: ['#8d857a', '#c0b6a6', '#d9d7d2', '#6f7a80'] },
+  },
+  {
+    id: 'p-7',
+    userId: 'u-priya',
+    caption: 'Scanned this blazer with VogueVault — it detected wool blend in 2 seconds 🤯',
+    likes: 104,
+    comments: 37,
+    createdAt: '14h',
+    category: 'Work',
+    mockImage: { background: '#e8ddd3', accents: ['#c8a882', '#f0ebe2', '#a08060', '#d4c4b0'] },
+  },
+  {
+    id: 'p-8',
+    userId: 'u-jenny',
+    caption: 'Travel capsule wardrobe for a long weekend. 6 outfits, 1 bag.',
+    likes: 78,
+    comments: 24,
+    createdAt: '16h',
+    category: 'Travel',
+    mockImage: { background: '#e4eae0', accents: ['#7ea08a', '#c8d8c4', '#f2f0ea', '#5a7a65'] },
   },
 ];
 
@@ -132,22 +152,35 @@ export const initialFollowedUserIds = ['u-priya', 'u-jenny'];
 
 export const initialCommentsByPost = {
   'p-1': [
-    { id: 'c-1', author: 'Jenny', text: 'The palette is clean. I would wear this.', time: '1h' },
+    { id: 'c-1', author: 'Jenny', text: 'The palette is so clean. Saving this!', time: '1h' },
     { id: 'c-2', author: 'Mark', text: 'Great spring layering idea.', time: '46m' },
+    { id: 'c-9', author: 'Maria', text: 'Obsessed with this colour combo 🤍', time: '30m' },
   ],
   'p-2': [
     { id: 'c-3', author: 'Priya', text: 'This is such a soft summer look.', time: '54m' },
+    { id: 'c-10', author: 'Hamid', text: 'The AI scan feature is so cool for this.', time: '40m' },
   ],
   'p-3': [
     { id: 'c-4', author: 'Laura', text: 'That outer layer works really well.', time: '37m' },
   ],
   'p-4': [
     { id: 'c-5', author: 'Steven', text: 'Minimal and strong. Nice fit.', time: '31m' },
+    { id: 'c-11', author: 'Jenny', text: 'I need those trousers!', time: '22m' },
   ],
   'p-5': [
     { id: 'c-6', author: 'Hamid', text: 'Perfect for travel weather.', time: '25m' },
   ],
   'p-6': [
     { id: 'c-7', author: 'Priya', text: 'Smart casual done right.', time: '18m' },
+    { id: 'c-12', author: 'Laura', text: 'Those shoes complete the look perfectly.', time: '10m' },
+  ],
+  'p-7': [
+    { id: 'c-8', author: 'Jenny', text: 'VogueVault is genuinely impressive.', time: '8h' },
+    { id: 'c-13', author: 'Mark', text: 'The AI detection on wool blend is accurate!', time: '6h' },
+    { id: 'c-14', author: 'Maria', text: 'It also detected the style and occasion perfectly 🙌', time: '5h' },
+  ],
+  'p-8': [
+    { id: 'c-15', author: 'Steven', text: 'This is the travel packing goal.', time: '14h' },
+    { id: 'c-16', author: 'Priya', text: 'How do you fit 6 looks in one bag?!', time: '12h' },
   ],
 };

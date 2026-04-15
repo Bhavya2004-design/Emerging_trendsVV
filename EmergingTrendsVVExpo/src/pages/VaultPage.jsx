@@ -1,4 +1,4 @@
-/* eslint-disable react-native/no-inline-styles */
+﻿/* eslint-disable react-native/no-inline-styles */
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AppScreenHeader from '../components/AppScreenHeader';
 import BottomTabBar from '../components/BottomTabBar';
 import { getVaultItems, vaultTabs } from '../data/vaultMockData';
+import vaultImages from '../data/vaultImages';
 
 export default function VaultPage({
   loadVaultItems = getVaultItems,
@@ -264,8 +265,14 @@ export default function VaultPage({
           </Pressable>
         </View>
 
-        {item.imageUri ? (
-          <Image source={{ uri: item.imageUri }} style={styles.imageMock} />
+        {item.imageKey && vaultImages[item.imageKey] ? (
+          <Image
+            source={vaultImages[item.imageKey]}
+            style={styles.imageMock}
+            resizeMode="cover"
+          />
+        ) : item.imageUri ? (
+          <Image source={{ uri: item.imageUri }} style={styles.imageMock} resizeMode="cover" />
         ) : (
           <OutfitMockImage mockImage={item.mockImage} />
         )}
