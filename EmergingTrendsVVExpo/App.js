@@ -1,290 +1,322 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, StatusBar, StyleSheet, View } from 'react-native';
 import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import BottomTabBar from '../components/BottomTabBar';
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from 'react-native-safe-area-context';
+import LoginPage from './src/pages/Login';
+import RegisterPage from './src/pages/Register';
+import ForgotPasswordPage from './src/pages/ForgotPassword';
+import VaultPage from './src/pages/VaultPage';
+import ScanPage from './src/pages/ScanPage';
+import CommunityPage from './src/pages/CommunityPage';
+import AddedToVaultPage from './src/pages/AddedToVaultPage';
+import ProfilePage from './src/pages/ProfilePage';
+import HomePage from './src/pages/HomePage';
+import TripPage from './src/pages/Trip';
+import TripOutfitPickerPage from './src/pages/TripOutfitPickerPage';
+import PackingProgressPage from './src/pages/PackingProgressPage';
+import MyTripsPage from './src/pages/MyTripsPage';
+import SplashScreen from './src/components/SplashScreen';
+import { mockVaultItems } from './src/data/vaultMockData';
+import { logoutUser, subscribeAuthState } from './src/services/firebaseAuth';
+import { saveOutfitToDatabase } from './src/services/outfitStorage';
 
-const quickActions = [
-  { key: 'scan', label: 'Scan Outfit', icon: '📷' },
-  { key: 'vault', label: 'My Vault', icon: '🧥' },
-  { key: 'trip', label: 'Pack for Trip', icon: '🧳' },
-  { key: 'my-trip', label: 'My Trip', icon: '✈️' },
-];
+export default function App() {
+  const [screen, setScreen] = useState('splash');
+  const screenRef = useRef('splash');
 
-function getFirstName(value) {
-  const raw = String(value || '').trim();
+  useEffect(() => {
+    screenRef.current = screen;
+  }, [screen]);
 
-  if (!raw) {
-    return 'User';
-  }
+  const [screenHistory, setScreenHistory] = useState([]);
 
-  if (raw.includes(' ')) {
-    return raw.split(' ')[0];
-  }
-
-  const cleaned = raw
-    .replace(/[0-9]+$/g, '')
-    .replace(/[._-]+/g, ' ')
-    .trim();
-
-  if (!cleaned) {
-    return 'User';
-  }
-
-  return cleaned.split(' ')[0];
-}
-
-export default function HomePage({
-  onNavigate,
-  onLogout,
-  selectedBottomTab = 'home',
-  userName = '',
-}) {
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-
-  const displayName = useMemo(() => getFirstName(userName), [userName]);
-
-  function handleProfileMenuAction(target) {
-    setIsProfileMenuOpen(false);
-    if (target) {
-      onNavigate(target);
+  const navigateTo = useCallback((next, options) => {
+    if (options?.resetHistory) {
+      setScreenHistory([]);
+      setScreen(next);
+      return;
     }
+    const from = screenRef.current;
+    if (!options?.skipHistory && from !== next) {
+      setScreenHistory(h => {
+        if (h.length > 0 && h[h.length - 1] === from) {
+          return h;
+        }
+        return [...h, from];
+      });
+    }
+    setScreen(next);
+  }, []);
+
+  const goBack = useCallback(() => {
+    setScreenHistory(h => {
+      if (h.length === 0) {
+        setScreen('home');
+        return h;
+      }
+      const prev = h[h.length - 1];
+      setScreen(prev);
+      return h.slice(0, -1);
+    });
+  }, []);
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUserName, setCurrentUserName] = useState('');
+  const [currentUserId, setCurrentUserId] = useState('');
+  const [vaultItems, setVaultItems] = useState(mockVaultItems);
+  const [lastAddedSection, setLastAddedSection] = useState(
+    'your selected section',
+  );
+
+  const [selectedTripOutfits, setSelectedTripOutfits] = useState([]);
+  const [savedTrips, setSavedTrips] = useState([]);
+  const [tripPlan, setTripPlan] = useState({
+    destination: '',
+    tripType: 'Personal',
+    startDate: null,
+    endDate: null,
+  });
+
+  useEffect(() => {
+    const unsubscribe = subscribeAuthState(user => {
+      const nextIsAuthenticated = Boolean(user);
+      setIsAuthenticated(nextIsAuthenticated);
+      const fallbackName = user?.email ? String(user.email).split('@')[0] : '';
+      setCurrentUserName(user?.displayName?.trim() || fallbackName);
+      setCurrentUserId(user?.uid || '');
+
+      const current = screenRef.current;
+      if (current === 'splash') {
+        return;
+      }
+      if (!nextIsAuthenticated) {
+        if (['login', 'register', 'forgot-password'].includes(current)) {
+          return;
+        }
+        setScreenHistory([]);
+        setScreen('login');
+        return;
+      }
+      if (['login', 'register', 'forgot-password'].includes(current)) {
+        setScreenHistory([]);
+        setScreen('home');
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+  function handleBottomTabPress(tabKey) {
+    if (
+      tabKey === 'home' ||
+      tabKey === 'vault' ||
+      tabKey === 'scan' ||
+      tabKey === 'community' ||
+      tabKey === 'profile' ||
+      tabKey === 'trip'
+    ) {
+      navigateTo(tabKey);
+      return;
+    }
+    if (tabKey === 'my-trip') {
+      navigateTo('my-trips');
+      return;
+    }
+
+    Alert.alert(
+      'Coming soon',
+      `${tabKey[0].toUpperCase()}${tabKey.slice(1)} page is not built yet.`,
+    );
+  }
+
+  function handleLogout() {
+    Alert.alert('Logout', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await logoutUser();
+          } catch {
+            // Guest or misconfigured Firebase — still leave session
+          } finally {
+            navigateTo('login', { resetHistory: true });
+          }
+        },
+      },
+    ]);
+  }
+
+  async function handleAddOutfit(outfitPayload) {
+    const newOutfit = {
+      id: `scan-${Date.now()}`,
+      title: outfitPayload.title || 'Scanned Outfit',
+      subtitle: outfitPayload.subtitle || '',
+      category: outfitPayload.category,
+      isFavorite: false,
+      mockImage: {
+        background: '#f0f0f0',
+        accents: ['#999999', '#cccccc'],
+        layout: 'scanned-item',
+      },
+    };
+
+    setVaultItems(currentItems => [newOutfit, ...currentItems]);
+    await saveOutfitToDatabase(newOutfit);
+    setLastAddedSection(
+      outfitPayload.category === 'travel' ? 'travel section' : 'work section',
+    );
+    navigateTo('added-to-vault');
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.screen}>
-        {isProfileMenuOpen ? (
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={() => setIsProfileMenuOpen(false)}
-            style={styles.menuBackdrop}
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.container}>
+        {screen === 'splash' ? (
+          <SplashScreen
+            onFinish={() =>
+              navigateTo(isAuthenticated ? 'home' : 'login', {
+                skipHistory: true,
+              })
+            }
+            logoSource={require('./src/pages/VV_logo.png')}
           />
         ) : null}
-
-        {isProfileMenuOpen ? (
-          <View style={styles.profileMenu}>
-            <TouchableOpacity
-              style={styles.profileMenuItem}
-              onPress={() => handleProfileMenuAction('profile')}
-            >
-              <Text style={styles.profileMenuItemText}>View Profile</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.profileMenuItem}
-              onPress={() => {
-                setIsProfileMenuOpen(false);
-                if (onLogout) {
-                  onLogout();
-                }
-              }}
-            >
-              <Text style={styles.profileMenuItemText}>Logout</Text>
-            </TouchableOpacity>
-          </View>
+        {screen === 'login' ? (
+          <LoginPage
+            onNavigate={navigateTo}
+            onAuthSuccess={() => navigateTo('home', { resetHistory: true })}
+          />
         ) : null}
-
-        <ScrollView
-          style={styles.scrollArea}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.headerRow}>
-            <View>
-              <Text style={styles.greeting}>Good morning,</Text>
-              <Text style={styles.userName}>{displayName}</Text>
-              <Text style={styles.subtitle}>Ready to style today?</Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.profileAvatar}
-              activeOpacity={0.85}
-              onPress={() => setIsProfileMenuOpen(open => !open)}
-            >
-              <Image
-                source={require('../../assets/maria.png')}
-                style={styles.profileAvatarImage}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.suggestionCard}>
-            <Text style={styles.suggestionTitle}>AI Outfit Suggestion</Text>
-            <TouchableOpacity style={styles.viewButton} onPress={() => onNavigate('vault')}>
-              <Text style={styles.viewButtonText}>View Outfit</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-
-          <View style={styles.quickActionRow}>
-            {quickActions.map(action => (
-              <TouchableOpacity
-                key={action.key}
-                style={styles.quickActionCard}
-                onPress={() => onNavigate(action.key)}
-              >
-                <Text style={styles.quickActionIcon} allowFontScaling={false}>
-                  {action.icon}
-                </Text>
-                <Text style={styles.quickActionLabel}>{action.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-
-        <BottomTabBar selectedTab={selectedBottomTab} onNavigate={onNavigate} />
+        {screen === 'register' ? (
+          <RegisterPage
+            onNavigate={navigateTo}
+            onAuthSuccess={() => navigateTo('home', { resetHistory: true })}
+          />
+        ) : null}
+        {screen === 'forgot-password' ? (
+          <ForgotPasswordPage onNavigate={navigateTo} />
+        ) : null}
+        {screen === 'home' ? (
+          <HomePage
+            userName={currentUserName}
+            selectedBottomTab="home"
+            onNavigate={handleBottomTabPress}
+            onLogout={handleLogout}
+          />
+        ) : null}
+        {screen === 'vault' ? (
+          <VaultPage
+            items={vaultItems}
+            selectedBottomTab="vault"
+            onBottomTabPress={handleBottomTabPress}
+            onGoBack={goBack}
+          />
+        ) : null}
+        {screen === 'scan' ? (
+          <ScanPage
+            selectedBottomTab="scan"
+            onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
+            onSaveOutfit={handleAddOutfit}
+          />
+        ) : null}
+        {screen === 'community' ? (
+          <CommunityPage
+            selectedBottomTab="community"
+            onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
+          />
+        ) : null}
+        {screen === 'trip' ? (
+          <TripPage
+            selectedBottomTab="home"
+            onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
+            initialTripPlan={tripPlan}
+            onGeneratePacking={nextTripPlan => {
+              setTripPlan(nextTripPlan);
+              navigateTo('trip-outfit-picker');
+            }}
+          />
+        ) : null}
+        {screen === 'trip-outfit-picker' ? (
+          <TripOutfitPickerPage
+            items={vaultItems}
+            onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
+            onContinuePacking={selectedIds => {
+              const selectedIdsList = Object.keys(selectedIds).filter(
+                id => selectedIds[id],
+              );
+              const outfits = vaultItems.filter(item =>
+                selectedIdsList.includes(item.id),
+              );
+              setSelectedTripOutfits(outfits);
+              setSavedTrips(prev => [
+                {
+                  id: `trip-${Date.now()}`,
+                  destination: tripPlan.destination || 'Trip',
+                  tripType: tripPlan.tripType,
+                  startDate: tripPlan.startDate,
+                  endDate: tripPlan.endDate,
+                  selectedOutfits: outfits,
+                },
+                ...prev,
+              ]);
+              navigateTo('packing-progress');
+            }}
+          />
+        ) : null}
+        {screen === 'packing-progress' ? (
+          <PackingProgressPage
+            onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
+            selectedOutfits={selectedTripOutfits}
+            onTripReady={() => navigateTo('home', { resetHistory: true })}
+          />
+        ) : null}
+        {screen === 'my-trips' ? (
+          <MyTripsPage
+            trips={savedTrips}
+            selectedBottomTab="home"
+            onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
+          />
+        ) : null}
+        {screen === 'added-to-vault' ? (
+          <AddedToVaultPage
+            sectionLabel={lastAddedSection}
+            selectedBottomTab="vault"
+            onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
+            onGoToVault={() => navigateTo('vault')}
+            onViewSuggestions={() => navigateTo('community')}
+          />
+        ) : null}
+        {screen === 'profile' ? (
+          <ProfilePage
+            userId={currentUserId}
+            userName={currentUserName}
+            onUserNameChange={setCurrentUserName}
+            selectedBottomTab="profile"
+            onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
+            onLogout={handleLogout}
+            onLoggedOut={() => navigateTo('login', { resetHistory: true })}
+          />
+        ) : null}
       </View>
-    </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#e8e4da',
-  },
-  screen: {
-    flex: 1,
-    backgroundColor: '#e8e4da',
-    paddingTop: 18,
-  },
-  scrollArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 28,
-    paddingBottom: 140,
-  },
-  menuBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 20,
-  },
-  profileMenu: {
-    position: 'absolute',
-    top: 84,
-    right: 22,
-    width: 168,
-    backgroundColor: '#fbf7f0',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#ddd4c8',
-    zIndex: 30,
-    shadowColor: '#1a1814',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  profileMenuItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ece2d5',
-  },
-  profileMenuItemText: {
-    color: '#3b332d',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 18,
-    marginBottom: 28,
-  },
-  greeting: {
-    fontSize: 30,
-    color: '#2f2a28',
-    fontWeight: '400',
-  },
-  userName: {
-    fontSize: 44,
-    lineHeight: 50,
-    color: '#88b8a5',
-    fontWeight: '700',
-    marginTop: 4,
-  },
-  subtitle: {
-    marginTop: 8,
-    fontSize: 16,
-    color: '#7c7570',
-  },
-  profileAvatar: {
-    width: 112,
-    height: 112,
-    borderRadius: 56,
-    overflow: 'hidden',
-    borderWidth: 4,
-    borderColor: '#7fb09b',
-    backgroundColor: '#f8f5ef',
-  },
-  profileAvatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  suggestionCard: {
-    backgroundColor: '#f7f4ee',
-    borderRadius: 28,
-    padding: 28,
-    minHeight: 170,
-    marginBottom: 32,
-  },
-  suggestionTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#7fb09b',
-    marginBottom: 28,
-  },
-  viewButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#7fb09b',
-    borderRadius: 999,
-    paddingVertical: 18,
-    paddingHorizontal: 36,
-  },
-  viewButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  sectionTitle: {
-    fontSize: 28,
-    color: '#2f2a28',
-    marginBottom: 20,
-    fontWeight: '500',
-  },
-  quickActionRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 18,
-  },
-  quickActionCard: {
-    width: '47%',
-    backgroundColor: '#f7f4ee',
-    borderRadius: 28,
-    minHeight: 240,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-  },
-  quickActionIcon: {
-    fontSize: 58,
-    marginBottom: 24,
-  },
-  quickActionLabel: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#2f2a28',
-    textAlign: 'center',
   },
 });

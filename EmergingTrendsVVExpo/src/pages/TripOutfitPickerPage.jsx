@@ -16,6 +16,7 @@ import ScreenBackButton from '../components/ScreenBackButton';
 export default function TripOutfitPickerPage({
   items = [],
   onNavigate,
+  onGoBack,
   onContinuePacking,
   onOpenAiSuggestions,
 }) {
@@ -105,7 +106,9 @@ export default function TripOutfitPickerPage({
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.screen}>
         <View style={styles.header}>
-          <ScreenBackButton onPress={() => onNavigate('trip')} />
+          <ScreenBackButton
+            onPress={() => (onGoBack ? onGoBack() : onNavigate('trip'))}
+          />
           <View>
             <Text style={styles.title}>Select Outfits</Text>
             <Text style={styles.subtitle}>Choose outfits from your vault for this trip</Text>
