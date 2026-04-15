@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { aiApiBaseUrl, aiServerApiKey } from '../config/aiConfig';
 
 const DEFAULT_TIMEOUT_MS = 30000;
