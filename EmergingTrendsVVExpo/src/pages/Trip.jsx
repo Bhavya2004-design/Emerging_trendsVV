@@ -324,15 +324,57 @@ export default function TripPage({
     };
   }, [selectedDestination.latitude, selectedDestination.longitude]);
 
+  const parseYmd = (ymd) => {
+    const [year, month, day] = (ymd || '').split('-').map(Number);
+    if (!year || !month || !day) {
+      return null;
+    }
+    return { year, month, day };
+  };
+
+  const ymdToUtcMs = (ymd) => {
+    const parsed = parseYmd(ymd);
+    if (!parsed) {
+      return null;
+    }
+    return Date.UTC(parsed.year, parsed.month - 1, parsed.day);
+  };
+
+  const addDaysToYmd = (ymd, daysToAdd) => {
+    const baseMs = ymdToUtcMs(ymd);
+    if (baseMs === null) {
+      return ymd;
+    }
+    const next = new Date(baseMs + daysToAdd * 24 * 60 * 60 * 1000);
+    const year = next.getUTCFullYear();
+    const month = String(next.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(next.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Select';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const parsed = parseYmd(dateStr);
+    if (!parsed) {
+      return 'Select';
+    }
+    const d = new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day));
+    return d.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
   };
 
   const getTripDays = () => {
     if (!startDate || !endDate) return null;
-    const diff = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
+    const startMs = ymdToUtcMs(startDate);
+    const endMs = ymdToUtcMs(endDate);
+    if (startMs === null || endMs === null) {
+      return null;
+    }
+    const diff = (endMs - startMs) / (1000 * 60 * 60 * 24);
     return diff > 0 ? diff : null;
   };
 
@@ -348,13 +390,10 @@ export default function TripPage({
     marked[startDate] = { startingDay: true, color: '#6d9f8d', textColor: '#fff' };
     if (endDate && endDate !== startDate) {
       marked[endDate] = { endingDay: true, color: '#6d9f8d', textColor: '#fff' };
-      let cur = new Date(startDate);
-      cur.setDate(cur.getDate() + 1);
-      const end = new Date(endDate);
-      while (cur < end) {
-        const key = cur.toISOString().split('T')[0];
+      let key = addDaysToYmd(startDate, 1);
+      while (key < endDate) {
         marked[key] = { color: '#c8e6c9', textColor: '#333' };
-        cur.setDate(cur.getDate() + 1);
+        key = addDaysToYmd(key, 1);
       }
     }
     return marked;
