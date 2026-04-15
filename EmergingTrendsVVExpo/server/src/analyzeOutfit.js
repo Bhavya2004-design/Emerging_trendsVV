@@ -9,8 +9,17 @@ import { buildUserPrompt, systemPrompt } from './prompt.js';
 const openAiModel = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
 const aiMode = (process.env.AI_MODE || 'stub').toLowerCase();
 const openAiApiKey = process.env.OPENAI_API_KEY || '';
+const openAiTimeoutMs = Number.parseInt(
+  process.env.OPENAI_TIMEOUT_MS || '280000',
+  10,
+);
 
-const client = openAiApiKey ? new OpenAI({ apiKey: openAiApiKey }) : null;
+const client = openAiApiKey
+  ? new OpenAI({
+      apiKey: openAiApiKey,
+      timeout: Number.isFinite(openAiTimeoutMs) ? openAiTimeoutMs : 280000,
+    })
+  : null;
 
 function clampConfidence(value) {
   if (!Number.isFinite(value)) {
