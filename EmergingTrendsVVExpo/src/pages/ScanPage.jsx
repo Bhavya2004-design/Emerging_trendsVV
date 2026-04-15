@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -29,6 +30,21 @@ const subtitleByCategory = {
   work: 'Work, Captured via Scan',
 };
 
+function createEmptyAiDetails() {
+  return {
+    itemType: '',
+    color: '',
+    material: '',
+    style: '',
+    features: [],
+    occasion: '',
+    confidence: null,
+    pattern: '',
+    reasoning: '',
+    warnings: [],
+  };
+}
+
 export default function ScanPage({
   onNavigate,
   onGoBack,
@@ -41,14 +57,7 @@ export default function ScanPage({
   const [isSaving, setIsSaving] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
-  const [aiDetails, setAiDetails] = useState({
-    itemType: '',
-    color: '',
-    material: '',
-    style: '',
-    features: [],
-    occasion: '',
-  });
+  const [aiDetails, setAiDetails] = useState(createEmptyAiDetails);
 
   const selectedTabLabel = useMemo(
     () =>
@@ -114,14 +123,7 @@ export default function ScanPage({
 
     setCapturedImageUri(uri);
     setProcessedImageUri('');
-    setAiDetails({
-      itemType: '',
-      color: '',
-      material: '',
-      style: '',
-      features: [],
-      occasion: '',
-    });
+    setAiDetails(createEmptyAiDetails());
   }
 
   function handleDiscard() {
@@ -131,14 +133,26 @@ export default function ScanPage({
 
     setCapturedImageUri('');
     setProcessedImageUri('');
-    setAiDetails({
-      itemType: '',
-      color: '',
-      material: '',
-      style: '',
-      features: [],
-      occasion: '',
-    });
+    setAiDetails(createEmptyAiDetails());
+  }
+
+  function updateAiTextField(field, value) {
+    setAiDetails(current => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  function updateFeaturesCsv(value) {
+    const parsed = value
+      .split(',')
+      .map(part => part.trim())
+      .filter(Boolean);
+
+    setAiDetails(current => ({
+      ...current,
+      features: parsed,
+    }));
   }
 
   async function handleRunAiDetection() {
@@ -157,15 +171,11 @@ export default function ScanPage({
       const resolvedImageUri =
         processingResult.processedImageUri || capturedImageUri;
       setProcessedImageUri(resolvedImageUri);
-    } finally {
-      setIsProcessingImage(false);
-    }
 
-    setIsAnalyzing(true);
+      setIsAnalyzing(true);
 
-    try {
       const analysis = await analyzeOutfitImage({
-        imageUri: processedImageUri || capturedImageUri,
+        imageUri: resolvedImageUri,
         category: selectedCategory,
       });
 
@@ -173,9 +183,10 @@ export default function ScanPage({
     } catch (error) {
       Alert.alert(
         'AI detection failed',
-        'Try again. You can still add manually to vault.',
+        error instanceof Error ? error.message : 'Try again. You can still add manually to vault.',
       );
     } finally {
+      setIsProcessingImage(false);
       setIsAnalyzing(false);
     }
   }
@@ -192,7 +203,7 @@ export default function ScanPage({
     setIsSaving(true);
 
     try {
-      const detailsReady = Boolean(aiDetails.itemType);
+      const detailsReady = Boolean(aiDetails.itemType.trim());
       const normalizedItemType = detailsReady
         ? aiDetails.itemType.charAt(0).toUpperCase() +
           aiDetails.itemType.slice(1)
@@ -212,17 +223,14 @@ export default function ScanPage({
         style: aiDetails.style,
         features: aiDetails.features,
         occasion: aiDetails.occasion,
+        pattern: aiDetails.pattern,
+        confidence: aiDetails.confidence,
+        reasoning: aiDetails.reasoning,
+        warnings: aiDetails.warnings,
       });
       setCapturedImageUri('');
       setProcessedImageUri('');
-      setAiDetails({
-        itemType: '',
-        color: '',
-        material: '',
-        style: '',
-        features: [],
-        occasion: '',
-      });
+      setAiDetails(createEmptyAiDetails());
     } finally {
       setIsSaving(false);
     }
@@ -326,27 +334,82 @@ export default function ScanPage({
 
           {aiDetails.itemType ? (
             <View style={styles.detailsCardWrap}>
-              <View style={styles.detailsRow}>
-                <View style={styles.detailCard}>
-                  <Text style={styles.detailLabel}>CATEGORY</Text>
-                  <Text style={styles.detailValue}>{aiDetails.itemType}</Text>
-                </View>
-                <View style={styles.detailCard}>
-                  <Text style={styles.detailLabel}>COLOR</Text>
-                  <Text style={styles.detailValue}>{aiDetails.color}</Text>
-                </View>
+              <Text style={styles.reviewTitle}>Review AI detection</Text>
+
+              <View style={styles.editFieldWrap}>
+                <Text style={styles.detailLabel}>ITEM TYPE</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={aiDetails.itemType}
+                  onChangeText={value => updateAiTextField('itemType', value)}
+                  autoCapitalize="none"
+                />
               </View>
 
-              <View style={styles.detailsRow}>
-                <View style={styles.detailCard}>
-                  <Text style={styles.detailLabel}>MATERIAL</Text>
-                  <Text style={styles.detailValue}>{aiDetails.material}</Text>
-                </View>
-                <View style={styles.detailCard}>
-                  <Text style={styles.detailLabel}>STYLE</Text>
-                  <Text style={styles.detailValue}>{aiDetails.style}</Text>
-                </View>
+              <View style={styles.editFieldWrap}>
+                <Text style={styles.detailLabel}>COLOR</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={aiDetails.color}
+                  onChangeText={value => updateAiTextField('color', value)}
+                  autoCapitalize="none"
+                />
               </View>
+
+              <View style={styles.editFieldWrap}>
+                <Text style={styles.detailLabel}>MATERIAL</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={aiDetails.material}
+                  onChangeText={value => updateAiTextField('material', value)}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.editFieldWrap}>
+                <Text style={styles.detailLabel}>STYLE</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={aiDetails.style}
+                  onChangeText={value => updateAiTextField('style', value)}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.editFieldWrap}>
+                <Text style={styles.detailLabel}>OCCASION</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={aiDetails.occasion}
+                  onChangeText={value => updateAiTextField('occasion', value)}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.editFieldWrap}>
+                <Text style={styles.detailLabel}>FEATURES (comma separated)</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={aiDetails.features.join(', ')}
+                  onChangeText={updateFeaturesCsv}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.metaRow}>
+                <Text style={styles.metaText}>
+                  Confidence: {Number.isFinite(aiDetails.confidence) ? `${Math.round(aiDetails.confidence * 100)}%` : 'N/A'}
+                </Text>
+                <Text style={styles.metaText}>Pattern: {aiDetails.pattern || 'N/A'}</Text>
+              </View>
+
+              {aiDetails.reasoning ? (
+                <Text style={styles.reasoningText}>Reasoning: {aiDetails.reasoning}</Text>
+              ) : null}
+
+              {Array.isArray(aiDetails.warnings) && aiDetails.warnings.length > 0 ? (
+                <Text style={styles.warningText}>Warnings: {aiDetails.warnings.join(' | ')}</Text>
+              ) : null}
 
               <Pressable
                 style={[styles.scanButton, styles.confirmButton]}
@@ -560,6 +623,55 @@ const styles = StyleSheet.create({
   },
   detailsCardWrap: {
     marginBottom: 12,
+    backgroundColor: '#f8f5ef',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e8ddd0',
+  },
+  reviewTitle: {
+    color: '#5a4f46',
+    fontFamily: 'serif',
+    fontSize: 16,
+    marginBottom: 10,
+    fontWeight: '700',
+  },
+  editFieldWrap: {
+    marginBottom: 8,
+  },
+  editInput: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd0c2',
+    color: '#2d2925',
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    fontFamily: 'serif',
+    fontSize: 15,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    marginTop: 2,
+  },
+  metaText: {
+    color: '#5a4f46',
+    fontFamily: 'serif',
+    fontSize: 12,
+  },
+  reasoningText: {
+    color: '#5a4f46',
+    fontFamily: 'serif',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  warningText: {
+    color: '#8b4f46',
+    fontFamily: 'serif',
+    fontSize: 12,
+    marginBottom: 8,
   },
   detailsRow: {
     flexDirection: 'row',
