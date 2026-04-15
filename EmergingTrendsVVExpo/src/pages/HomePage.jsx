@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -41,7 +42,6 @@ export default function HomePage({
 }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const displayName = userName && userName.trim() ? userName.trim() : 'Maria';
-  const avatarInitial = displayName.charAt(0).toUpperCase();
 
   function handleProfileMenuAction(target) {
     setIsProfileMenuOpen(false);
@@ -67,12 +67,6 @@ export default function HomePage({
               onPress={() => handleProfileMenuAction('profile')}
             >
               <Text style={styles.profileMenuItemText}>View Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.profileMenuItem}
-              onPress={() => handleProfileMenuAction('vault')}
-            >
-              <Text style={styles.profileMenuItemText}>My Vault</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.profileMenuItem}
@@ -103,7 +97,10 @@ export default function HomePage({
               activeOpacity={0.85}
               onPress={() => setIsProfileMenuOpen((open) => !open)}
             >
-              <Text style={styles.profileAvatarText}>{avatarInitial}</Text>
+              <Image
+                source={require('../../assets/maria.png')}
+                style={styles.profileAvatarImage}
+              />
             </TouchableOpacity>
           </View>
 
@@ -257,11 +254,10 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 4,
   },
-  profileAvatarText: {
-    color: '#2c3d35',
-    fontWeight: '700',
-    fontSize: 18,
-    fontFamily: 'serif',
+  profileAvatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 27,
   },
   suggestionCard: {
     backgroundColor: '#f0ede7',
