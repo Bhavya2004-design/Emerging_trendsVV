@@ -21,7 +21,12 @@ const INITIAL_CHECKLIST = [
   { id: 'meds', label: 'Medicines', packed: true },
 ];
 
-export default function PackingProgressPage({ onNavigate, onTripReady, selectedOutfits = [] }) {
+export default function PackingProgressPage({
+  onNavigate,
+  onGoBack,
+  onTripReady,
+  selectedOutfits = [],
+}) {
   const [checklist, setChecklist] = useState(INITIAL_CHECKLIST);
   const packedCount = useMemo(
     () => checklist.filter(item => item.packed).length,
@@ -63,7 +68,7 @@ export default function PackingProgressPage({ onNavigate, onTripReady, selectedO
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.screen}>
         <View style={styles.header}>
-          <ScreenBackButton onPress={() => onNavigate('trip-outfit-picker')} />
+          <ScreenBackButton onPress={onGoBack} />
           <View style={styles.headerTextWrap}>
             <Text style={styles.title}>Packing Progress</Text>
             <Text style={styles.subtitle}>Final checklist before your trip</Text>

@@ -6,6 +6,7 @@ import ScreenBackButton from '../components/ScreenBackButton';
 
 export default function AddedToVaultPage({
   onNavigate,
+  onGoBack,
   onGoToVault,
   onViewSuggestions,
   sectionLabel = 'your selected section',
@@ -15,7 +16,7 @@ export default function AddedToVaultPage({
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
         <View style={styles.topBack}>
-          <ScreenBackButton onPress={() => onNavigate('home')} />
+          <ScreenBackButton onPress={onGoBack} />
         </View>
         <View style={styles.contentWrap}>
           <View style={styles.titleWrap}>

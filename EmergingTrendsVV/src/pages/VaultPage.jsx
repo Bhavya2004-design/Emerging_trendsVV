@@ -22,6 +22,7 @@ export default function VaultPage({
   items,
   selectedBottomTab = 'vault',
   onBottomTabPress,
+  onGoBack,
 }) {
   const { width } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState('all');
@@ -131,7 +132,7 @@ export default function VaultPage({
     return (
       <View style={styles.headerWrapper}>
         <AppScreenHeader
-          onBack={() => handleBottomTabPress('home')}
+          onBack={onGoBack}
           title="My Vault"
           right={
             <Pressable

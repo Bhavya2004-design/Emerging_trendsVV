@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { launchCamera } from 'react-native-image-picker';
 import AppScreenHeader from '../components/AppScreenHeader';
 import BottomTabBar from '../components/BottomTabBar';
 import { vaultTabs } from '../data/vaultMockData';
@@ -32,6 +32,7 @@ const subtitleByCategory = {
 
 export default function ScanPage({
   onNavigate,
+  onGoBack,
   onSaveOutfit,
   selectedBottomTab = 'scan',
 }) {
@@ -110,45 +111,6 @@ export default function ScanPage({
 
     if (!uri) {
       Alert.alert('Scan failed', 'No image captured. Try again.');
-      return;
-    }
-
-    setCapturedImageUri(uri);
-    setProcessedImageUri('');
-    setAiDetails({
-      itemType: '',
-      color: '',
-      material: '',
-      style: '',
-      features: [],
-      occasion: '',
-    });
-    setIsEditingDetails(false);
-  }
-
-  async function handlePickFromGallery() {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      selectionLimit: 1,
-      quality: 0.9,
-    });
-
-    if (result.didCancel) {
-      return;
-    }
-
-    if (result.errorCode) {
-      Alert.alert(
-        'Gallery error',
-        result.errorMessage || 'Could not open gallery.',
-      );
-      return;
-    }
-
-    const uri = result.assets?.[0]?.uri;
-
-    if (!uri) {
-      Alert.alert('Selection failed', 'No image selected. Try again.');
       return;
     }
 
@@ -280,7 +242,7 @@ export default function ScanPage({
           showsVerticalScrollIndicator={false}
         >
           <AppScreenHeader
-            onBack={() => onNavigate('home')}
+            onBack={onGoBack}
             title="Scan Outfit"
             subtitle="Tap to scan clothes and add to VogueVault"
           />
@@ -297,7 +259,7 @@ export default function ScanPage({
                   No outfit scanned yet
                 </Text>
                 <Text style={styles.previewHintText}>
-                  Tap SCAN ITEM or Select from Gallery
+                  Tap SCAN ITEM to capture an outfit
                 </Text>
               </View>
             )}
@@ -307,16 +269,9 @@ export default function ScanPage({
             <View style={styles.cropCornerBottomRight} />
           </View>
 
-          <Text style={styles.helperText}>Start with gallery or camera</Text>
+          <Text style={styles.helperText}>Use the camera to scan an item</Text>
 
           <View style={styles.quickActionsRow}>
-            <Pressable
-              style={styles.quickActionButton}
-              onPress={handlePickFromGallery}
-            >
-              <Text style={styles.quickActionIcon}>⌂</Text>
-              <Text style={styles.quickActionText}>Select from Gallery</Text>
-            </Pressable>
             <Pressable
               style={styles.quickActionButton}
               onPress={() => onNavigate('vault')}
@@ -370,7 +325,7 @@ export default function ScanPage({
                   ? 'PROCESSING IMAGE...'
                   : isAnalyzing
                   ? 'ANALYZING OUTFIT...'
-                  : 'RUN AI DETECTION'}
+                  : 'Detect'}
               </Text>
             </Pressable>
           ) : null}
@@ -476,17 +431,6 @@ export default function ScanPage({
               </Pressable>
               <Pressable style={styles.secondaryButton} onPress={handleDiscard}>
                 <Text style={styles.secondaryButtonText}>Discard</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.secondaryButton, styles.addButton]}
-                onPress={handleRunAiDetection}
-                disabled={isAnalyzing || isProcessingImage}
-              >
-                <Text
-                  style={[styles.secondaryButtonText, styles.addButtonText]}
-                >
-                  {isAnalyzing || isProcessingImage ? 'Analyzing...' : 'Detect'}
-                </Text>
               </Pressable>
             </View>
           ) : null}
@@ -598,9 +542,11 @@ const styles = StyleSheet.create({
   quickActionsRow: {
     flexDirection: 'row',
     marginBottom: 14,
+    justifyContent: 'center',
   },
   quickActionButton: {
-    flex: 1,
+    flexGrow: 1,
+    maxWidth: 360,
     backgroundColor: '#fbf7f0',
     borderRadius: 14,
     minHeight: 62,
@@ -757,12 +703,5 @@ const styles = StyleSheet.create({
     color: '#5a4f46',
     fontFamily: 'serif',
     fontSize: 14,
-  },
-  addButton: {
-    backgroundColor: '#9cc8b8',
-  },
-  addButtonText: {
-    color: '#2f4338',
-    fontWeight: '700',
   },
 });

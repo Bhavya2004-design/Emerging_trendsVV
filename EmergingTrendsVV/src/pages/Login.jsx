@@ -45,7 +45,7 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
       if (onAuthSuccess) {
         onAuthSuccess();
       } else {
-        onNavigate('home');
+        onNavigate('home', { resetHistory: true });
       }
     } catch (error) {
       Alert.alert('Login failed', formatAuthError(error));
@@ -115,7 +115,7 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
 
         <TouchableOpacity
           style={styles.demoButton}
-          onPress={() => onNavigate('home')}>
+          onPress={() => onNavigate('home', { resetHistory: true })}>
           <Text style={styles.demoButtonText}>Continue as Guest</Text>
         </TouchableOpacity>
 

@@ -125,6 +125,7 @@ const getWeatherPresentation = (weatherCode) => {
 ========================= */
 export default function TripPage({
   onNavigate,
+  onGoBack,
   selectedBottomTab = 'home',
   initialTripPlan,
   onGeneratePacking,
@@ -410,7 +411,7 @@ export default function TripPage({
 
           {/* HEADER */}
           <View style={styles.header}>
-            <ScreenBackButton onPress={() => onNavigate('home')} />
+            <ScreenBackButton onPress={onGoBack} />
             <View style={styles.headerTextWrap}>
               <Text style={styles.title}>✈️ Pack For Trip</Text>
               <Text style={styles.subtitle}>Smart packing, stress-free travel</Text>

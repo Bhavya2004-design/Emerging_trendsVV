@@ -5,7 +5,7 @@
  * @format
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StatusBar, StyleSheet, View } from 'react-native';
 import {
   SafeAreaProvider,
@@ -50,23 +50,67 @@ type TripPlan = {
   endDate: string | null;
 };
 
+type AppScreen =
+  | 'splash'
+  | 'login'
+  | 'register'
+  | 'forgot-password'
+  | 'home'
+  | 'vault'
+  | 'scan'
+  | 'community'
+  | 'profile'
+  | 'added-to-vault'
+  | 'trip'
+  | 'trip-outfit-picker'
+  | 'trip-ai-suggestions'
+  | 'packing-progress';
+
 function App() {
-  const [screen, setScreen] = useState<
-    | 'splash'
-    | 'login'
-    | 'register'
-    | 'forgot-password'
-    | 'home'
-    | 'vault'
-    | 'scan'
-    | 'community'
-    | 'profile'
-    | 'added-to-vault'
-    | 'trip'
-    | 'trip-outfit-picker'
-    | 'trip-ai-suggestions'
-    | 'packing-progress'
-  >('splash');
+  const [screen, setScreen] = useState<AppScreen>('splash');
+  const screenRef = useRef<AppScreen>('splash');
+
+  useEffect(() => {
+    screenRef.current = screen;
+  }, [screen]);
+
+  const [screenHistory, setScreenHistory] = useState<AppScreen[]>([]);
+
+  const navigateTo = useCallback(
+    (
+      next: AppScreen,
+      options?: { skipHistory?: boolean; resetHistory?: boolean },
+    ) => {
+      if (options?.resetHistory) {
+        setScreenHistory([]);
+        setScreen(next);
+        return;
+      }
+      const from = screenRef.current;
+      if (!options?.skipHistory && from !== next) {
+        setScreenHistory(h => {
+          if (h.length > 0 && h[h.length - 1] === from) {
+            return h;
+          }
+          return [...h, from];
+        });
+      }
+      setScreen(next);
+    },
+    [],
+  );
+
+  const goBack = useCallback(() => {
+    setScreenHistory(h => {
+      if (h.length === 0) {
+        setScreen('home');
+        return h;
+      }
+      const prev = h[h.length - 1];
+      setScreen(prev);
+      return h.slice(0, -1);
+    });
+  }, []);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUserName, setCurrentUserName] = useState('');
   const [currentUserId, setCurrentUserId] = useState('');
@@ -94,12 +138,22 @@ function App() {
       setCurrentUserName(user?.displayName?.trim() || fallbackName);
       setCurrentUserId(user?.uid || '');
 
-      setScreen((current) => {
-        if (current === 'splash') {
-          return current;
+      const current = screenRef.current;
+      if (current === 'splash') {
+        return;
+      }
+      if (!nextIsAuthenticated) {
+        if (['login', 'register', 'forgot-password'].includes(current)) {
+          return;
         }
-        return nextIsAuthenticated ? 'home' : 'login';
-      });
+        setScreenHistory([]);
+        setScreen('login');
+        return;
+      }
+      if (['login', 'register', 'forgot-password'].includes(current)) {
+        setScreenHistory([]);
+        setScreen('home');
+      }
     });
 
     return unsubscribe;
@@ -114,7 +168,7 @@ function App() {
       tabKey === 'profile' ||
       tabKey === 'trip'
     ) {
-      setScreen(tabKey);
+      navigateTo(tabKey as AppScreen);
       return;
     }
 
@@ -136,7 +190,7 @@ function App() {
           } catch {
             // Guest or misconfigured Firebase — still leave session
           } finally {
-            setScreen('login');
+            navigateTo('login', { resetHistory: true });
           }
         },
       },
@@ -162,7 +216,7 @@ function App() {
     setLastAddedSection(
       outfitPayload.category === 'travel' ? 'travel section' : 'work section',
     );
-    setScreen('added-to-vault');
+    navigateTo('added-to-vault');
   }
 
   return (
@@ -171,24 +225,32 @@ function App() {
       <View style={styles.container}>
         {screen === 'splash' ? (
           <SplashScreen
-            onFinish={() => setScreen(isAuthenticated ? 'home' : 'login')}
+            onFinish={() =>
+              navigateTo(isAuthenticated ? 'home' : 'login', {
+                skipHistory: true,
+              })
+            }
             logoSource={require('./src/pages/VV_logo.png')}
           />
         ) : null}
         {screen === 'login' ? (
           <LoginPage
-            onNavigate={setScreen}
-            onAuthSuccess={() => setScreen('home')}
+            onNavigate={navigateTo}
+            onAuthSuccess={() =>
+              navigateTo('home', { resetHistory: true })
+            }
           />
         ) : null}
         {screen === 'register' ? (
           <RegisterPage
-            onNavigate={setScreen}
-            onAuthSuccess={() => setScreen('home')}
+            onNavigate={navigateTo}
+            onAuthSuccess={() =>
+              navigateTo('home', { resetHistory: true })
+            }
           />
         ) : null}
         {screen === 'forgot-password' ? (
-          <ForgotPasswordPage onNavigate={setScreen} />
+          <ForgotPasswordPage onNavigate={navigateTo} />
         ) : null}
         {screen === 'home' ? (
           <HomePage
@@ -203,12 +265,14 @@ function App() {
             items={vaultItems}
             selectedBottomTab="vault"
             onBottomTabPress={handleBottomTabPress}
+            onGoBack={goBack}
           />
         ) : null}
         {screen === 'scan' ? (
           <ScanPage
             selectedBottomTab="scan"
             onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
             onSaveOutfit={handleAddOutfit}
           />
         ) : null}
@@ -216,16 +280,18 @@ function App() {
           <CommunityPage
             selectedBottomTab="community"
             onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
           />
         ) : null}
         {screen === 'trip' ? (
           <TripPage
             selectedBottomTab="home"
             onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
             initialTripPlan={tripPlan}
             onGeneratePacking={(nextTripPlan: TripPlan) => {
               setTripPlan(nextTripPlan);
-              setScreen('trip-outfit-picker');
+              navigateTo('trip-outfit-picker');
             }}
           />
         ) : null}
@@ -233,7 +299,8 @@ function App() {
           <TripOutfitPickerPage
             items={vaultItems}
             onNavigate={handleBottomTabPress}
-            onOpenAiSuggestions={() => setScreen('trip-ai-suggestions')}
+            onGoBack={goBack}
+            onOpenAiSuggestions={() => navigateTo('trip-ai-suggestions')}
             onContinuePacking={(selectedIds: Record<string, boolean>) => {
               const selectedIdsList = Object.keys(selectedIds).filter(
                 id => selectedIds[id],
@@ -242,26 +309,29 @@ function App() {
               setSelectedTripOutfits(
                 vaultItems.filter(item => selectedIdsList.includes(item.id)),
               );
-              setScreen('packing-progress');
+              navigateTo('packing-progress');
             }}
           />
         ) : null}
         {screen === 'trip-ai-suggestions' ? (
           <TripAiSuggestionsPage
             tripPlan={tripPlan}
-            onBack={() => setScreen('trip-outfit-picker')}
+            onBack={goBack}
             onUseSuggestions={(suggestedOutfits: VaultItem[]) => {
               setSelectedTripOutfitIds([]);
               setSelectedTripOutfits(suggestedOutfits);
-              setScreen('packing-progress');
+              navigateTo('packing-progress');
             }}
           />
         ) : null}
         {screen === 'packing-progress' ? (
           <PackingProgressPage
             onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
             selectedOutfits={selectedTripOutfits}
-            onTripReady={() => setScreen('home')}
+            onTripReady={() =>
+              navigateTo('home', { resetHistory: true })
+            }
           />
         ) : null}
         {screen === 'added-to-vault' ? (
@@ -269,8 +339,9 @@ function App() {
             sectionLabel={lastAddedSection}
             selectedBottomTab="vault"
             onNavigate={handleBottomTabPress}
-            onGoToVault={() => setScreen('vault')}
-            onViewSuggestions={() => setScreen('community')}
+            onGoBack={goBack}
+            onGoToVault={() => navigateTo('vault')}
+            onViewSuggestions={() => navigateTo('community')}
           />
         ) : null}
         {screen === 'profile' ? (
@@ -280,8 +351,9 @@ function App() {
             onUserNameChange={setCurrentUserName}
             selectedBottomTab="profile"
             onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
             onLogout={handleLogout}
-            onLoggedOut={() => setScreen('login')}
+            onLoggedOut={() => navigateTo('login', { resetHistory: true })}
           />
         ) : null}
       </View>
