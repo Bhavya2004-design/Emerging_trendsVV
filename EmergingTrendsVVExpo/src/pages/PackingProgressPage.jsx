@@ -27,29 +27,6 @@ export default function PackingProgressPage({ onNavigate, onTripReady, selectedO
     () => checklist.filter(item => item.packed).length,
     [checklist],
   );
-  const progressPercentage = useMemo(() => {
-    if (checklist.length === 0) {
-      return 0;
-    }
-
-    return Math.round((packedCount / checklist.length) * 100);
-  }, [packedCount, checklist.length]);
-  const progressHint = useMemo(() => {
-    if (progressPercentage === 100) {
-      return 'Everything is packed. You are ready to go.';
-    }
-
-    if (progressPercentage >= 75) {
-      return 'Almost there. Just a few final items left.';
-    }
-
-    if (progressPercentage >= 40) {
-      return 'Good progress so far. Keep checking items off.';
-    }
-
-    return 'Start with the essentials so your trip prep stays easy.';
-  }, [progressPercentage]);
-  const tripStatusLabel = progressPercentage === 100 ? 'Ready' : progressPercentage >= 60 ? 'On Track' : 'In Progress';
 
   function toggleChecklistItem(itemId) {
     setChecklist(current =>
@@ -68,24 +45,9 @@ export default function PackingProgressPage({ onNavigate, onTripReady, selectedO
             <Text style={styles.title}>Packing Progress</Text>
             <Text style={styles.subtitle}>Final checklist before your trip</Text>
           </View>
-          <View style={styles.headerBadge}>
-            <Text style={styles.headerBadgeText}>{tripStatusLabel}</Text>
-          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.progressCard}>
-            <View style={styles.progressTopRow}>
-              <Text style={styles.progressTitle}>Packing Completion</Text>
-              <Text style={styles.progressMiniLabel}>{packedCount}/{checklist.length} packed</Text>
-            </View>
-            <Text style={styles.progressValue}>{progressPercentage}%</Text>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${progressPercentage}%` }]} />
-            </View>
-            <Text style={styles.progressHint}>{progressHint}</Text>
-          </View>
-
           <View style={styles.selectedCard}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.checklistTitle}>Selected Outfits</Text>
@@ -341,62 +303,18 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   headerTextWrap: { flex: 1 },
-  headerBadge: {
-    backgroundColor: '#efe6da',
-    borderWidth: 1,
-    borderColor: '#dfd0bb',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginLeft: 8,
-  },
-  headerBadgeText: { color: '#8f7458', fontSize: 11, fontWeight: '700' },
   title: { fontSize: 22, fontWeight: '700', color: '#2c3e50' },
   subtitle: { marginTop: 2, fontSize: 13, color: '#808b86' },
   scrollContent: { padding: 20, paddingTop: 8, paddingBottom: 130 },
 
-  progressCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#e4ddd2',
-    marginBottom: 14,
-    shadowColor: '#2c3e50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  progressTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  progressTitle: { fontSize: 14, fontWeight: '700', color: '#5c5247' },
-  progressMiniLabel: { fontSize: 12, color: '#8a7d70', fontWeight: '600' },
-  progressValue: { fontSize: 36, fontWeight: '800', color: '#2c3e50', marginTop: 8 },
-  progressTrack: {
-    marginTop: 10,
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: '#ece5da',
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#cfa97f',
-    borderRadius: 999,
-  },
-  progressHint: { marginTop: 10, color: '#8a7d70', fontSize: 12 },
-
   selectedCard: {
     backgroundColor: '#fff',
     borderRadius: 18,
-    padding: 18,
+    padding: 20,
     borderWidth: 1,
     borderColor: '#e4ddd2',
-    marginBottom: 14,
+    marginBottom: 16,
+    minHeight: 220,
     shadowColor: '#2c3e50',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
@@ -420,7 +338,7 @@ const styles = StyleSheet.create({
   selectedRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
   selectedThumbWrap: {
     width: 30,

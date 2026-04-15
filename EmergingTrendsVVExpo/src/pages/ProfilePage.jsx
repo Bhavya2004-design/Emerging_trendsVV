@@ -41,7 +41,6 @@ const DEFAULT_PROFILE = {
 };
 
 const activityLinks = [
-  { key: 'my-vault', icon: '🗂', label: 'My Vault' },
   { key: 'saved-outfits', icon: '❤️', label: 'Saved Outfits' },
   { key: 'travel-packing', icon: '🧳', label: 'Travel Packing' },
   { key: 'community-posts', icon: '👥', label: 'Community Posts' },
@@ -1092,14 +1091,6 @@ export default function ProfilePage({
             ))}
           </View>
 
-          <Pressable
-            style={styles.primaryBtn}
-            onPress={() =>
-              Alert.alert('Data Export', 'CSV export hook goes here.')
-            }
-          >
-            <Text style={styles.primaryBtnText}>Export Closet CSV</Text>
-          </Pressable>
         </View>
       </ScrollView>
     );

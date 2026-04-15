@@ -12,7 +12,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CalendarList } from 'react-native-calendars';
 import ScreenBackButton from '../components/ScreenBackButton';
 import BottomTabBar from '../components/BottomTabBar';
@@ -131,6 +131,7 @@ export default function TripPage({
   initialTripPlan,
   onGeneratePacking,
 }) {
+  const insets = useSafeAreaInsets();
   const initialDestination = normalizeDestination(initialTripPlan?.destination);
   const [selectedDestination, setSelectedDestination] = useState(initialDestination);
   const [tripType, setTripType] = useState(initialTripPlan?.tripType || 'Business');
@@ -447,7 +448,13 @@ export default function TripPage({
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.screen}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: 150 + Math.max(insets.bottom, 12) },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
 
           {/* HEADER */}
           <View style={styles.header}>

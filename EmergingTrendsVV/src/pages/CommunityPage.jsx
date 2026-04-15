@@ -110,6 +110,8 @@ function PostCard({
   onOpenComments,
   compact = false,
 }) {
+  const likeCount = post.likes + (isLiked ? 1 : 0);
+
   return (
     <View style={[styles.postCard, compact && styles.postCardCompact]}>
       <View style={styles.postHeader}>
@@ -143,19 +145,6 @@ function PostCard({
 
       <Text style={styles.postCaption}>{post.caption}</Text>
 
-      <View style={styles.postMetaRow}>
-        <Text style={styles.postMeta}>{post.category}</Text>
-        <Text style={styles.postMeta}>•</Text>
-        <Text style={styles.postMeta}>{post.createdAt}</Text>
-      </View>
-
-      <View style={styles.socialStatsRow}>
-        <Text style={styles.socialStatText}>
-          {post.likes + (isLiked ? 1 : 0)} likes
-        </Text>
-        <Text style={styles.socialStatText}>{commentCount} comments</Text>
-      </View>
-
       <View style={styles.actionRow}>
         <TouchableOpacity
           style={styles.iconActionBtn}
@@ -170,7 +159,7 @@ function PostCard({
               isLiked && styles.iconActionLabelActive,
             ]}
           >
-            Like
+            {likeCount}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -178,7 +167,7 @@ function PostCard({
           onPress={() => onOpenComments(post.id)}
         >
           <Text style={styles.iconAction}>💬</Text>
-          <Text style={styles.iconActionLabel}>Comment</Text>
+          <Text style={styles.iconActionLabel}>{commentCount}</Text>
         </TouchableOpacity>
       </View>
 
@@ -952,43 +941,20 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontFamily: 'serif',
   },
-  postMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 6,
-  },
-  postMeta: {
-    color: '#6e6258',
-    fontSize: 11,
-    fontWeight: '600',
-    fontFamily: 'serif',
-  },
   actionRow: {
-    marginTop: 10,
+    marginTop: 12,
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    gap: 18,
-  },
-  socialStatsRow: {
-    marginTop: 10,
-    flexDirection: 'row',
-    gap: 14,
-  },
-  socialStatText: {
-    fontWeight: '700',
-    color: '#4e423c',
-    fontSize: 12,
-    fontFamily: 'serif',
+    gap: 16,
   },
   iconActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   iconAction: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#64594e',
   },
   iconActionActive: {
@@ -996,7 +962,7 @@ const styles = StyleSheet.create({
   },
   iconActionLabel: {
     color: '#6e6258',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     fontFamily: 'serif',
   },

@@ -16,6 +16,7 @@ import HomePage from './src/pages/HomePage';
 import TripPage from './src/pages/Trip';
 import TripOutfitPickerPage from './src/pages/TripOutfitPickerPage';
 import PackingProgressPage from './src/pages/PackingProgressPage';
+import MyTripsPage from './src/pages/MyTripsPage';
 import SplashScreen from './src/components/SplashScreen';
 import { mockVaultItems } from './src/data/vaultMockData';
 import { logoutUser, subscribeAuthState } from './src/services/firebaseAuth';
@@ -37,6 +38,7 @@ export default function App() {
     endDate: null,
   });
   const [selectedTripOutfits, setSelectedTripOutfits] = useState([]);
+  const [savedTrips, setSavedTrips] = useState([]);
 
   useEffect(() => {
     screenRef.current = screen;
@@ -112,7 +114,8 @@ export default function App() {
       tabKey === 'scan' ||
       tabKey === 'community' ||
       tabKey === 'profile' ||
-      tabKey === 'trip'
+      tabKey === 'trip' ||
+      tabKey === 'my-trip'
     ) {
       navigateTo(tabKey);
       return;
@@ -248,9 +251,21 @@ export default function App() {
               const selectedIdsList = Object.keys(selectedIds).filter(
                 id => selectedIds[id],
               );
-              setSelectedTripOutfits(
-                vaultItems.filter(item => selectedIdsList.includes(item.id)),
+              const nextSelectedOutfits = vaultItems.filter(item =>
+                selectedIdsList.includes(item.id),
               );
+              setSelectedTripOutfits(nextSelectedOutfits);
+              setSavedTrips(currentTrips => [
+                {
+                  id: `trip-${Date.now()}`,
+                  destination: tripPlan.destination,
+                  tripType: tripPlan.tripType,
+                  startDate: tripPlan.startDate,
+                  endDate: tripPlan.endDate,
+                  selectedOutfits: nextSelectedOutfits,
+                },
+                ...currentTrips,
+              ]);
               navigateTo('packing-progress');
             }}
           />
@@ -260,6 +275,14 @@ export default function App() {
             onNavigate={navigateTo}
             selectedOutfits={selectedTripOutfits}
             onTripReady={() => navigateTo('home', { resetHistory: true })}
+          />
+        ) : null}
+        {screen === 'my-trip' ? (
+          <MyTripsPage
+            onNavigate={handleBottomTabPress}
+            onGoBack={goBack}
+            trips={savedTrips}
+            selectedBottomTab="home"
           />
         ) : null}
         {screen === 'added-to-vault' ? (

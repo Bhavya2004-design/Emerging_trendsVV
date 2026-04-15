@@ -160,9 +160,6 @@ export default function TripOutfitPickerPage({
         </ScrollView>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.secondaryButton} onPress={handleAiSuggestions}>
-            <Text style={styles.secondaryButtonText}>Get AI Suggestions</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={styles.primaryButton} onPress={handleContinue}>
             <Text style={styles.primaryButtonText}>Continue Packing ({selectedCount})</Text>
           </TouchableOpacity>

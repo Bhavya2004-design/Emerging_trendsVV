@@ -111,18 +111,18 @@ const personStyles = StyleSheet.create({
 
 const communityStyles = StyleSheet.create({
   wrap: {
-    width: 28,
+    width: 24,
     height: 22,
     position: 'relative',
   },
   back: {
     position: 'absolute',
-    left: 0,
+    left: 2,
     bottom: 0,
   },
   front: {
     position: 'absolute',
-    right: 0,
+    right: 2,
     bottom: 0,
     zIndex: 1,
   },

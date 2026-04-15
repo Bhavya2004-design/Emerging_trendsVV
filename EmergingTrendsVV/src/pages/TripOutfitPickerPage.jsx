@@ -48,7 +48,10 @@ export default function TripOutfitPickerPage({
 
   function handleAiSuggestions() {
     if (outfitItems.length === 0) {
-      Alert.alert('No outfits available', 'Add outfits to your vault first to get AI suggestions.');
+      Alert.alert(
+        'No outfits available',
+        'Add outfits to your vault first to get AI suggestions.',
+      );
       return;
     }
 
@@ -83,16 +86,18 @@ export default function TripOutfitPickerPage({
               <Text style={styles.alertIcon}>📋</Text>
             </View>
             <Text style={styles.alertTitle}>Select Outfits</Text>
-            <Text style={styles.alertMessage}>Please select at least one outfit before continuing.</Text>
-            
+            <Text style={styles.alertMessage}>
+              Please select at least one outfit before continuing.
+            </Text>
+
             <View style={styles.alertButtonsRow}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.alertButtonSecondary}
                 onPress={() => setShowAlert(false)}
               >
                 <Text style={styles.alertButtonSecondaryText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.alertButtonPrimary}
                 onPress={() => setShowAlert(false)}
               >
@@ -103,73 +108,109 @@ export default function TripOutfitPickerPage({
         </View>
       </Modal>
 
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.screen}>
-        <View style={styles.header}>
-          <ScreenBackButton onPress={onGoBack} />
-          <View>
-            <Text style={styles.title}>Select Outfits</Text>
-            <Text style={styles.subtitle}>Choose outfits from your vault for this trip</Text>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.screen}>
+          <View style={styles.header}>
+            <ScreenBackButton onPress={onGoBack} />
+            <View>
+              <Text style={styles.title}>Select Outfits</Text>
+              <Text style={styles.subtitle}>
+                Choose outfits from your vault for this trip
+              </Text>
+            </View>
+          </View>
+
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {outfitItems.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>
+                  No outfits in your vault yet
+                </Text>
+                <Text style={styles.emptyText}>
+                  Save outfits first, then come back to build packing.
+                </Text>
+              </View>
+            ) : (
+              outfitItems.map(item => {
+                const selected = Boolean(selectedIds[item.id]);
+
+                return (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => toggleItem(item.id)}
+                    style={[styles.card, selected && styles.cardSelected]}
+                  >
+                    <View style={styles.imageWrap}>
+                      {item.imageUri ? (
+                        <Image
+                          source={{ uri: item.imageUri }}
+                          style={styles.image}
+                          resizeMode="cover"
+                        />
+                      ) : item?.mockImage ? (
+                        <OutfitMockImage mockImage={item.mockImage} />
+                      ) : (
+                        <View
+                          style={[
+                            styles.placeholder,
+                            { backgroundColor: '#dfe7e1' },
+                          ]}
+                        >
+                          <Text style={styles.placeholderText}>
+                            {(item.title || 'Outfit').slice(0, 1).toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <View style={styles.content}>
+                      <Text style={styles.itemTitle}>
+                        {item.title || 'Untitled Outfit'}
+                      </Text>
+                      <Text style={styles.itemSubtitle}>
+                        {item.subtitle || 'Saved in vault'}
+                      </Text>
+                      <Text style={styles.itemCategory}>
+                        {item.category || 'outfit'}
+                      </Text>
+                    </View>
+
+                    <View
+                      style={[
+                        styles.selectPill,
+                        selected && styles.selectPillActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.selectPillText,
+                          selected && styles.selectPillTextActive,
+                        ]}
+                      >
+                        {selected ? 'Selected' : 'Select'}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })
+            )}
+          </ScrollView>
+
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleContinue}
+            >
+              <Text style={styles.primaryButtonText}>
+                Continue Packing ({selectedCount})
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {outfitItems.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>No outfits in your vault yet</Text>
-              <Text style={styles.emptyText}>Save outfits first, then come back to build packing.</Text>
-            </View>
-          ) : (
-            outfitItems.map(item => {
-              const selected = Boolean(selectedIds[item.id]);
-
-              return (
-                <Pressable
-                  key={item.id}
-                  onPress={() => toggleItem(item.id)}
-                  style={[styles.card, selected && styles.cardSelected]}
-                >
-                  <View style={styles.imageWrap}>
-                    {item.imageUri ? (
-                      <Image source={{ uri: item.imageUri }} style={styles.image} resizeMode="cover" />
-                    ) : item?.mockImage ? (
-                      <OutfitMockImage mockImage={item.mockImage} />
-                    ) : (
-                      <View style={[styles.placeholder, { backgroundColor: '#dfe7e1' }]}>
-                        <Text style={styles.placeholderText}>
-                          {(item.title || 'Outfit').slice(0, 1).toUpperCase()}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={styles.content}>
-                    <Text style={styles.itemTitle}>{item.title || 'Untitled Outfit'}</Text>
-                    <Text style={styles.itemSubtitle}>{item.subtitle || 'Saved in vault'}</Text>
-                    <Text style={styles.itemCategory}>{item.category || 'outfit'}</Text>
-                  </View>
-
-                  <View style={[styles.selectPill, selected && styles.selectPillActive]}>
-                    <Text style={[styles.selectPillText, selected && styles.selectPillTextActive]}>
-                      {selected ? 'Selected' : 'Select'}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            })
-          )}
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.secondaryButton} onPress={handleAiSuggestions}>
-            <Text style={styles.secondaryButtonText}>Get AI Suggestions</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.primaryButton} onPress={handleContinue}>
-            <Text style={styles.primaryButtonText}>Continue Packing ({selectedCount})</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
     </>
   );
 }
@@ -837,7 +878,12 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   itemTitle: { fontSize: 15, fontWeight: '700', color: '#2c3e50' },
   itemSubtitle: { marginTop: 2, fontSize: 12, color: '#6a726f' },
-  itemCategory: { marginTop: 4, fontSize: 11, color: '#6d9f8d', textTransform: 'capitalize' },
+  itemCategory: {
+    marginTop: 4,
+    fontSize: 11,
+    color: '#6d9f8d',
+    textTransform: 'capitalize',
+  },
   selectPill: {
     borderWidth: 1,
     borderColor: '#d7dedb',

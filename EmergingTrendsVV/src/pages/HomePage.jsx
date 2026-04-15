@@ -16,23 +16,6 @@ const quickActions = [
   { key: 'my-trip', label: 'My Trip', icon: '✈️' },
 ];
 
-const posts = [
-  {
-    id: 'p1',
-    name: 'Priya',
-    message: 'Love this neutral outfit! Perfect for spring!',
-    likes: 45,
-    comments: 12,
-  },
-  {
-    id: 'p2',
-    name: 'Jenny',
-    message: 'Bringing out my summer dresses.',
-    likes: 36,
-    comments: 45,
-  },
-];
-
 export default function HomePage({
   onNavigate,
   onLogout,
@@ -134,31 +117,6 @@ export default function HomePage({
               </TouchableOpacity>
             ))}
           </View>
-
-          <Text style={[styles.sectionTitle, styles.communityTitle]}>Community Looks</Text>
-          {posts.map((post) => (
-            <TouchableOpacity
-              key={post.id}
-              style={styles.postCard}
-              onPress={() => onNavigate('community')}
-              activeOpacity={0.9}
-            >
-              <View style={styles.postHeader}>
-                <View style={styles.userChip}>
-                  <View style={styles.userAvatar}>
-                    <Text style={styles.userAvatarText}>{post.name.charAt(0)}</Text>
-                  </View>
-                  <Text style={styles.postName}>{post.name}</Text>
-                </View>
-                <Text style={styles.menuDots}>...</Text>
-              </View>
-              <Text style={styles.postMessage}>{post.message}</Text>
-              <View style={styles.postFooter}>
-                <Text style={styles.postStat}>♡ {post.likes}</Text>
-                <Text style={styles.postStat}>◌ {post.comments}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
         </ScrollView>
 
         <BottomTabBar selectedTab={selectedBottomTab} onNavigate={onNavigate} />
@@ -303,27 +261,26 @@ const styles = StyleSheet.create({
   },
   quickActionRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 10,
-    marginBottom: 18,
+    marginBottom: 20,
   },
   quickActionCard: {
-    flex: 1,
-    minHeight: 124,
+    width: '48%',
+    minHeight: 168,
     backgroundColor: '#f0ede7',
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 20,
     paddingHorizontal: 8,
+    marginBottom: 10,
   },
   quickActionIcon: {
     fontSize: 46,
     lineHeight: 52,
     marginBottom: 10,
-  },
-  communityTitle: {
-    marginBottom: 2,
   },
   quickActionLabel: {
     fontFamily: 'serif',
@@ -331,60 +288,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
-  },
-  postCard: {
-    backgroundColor: '#f0ede7',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-  },
-  postHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  userChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  userAvatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#bf8e6c',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  userAvatarText: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-  postName: {
-    fontFamily: 'serif',
-    color: '#2b2b2b',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  menuDots: {
-    color: '#5f574f',
-    fontSize: 18,
-  },
-  postMessage: {
-    marginTop: 8,
-    color: '#4b433d',
-    fontFamily: 'serif',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  postFooter: {
-    marginTop: 10,
-    flexDirection: 'row',
-    gap: 20,
-  },
-  postStat: {
-    color: '#4b433d',
-    fontFamily: 'serif',
-    fontSize: 13,
   },
 });
