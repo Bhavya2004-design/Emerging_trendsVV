@@ -10,6 +10,7 @@ import {
   Alert,
   Pressable,
   TextInput,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CalendarList } from 'react-native-calendars';
@@ -426,7 +427,7 @@ export default function TripPage({
             <View style={styles.selectorLeft}>
               <Text style={styles.selectorEmoji}>{destEmoji}</Text>
               <View>
-                <Text style={styles.selectorHint}>Destination</Text>
+                <Text style={styles.selectorHint}>Destination (tap to search)</Text>
                 <Text style={styles.selectorValue}>{destination}</Text>
               </View>
             </View>
@@ -583,8 +584,16 @@ export default function TripPage({
 
         {/* DESTINATION MODAL */}
         <Modal visible={showDest} transparent animationType="slide">
-          <Pressable style={styles.modalOverlay} onPress={() => setShowDest(false)}>
-            <Pressable style={[styles.modalSheet, styles.destinationSheet]} onPress={() => {}}>
+          <View style={[styles.modalOverlay, styles.destinationModalOverlay]}>
+            <Pressable
+              style={styles.modalBackdropTapZone}
+              onPress={() => setShowDest(false)}
+            />
+            <KeyboardAvoidingView
+              behavior="padding"
+              style={styles.destinationKeyboardWrap}
+            >
+              <View style={[styles.modalSheet, styles.destinationSheet]}>
               <View style={styles.modalHandle} />
               <Text style={styles.modalTitle}>Choose Destination</Text>
               <TextInput
@@ -596,6 +605,7 @@ export default function TripPage({
                 autoCapitalize="words"
                 autoCorrect={false}
                 autoFocus
+                returnKeyType="search"
               />
               <Text style={styles.destinationHelper}>Results powered by Open-Meteo geocoding.</Text>
               <ScrollView style={styles.destinationResults} keyboardShouldPersistTaps="handled">
@@ -636,8 +646,9 @@ export default function TripPage({
                   );
                 })}
               </ScrollView>
-            </Pressable>
-          </Pressable>
+              </View>
+            </KeyboardAvoidingView>
+          </View>
         </Modal>
 
         {/* TRIP TYPE MODAL - kept for safety */}
@@ -790,6 +801,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
   },
+  modalBackdropTapZone: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  destinationModalOverlay: {
+    justifyContent: 'flex-start',
+    paddingTop: 88,
+    paddingHorizontal: 14,
+  },
+  destinationKeyboardWrap: {
+    width: '100%',
+  },
   modalSheet: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,
@@ -798,7 +820,18 @@ const styles = StyleSheet.create({
     paddingBottom: 36,
   },
   destinationSheet: {
-    maxHeight: '76%',
+    maxHeight: '72%',
+    borderRadius: 22,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+    paddingBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 18,
+    elevation: 12,
   },
   calendarSheet: {
     minHeight: '78%',
@@ -823,23 +856,23 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   destinationInput: {
-    borderWidth: 1,
-    borderColor: '#e3ddd3',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
+    borderWidth: 1.5,
+    borderColor: '#d8cec0',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    fontSize: 16,
     color: '#333',
-    backgroundColor: '#fcfbf8',
-    marginBottom: 8,
+    backgroundColor: '#fff',
+    marginBottom: 10,
   },
   destinationHelper: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#938b80',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   destinationResults: {
-    maxHeight: 320,
+    maxHeight: 360,
   },
   destinationStatusRow: {
     flexDirection: 'row',
