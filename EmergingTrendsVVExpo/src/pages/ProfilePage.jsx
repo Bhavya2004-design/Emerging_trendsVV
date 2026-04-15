@@ -22,6 +22,7 @@ import { communityPosts } from '../data/communityMockData';
 import { logoutUser, updateAuthDisplayName } from '../services/firebaseAuth';
 
 const PROFILE_STORAGE_PREFIX = 'profile:custom:';
+const DEFAULT_AVATAR_SOURCE = require('../../assets/maria.png');
 
 const DEFAULT_PROFILE = {
   userID: 'user-maria-01',
@@ -91,16 +92,17 @@ function buildPostHistory() {
 }
 
 function ProfileHeader({ profile }) {
-  const initial = profile.name?.charAt(0)?.toUpperCase() || '?';
-
   return (
     <View style={styles.profileHeaderWrap}>
       <View style={styles.avatarFrame}>
-        {profile.avatarUri ? (
-          <Image source={{ uri: profile.avatarUri }} style={styles.avatarImage} />
-        ) : (
-          <Text style={styles.avatarText}>{initial}</Text>
-        )}
+        <Image
+          source={
+            profile.avatarUri
+              ? { uri: profile.avatarUri }
+              : DEFAULT_AVATAR_SOURCE
+          }
+          style={styles.avatarImage}
+        />
       </View>
       <Text style={styles.profileName}>{profile.name}</Text>
       <Text style={styles.profileBio}>{profile.bio}</Text>
@@ -257,10 +259,11 @@ export default function ProfilePage({
   const [privacySettings, setPrivacySettings] = useState({
     privateAccount: false,
     closetVisibility: 'Followers',
-    blockedUsers: ['@spamcloset', '@style_bot_22'],
   });
 
-  const [theme, setTheme] = useState('Cream');
+  const [isClearingCache, setIsClearingCache] = useState(false);
+  const [clearCacheProgress, setClearCacheProgress] = useState(0);
+  const [clearCacheMessage, setClearCacheMessage] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -737,6 +740,39 @@ export default function ProfilePage({
     ]);
   }
 
+  async function handleClearCache() {
+    if (isClearingCache) {
+      return;
+    }
+
+    setIsClearingCache(true);
+    setClearCacheProgress(0);
+    setClearCacheMessage('');
+
+    try {
+      const allKeys = await AsyncStorage.getAllKeys();
+      const profileKeys = allKeys.filter(key =>
+        key.startsWith(PROFILE_STORAGE_PREFIX),
+      );
+      setClearCacheProgress(35);
+
+      if (profileKeys.length > 0) {
+        await AsyncStorage.multiRemove(profileKeys);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 220));
+      setClearCacheProgress(70);
+      await new Promise(resolve => setTimeout(resolve, 220));
+      setClearCacheProgress(100);
+      setClearCacheMessage('Cache cleared successfully.');
+    } catch (error) {
+      setClearCacheProgress(0);
+      setClearCacheMessage('Unable to clear cache. Please try again.');
+    } finally {
+      setIsClearingCache(false);
+    }
+  }
+
   async function selectProfileImage(source) {
     try {
       if (source === 'camera' && Platform.OS === 'android') {
@@ -842,13 +878,14 @@ export default function ProfilePage({
             onPress={openPhotoPickerMenu}
           >
             <View style={styles.avatarEditLarge}>
-              {profile.avatarUri ? (
-                <Image source={{ uri: profile.avatarUri }} style={styles.avatarEditLargeImage} />
-              ) : (
-                <Text style={styles.avatarEditLargeText}>
-                  {profile.name.charAt(0) || '?'}
-                </Text>
-              )}
+              <Image
+                source={
+                  profile.avatarUri
+                    ? { uri: profile.avatarUri }
+                    : DEFAULT_AVATAR_SOURCE
+                }
+                style={styles.avatarEditLargeImage}
+              />
             </View>
             <View style={styles.avatarEditMeta}>
               <Text style={styles.avatarEditTitle}>Profile photo</Text>
@@ -1055,25 +1092,6 @@ export default function ProfilePage({
             ))}
           </View>
 
-          <Text style={styles.sectionSubtitle}>Blocked Users</Text>
-          {privacySettings.blockedUsers.map(user => (
-            <View key={user} style={styles.blockedRow}>
-              <Text style={styles.subCopy}>{user}</Text>
-              <Pressable
-                onPress={() =>
-                  setPrivacySettings(current => ({
-                    ...current,
-                    blockedUsers: current.blockedUsers.filter(
-                      entry => entry !== user,
-                    ),
-                  }))
-                }
-              >
-                <Text style={styles.smallActionBtnText}>Unblock</Text>
-              </Pressable>
-            </View>
-          ))}
-
           <Pressable
             style={styles.primaryBtn}
             onPress={() =>
@@ -1096,55 +1114,64 @@ export default function ProfilePage({
         <ViewTitle title="App Settings" onBack={() => setView('home')} />
 
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionSubtitle}>Theme</Text>
-          <View style={styles.chipRow}>
-            {['Light', 'Cream'].map(entry => (
-              <Pressable
-                key={entry}
-                onPress={() => setTheme(entry)}
-                style={[
-                  styles.smallChip,
-                  theme === entry && styles.smallChipActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.smallChipText,
-                    theme === entry && styles.smallChipTextActive,
-                  ]}
-                >
-                  {entry}
-                </Text>
-              </Pressable>
-            ))}
+          <View style={styles.settingsProfileRow}>
+            <Image
+              source={
+                profile.avatarUri
+                  ? { uri: profile.avatarUri }
+                  : DEFAULT_AVATAR_SOURCE
+              }
+              style={styles.settingsAvatar}
+            />
+            <View style={styles.settingsProfileMeta}>
+              <Text style={styles.settingsProfileName}>{profile.name}</Text>
+              <Text style={styles.settingsProfileHint}>Profile photo</Text>
+            </View>
           </View>
 
           <Pressable
             style={styles.linkRow}
-            onPress={() =>
-              Alert.alert('Storage', 'Clear cache action can be attached here.')
-            }
+            onPress={handleClearCache}
+            disabled={isClearingCache}
           >
-            <View style={styles.linkLeft}>
-              <Text style={styles.linkIcon}>⌂</Text>
-              <Text style={styles.linkLabel}>Storage Management</Text>
-            </View>
-            <Text style={styles.linkArrow}>›</Text>
+            <Text style={styles.linkLabel}>
+              {isClearingCache ? 'Clearing Cache...' : 'Clear Cache'}
+            </Text>
           </Pressable>
+          {isClearingCache || clearCacheProgress > 0 ? (
+            <View style={styles.cacheProgressWrap}>
+              <View style={styles.cacheProgressTrack}>
+                <View
+                  style={[
+                    styles.cacheProgressFill,
+                    { width: `${clearCacheProgress}%` },
+                  ]}
+                />
+              </View>
+              <Text style={styles.cacheProgressText}>{clearCacheProgress}%</Text>
+            </View>
+          ) : null}
+          {clearCacheMessage ? (
+            <Text
+              style={[
+                styles.cacheStatusText,
+                clearCacheProgress === 100 && styles.cacheStatusTextSuccess,
+              ]}
+            >
+              {clearCacheMessage}
+            </Text>
+          ) : null}
+
           <Pressable
             style={styles.linkRow}
             onPress={() =>
               Alert.alert(
-                'Help & Support',
+                'Contact Us',
                 'Connect FAQ / bug report links here.',
               )
             }
           >
-            <View style={styles.linkLeft}>
-              <Text style={styles.linkIcon}>◌</Text>
-              <Text style={styles.linkLabel}>Help / Support</Text>
-            </View>
-            <Text style={styles.linkArrow}>›</Text>
+            <Text style={styles.linkLabel}>Contact Us</Text>
           </Pressable>
 
           <Pressable
@@ -1233,12 +1260,6 @@ const styles = StyleSheet.create({
     borderColor: '#e8e3da',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 32,
-    fontFamily: 'serif',
-    color: '#5e544c',
-    fontWeight: '700',
   },
   avatarImage: {
     width: '100%',
@@ -1641,12 +1662,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarEditLargeText: {
-    color: '#3d3630',
-    fontFamily: 'serif',
-    fontSize: 28,
-    fontWeight: '700',
-  },
   avatarEditLargeImage: {
     width: '100%',
     height: '100%',
@@ -1667,6 +1682,67 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
     fontSize: 14,
     marginTop: 4,
+  },
+  settingsProfileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  settingsAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#e8e3da',
+    marginRight: 12,
+  },
+  settingsProfileMeta: {
+    flex: 1,
+  },
+  settingsProfileName: {
+    color: '#1f1e1a',
+    fontFamily: 'serif',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  settingsProfileHint: {
+    color: '#6f655c',
+    fontFamily: 'serif',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  cacheProgressWrap: {
+    marginTop: 8,
+    marginBottom: 6,
+  },
+  cacheProgressTrack: {
+    width: '100%',
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: '#e3d9ca',
+    overflow: 'hidden',
+  },
+  cacheProgressFill: {
+    height: '100%',
+    backgroundColor: '#79b39b',
+    borderRadius: 999,
+  },
+  cacheProgressText: {
+    marginTop: 6,
+    color: '#6f655c',
+    fontFamily: 'serif',
+    fontSize: 12,
+  },
+  cacheStatusText: {
+    marginTop: 4,
+    marginBottom: 6,
+    color: '#6b5f56',
+    fontFamily: 'serif',
+    fontSize: 13,
+  },
+  cacheStatusTextSuccess: {
+    color: '#3f6d5b',
+    fontWeight: '600',
   },
   fieldGroup: {
     marginBottom: 16,
@@ -1737,18 +1813,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
-  },
-  blockedRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e5dacd',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginBottom: 8,
-    backgroundColor: '#f8f3eb',
   },
   logoutBtn: {
     marginTop: 16,
