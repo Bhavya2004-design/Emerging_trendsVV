@@ -28,6 +28,7 @@ import SplashScreen from './src/components/SplashScreen';
 import { mockVaultItems } from './src/data/vaultMockData';
 import { logoutUser, subscribeAuthState } from './src/services/firebaseAuth';
 import { saveOutfitToDatabase } from './src/services/outfitStorage';
+import type { VaultItem } from './src/types/vaultItem';
 
 type ScanOutfitPayload = {
   imageUri: string;
@@ -69,13 +70,15 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUserName, setCurrentUserName] = useState('');
   const [currentUserId, setCurrentUserId] = useState('');
-  const [vaultItems, setVaultItems] = useState(mockVaultItems);
+  const [vaultItems, setVaultItems] = useState<VaultItem[]>(
+    mockVaultItems as VaultItem[],
+  );
   const [lastAddedSection, setLastAddedSection] = useState(
     'your selected section',
   );
 
   const [selectedTripOutfitIds, setSelectedTripOutfitIds] = useState<string[]>([]);
-  const [selectedTripOutfits, setSelectedTripOutfits] = useState<any[]>([]);
+  const [selectedTripOutfits, setSelectedTripOutfits] = useState<VaultItem[]>([]);
   const [tripPlan, setTripPlan] = useState<TripPlan>({
     destination: 'Paris, France',
     tripType: 'Business',
@@ -141,7 +144,7 @@ function App() {
   }
 
   async function handleAddOutfit(outfitPayload: ScanOutfitPayload) {
-    const newOutfit = {
+    const newOutfit: VaultItem = {
       id: `scan-${Date.now()}`,
       title: outfitPayload.title || 'Scanned Outfit',
       subtitle: outfitPayload.subtitle || '',
@@ -220,7 +223,7 @@ function App() {
             selectedBottomTab="home"
             onNavigate={handleBottomTabPress}
             initialTripPlan={tripPlan}
-            onGeneratePacking={nextTripPlan => {
+            onGeneratePacking={(nextTripPlan: TripPlan) => {
               setTripPlan(nextTripPlan);
               setScreen('trip-outfit-picker');
             }}
@@ -231,10 +234,14 @@ function App() {
             items={vaultItems}
             onNavigate={handleBottomTabPress}
             onOpenAiSuggestions={() => setScreen('trip-ai-suggestions')}
-            onContinuePacking={selectedIds => {
-              const selectedIdsList = Object.keys(selectedIds).filter(id => selectedIds[id]);
+            onContinuePacking={(selectedIds: Record<string, boolean>) => {
+              const selectedIdsList = Object.keys(selectedIds).filter(
+                id => selectedIds[id],
+              );
               setSelectedTripOutfitIds(selectedIdsList);
-              setSelectedTripOutfits(vaultItems.filter(item => selectedIdsList.includes(item.id)));
+              setSelectedTripOutfits(
+                vaultItems.filter(item => selectedIdsList.includes(item.id)),
+              );
               setScreen('packing-progress');
             }}
           />
@@ -243,7 +250,7 @@ function App() {
           <TripAiSuggestionsPage
             tripPlan={tripPlan}
             onBack={() => setScreen('trip-outfit-picker')}
-            onUseSuggestions={suggestedOutfits => {
+            onUseSuggestions={(suggestedOutfits: VaultItem[]) => {
               setSelectedTripOutfitIds([]);
               setSelectedTripOutfits(suggestedOutfits);
               setScreen('packing-progress');
