@@ -8,7 +8,6 @@ export default function AddedToVaultPage({
   onNavigate,
   onGoBack,
   onGoToVault,
-  onViewSuggestions,
   sectionLabel = 'your selected section',
   selectedBottomTab = 'vault',
 }) {
@@ -35,12 +34,6 @@ export default function AddedToVaultPage({
 
           <Pressable style={styles.primaryButton} onPress={onGoToVault}>
             <Text style={styles.primaryButtonText}>GO TO MY VAULT</Text>
-          </Pressable>
-
-          <Pressable style={styles.secondaryButton} onPress={onViewSuggestions}>
-            <Text style={styles.secondaryButtonText}>
-              VIEW MY OUTFIT SUGGESTIONS
-            </Text>
           </Pressable>
         </View>
 
@@ -129,23 +122,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0.5,
-  },
-  secondaryButton: {
-    marginTop: 16,
-    minWidth: 250,
-    borderWidth: 3,
-    borderColor: '#79b39b',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 999,
-    alignItems: 'center',
-    backgroundColor: '#e8e4da',
-  },
-  secondaryButtonText: {
-    color: '#2b3430',
-    fontFamily: 'serif',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.4,
   },
 });

@@ -18,7 +18,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchCamera, launchImageLibrary } from '../services/expoImagePickerAdapter';
 import AppScreenHeader from '../components/AppScreenHeader';
 import BottomTabBar from '../components/BottomTabBar';
-import { communityPosts } from '../data/communityMockData';
 import { logoutUser, updateAuthDisplayName } from '../services/firebaseAuth';
 
 const PROFILE_STORAGE_PREFIX = 'profile:custom:';
@@ -43,7 +42,6 @@ const DEFAULT_PROFILE = {
 const activityLinks = [
   { key: 'saved-outfits', icon: '❤️', label: 'Saved Outfits' },
   { key: 'travel-packing', icon: '🧳', label: 'Travel Packing' },
-  { key: 'community-posts', icon: '👥', label: 'Community Posts' },
 ];
 
 const settingsLinks = [
@@ -54,38 +52,72 @@ const settingsLinks = [
 ];
 
 function buildSavedOutfits() {
-  return communityPosts.slice(0, 6).map((post, index) => ({
-    id: `saved-${post.id}`,
-    title: post.caption,
-    category:
-      index % 3 === 0 ? 'Casual' : index % 3 === 1 ? 'Formal' : 'Summer',
-    isSaved: true,
-    mockImage: post.mockImage,
-  }));
-}
-
-function buildPostHistory() {
   return [
     {
-      id: 'up-1',
-      caption: 'Neutral layers for coffee run.',
-      visibility: 'public',
-      likes: 42,
-      saves: 11,
+      id: 'saved-1',
+      title: 'Capsule neutrals for travel',
+      category: 'Casual',
+      isSaved: true,
+      mockImage: {
+        background: '#e8dfd0',
+        accents: ['#7fb09b', '#c4b8a5', '#3d4f46'],
+        layout: 'outfit-card',
+      },
     },
     {
-      id: 'up-2',
-      caption: 'Monochrome workwear capsule.',
-      visibility: 'private',
-      likes: 31,
-      saves: 8,
+      id: 'saved-2',
+      title: 'Office week rotation',
+      category: 'Formal',
+      isSaved: true,
+      mockImage: {
+        background: '#dfe8e4',
+        accents: ['#3d4f46', '#9bc7b7', '#d9cec2'],
+        layout: 'outfit-card',
+      },
     },
     {
-      id: 'up-3',
-      caption: 'Weekend travel essentials.',
-      visibility: 'public',
-      likes: 57,
-      saves: 14,
+      id: 'saved-3',
+      title: 'Summer linen set',
+      category: 'Summer',
+      isSaved: true,
+      mockImage: {
+        background: '#f2ebe0',
+        accents: ['#c9a227', '#88b8a5', '#6b5b4f'],
+        layout: 'outfit-card',
+      },
+    },
+    {
+      id: 'saved-4',
+      title: 'Weekend denim layers',
+      category: 'Casual',
+      isSaved: true,
+      mockImage: {
+        background: '#e4e0d8',
+        accents: ['#4a6fa5', '#8b7355', '#c4bdb0'],
+        layout: 'outfit-card',
+      },
+    },
+    {
+      id: 'saved-5',
+      title: 'Evening minimal look',
+      category: 'Formal',
+      isSaved: true,
+      mockImage: {
+        background: '#eae6df',
+        accents: ['#1f1e1a', '#7fb09b', '#b8a99a'],
+        layout: 'outfit-card',
+      },
+    },
+    {
+      id: 'saved-6',
+      title: 'Airport comfort kit',
+      category: 'Casual',
+      isSaved: true,
+      mockImage: {
+        background: '#dde5e2',
+        accents: ['#5c7d7a', '#d4c4b0', '#8a7f72'],
+        layout: 'outfit-card',
+      },
     },
   ];
 }
@@ -244,15 +276,10 @@ export default function ProfilePage({
   ]);
   const [selectedTripId, setSelectedTripId] = useState(null);
 
-  const [posts, setPosts] = useState(buildPostHistory());
-  const [editingPostId, setEditingPostId] = useState('');
-  const [editingCaption, setEditingCaption] = useState('');
-
   const [notificationSettings, setNotificationSettings] = useState({
     newFollowers: true,
     outfitLikes: true,
     styleReminders: false,
-    communityAlerts: true,
   });
 
   const [privacySettings, setPrivacySettings] = useState({
@@ -390,56 +417,6 @@ export default function ProfilePage({
       ...current,
       closetVisibility: next,
     }));
-  }
-
-  function startEditPost(post) {
-    setEditingPostId(post.id);
-    setEditingCaption(post.caption);
-  }
-
-  function savePostCaption(postId) {
-    setPosts(current =>
-      current.map(post =>
-        post.id === postId
-          ? {
-              ...post,
-              caption: editingCaption.trim() || post.caption,
-            }
-          : post,
-      ),
-    );
-    setEditingPostId('');
-    setEditingCaption('');
-  }
-
-  function togglePostVisibility(postId) {
-    setPosts(current =>
-      current.map(post =>
-        post.id === postId
-          ? {
-              ...post,
-              visibility: post.visibility === 'public' ? 'private' : 'public',
-            }
-          : post,
-      ),
-    );
-  }
-
-  function deletePost(postId) {
-    Alert.alert('Delete Post', 'Are you sure you want to delete this post?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          setPosts(current => current.filter(post => post.id !== postId));
-          if (editingPostId === postId) {
-            setEditingPostId('');
-            setEditingCaption('');
-          }
-        },
-      },
-    ]);
   }
 
   function renderHome() {
@@ -610,80 +587,6 @@ export default function ProfilePage({
             </Text>
           </View>
         ) : null}
-      </ScrollView>
-    );
-  }
-
-  function renderCommunityPosts() {
-    return (
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentPadBottom}
-      >
-        <ViewTitle title="Community Posts" onBack={() => setView('home')} />
-
-        {posts.map(post => {
-          const isEditing = editingPostId === post.id;
-          return (
-            <View key={post.id} style={styles.sectionCard}>
-              <Text style={styles.sectionSubtitle}>Post #{post.id}</Text>
-
-              {isEditing ? (
-                <TextInput
-                  value={editingCaption}
-                  onChangeText={setEditingCaption}
-                  style={styles.input}
-                  placeholder="Update caption"
-                  placeholderTextColor="#a29a90"
-                />
-              ) : (
-                <Text style={styles.subCopy}>{post.caption}</Text>
-              )}
-
-              <View style={styles.analyticsRow}>
-                <Text style={styles.analyticsText}>Likes: {post.likes}</Text>
-                <Text style={styles.analyticsText}>Saves: {post.saves}</Text>
-                <Text style={styles.analyticsText}>
-                  Visibility: {post.visibility}
-                </Text>
-              </View>
-
-              <View style={styles.actionButtonsRow}>
-                {isEditing ? (
-                  <Pressable
-                    style={styles.smallActionBtn}
-                    onPress={() => savePostCaption(post.id)}
-                  >
-                    <Text style={styles.smallActionBtnText}>Save Caption</Text>
-                  </Pressable>
-                ) : (
-                  <Pressable
-                    style={styles.smallActionBtn}
-                    onPress={() => startEditPost(post)}
-                  >
-                    <Text style={styles.smallActionBtnText}>Edit Caption</Text>
-                  </Pressable>
-                )}
-
-                <Pressable
-                  style={styles.smallActionBtn}
-                  onPress={() => togglePostVisibility(post.id)}
-                >
-                  <Text style={styles.smallActionBtnText}>
-                    Make {post.visibility === 'public' ? 'Private' : 'Public'}
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  style={styles.deleteBtn}
-                  onPress={() => deletePost(post.id)}
-                >
-                  <Text style={styles.deleteBtnText}>Delete</Text>
-                </Pressable>
-              </View>
-            </View>
-          );
-        })}
       </ScrollView>
     );
   }
@@ -1033,14 +936,6 @@ export default function ProfilePage({
               trackColor={{ false: '#d6cec2', true: '#9bc7b7' }}
             />
           </View>
-          <View style={styles.toggleRow}>
-            <Text style={styles.linkLabel}>Community Alerts</Text>
-            <Switch
-              value={notificationSettings.communityAlerts}
-              onValueChange={() => toggleNotification('communityAlerts')}
-              trackColor={{ false: '#d6cec2', true: '#9bc7b7' }}
-            />
-          </View>
         </View>
       </ScrollView>
     );
@@ -1185,9 +1080,6 @@ export default function ProfilePage({
     }
     if (view === 'travel-packing') {
       return renderTravelPacking();
-    }
-    if (view === 'community-posts') {
-      return renderCommunityPosts();
     }
     if (view === 'edit-profile') {
       return renderEditProfile();

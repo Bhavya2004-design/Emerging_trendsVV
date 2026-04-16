@@ -9,7 +9,6 @@ const tabs = [
   { key: 'home', label: 'Home', icon: '⌂' },
   { key: 'scan', label: 'Scan', icon: null },
   { key: 'vault', label: 'Vault', icon: null },
-  { key: 'community', label: 'Community', icon: null },
   { key: 'profile', label: 'Profile', icon: null },
 ];
 
@@ -41,19 +40,6 @@ function PersonOutline({ color, headSize, shoulderW, shoulderH }) {
           },
         ]}
       />
-    </View>
-  );
-}
-
-function CommunityOutlineIcon({ color }) {
-  return (
-    <View style={communityStyles.wrap}>
-      <View style={communityStyles.back}>
-        <PersonOutline color={color} headSize={5} shoulderW={9} shoulderH={5} />
-      </View>
-      <View style={communityStyles.front}>
-        <PersonOutline color={color} headSize={6} shoulderW={11} shoulderH={6} />
-      </View>
     </View>
   );
 }
@@ -106,25 +92,6 @@ const personStyles = StyleSheet.create({
     borderWidth: 1.35,
     borderBottomWidth: 0,
     backgroundColor: 'transparent',
-  },
-});
-
-const communityStyles = StyleSheet.create({
-  wrap: {
-    width: 24,
-    height: 22,
-    position: 'relative',
-  },
-  back: {
-    position: 'absolute',
-    left: 2,
-    bottom: 0,
-  },
-  front: {
-    position: 'absolute',
-    right: 2,
-    bottom: 0,
-    zIndex: 1,
   },
 });
 
@@ -210,9 +177,6 @@ function TabIcon({ tab, active }) {
   }
   if (tab.key === 'vault') {
     return <VaultClosetIcon color={color} />;
-  }
-  if (tab.key === 'community') {
-    return <CommunityOutlineIcon color={color} />;
   }
   if (tab.key === 'profile') {
     return <ProfileOutlineIcon color={color} />;

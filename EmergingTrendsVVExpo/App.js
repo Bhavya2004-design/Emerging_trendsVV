@@ -9,7 +9,6 @@ import RegisterPage from './src/pages/Register';
 import ForgotPasswordPage from './src/pages/ForgotPassword';
 import VaultPage from './src/pages/VaultPage';
 import ScanPage from './src/pages/ScanPage';
-import CommunityPage from './src/pages/CommunityPage';
 import AddedToVaultPage from './src/pages/AddedToVaultPage';
 import ProfilePage from './src/pages/ProfilePage';
 import HomePage from './src/pages/HomePage';
@@ -113,7 +112,6 @@ export default function App() {
       tabKey === 'home' ||
       tabKey === 'vault' ||
       tabKey === 'scan' ||
-      tabKey === 'community' ||
       tabKey === 'profile' ||
       tabKey === 'trip'
     ) {
@@ -225,13 +223,6 @@ export default function App() {
             onSaveOutfit={handleAddOutfit}
           />
         ) : null}
-        {screen === 'community' ? (
-          <CommunityPage
-            selectedBottomTab="community"
-            onNavigate={handleBottomTabPress}
-            onGoBack={goBack}
-          />
-        ) : null}
         {screen === 'trip' ? (
           <TripPage
             selectedBottomTab="home"
@@ -295,7 +286,6 @@ export default function App() {
             onNavigate={handleBottomTabPress}
             onGoBack={goBack}
             onGoToVault={() => navigateTo('vault')}
-            onViewSuggestions={() => navigateTo('community')}
           />
         ) : null}
         {screen === 'profile' ? (
