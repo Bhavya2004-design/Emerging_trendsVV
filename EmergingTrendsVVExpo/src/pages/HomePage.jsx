@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Image,
   ScrollView,
@@ -17,6 +17,29 @@ const quickActions = [
   { key: 'my-trip', label: 'My Trip', icon: '✈️' },
 ];
 
+function getFirstName(value) {
+  const raw = String(value || '').trim();
+
+  if (!raw) {
+    return 'User';
+  }
+
+  if (raw.includes(' ')) {
+    return raw.split(' ')[0];
+  }
+
+  const cleaned = raw
+    .replace(/[0-9]+$/g, '')
+    .replace(/[._-]+/g, ' ')
+    .trim();
+
+  if (!cleaned) {
+    return 'User';
+  }
+
+  return cleaned.split(' ')[0];
+}
+
 export default function HomePage({
   onNavigate,
   onLogout,
@@ -24,7 +47,8 @@ export default function HomePage({
   userName = '',
 }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const displayName = userName && userName.trim() ? userName.trim() : 'Maria';
+
+  const displayName = useMemo(() => getFirstName(userName), [userName]);
 
   function handleProfileMenuAction(target) {
     setIsProfileMenuOpen(false);
@@ -43,6 +67,7 @@ export default function HomePage({
             style={styles.menuBackdrop}
           />
         ) : null}
+
         {isProfileMenuOpen ? (
           <View style={styles.profileMenu}>
             <TouchableOpacity
@@ -51,6 +76,7 @@ export default function HomePage({
             >
               <Text style={styles.profileMenuItemText}>View Profile</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.profileMenuItem}
               onPress={() => {
@@ -64,21 +90,25 @@ export default function HomePage({
             </TouchableOpacity>
           </View>
         ) : null}
+
         <ScrollView
           style={styles.scrollArea}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.headerRow}>
-            <View>
+            <View style={styles.headerTextWrap}>
               <Text style={styles.greeting}>Good morning,</Text>
-              <Text style={styles.userName}>{displayName}</Text>
+              <Text style={styles.userName} numberOfLines={1}>
+                {displayName}
+              </Text>
               <Text style={styles.subtitle}>Ready to style today?</Text>
             </View>
+
             <TouchableOpacity
               style={styles.profileAvatar}
               activeOpacity={0.85}
-              onPress={() => setIsProfileMenuOpen((open) => !open)}
+              onPress={() => setIsProfileMenuOpen(open => !open)}
             >
               <Image
                 source={require('../../assets/maria.png')}
@@ -89,14 +119,18 @@ export default function HomePage({
 
           <View style={styles.suggestionCard}>
             <Text style={styles.suggestionTitle}>AI Outfit Suggestion</Text>
-            <TouchableOpacity style={styles.viewButton} onPress={() => onNavigate('vault')}>
+            <TouchableOpacity
+              style={styles.viewButton}
+              onPress={() => onNavigate('vault')}
+            >
               <Text style={styles.viewButtonText}>View Outfit</Text>
             </TouchableOpacity>
           </View>
 
           <Text style={styles.sectionTitle}>Quick Actions</Text>
+
           <View style={styles.quickActionRow}>
-            {quickActions.map((action) => (
+            {quickActions.map(action => (
               <TouchableOpacity
                 key={action.key}
                 style={styles.quickActionCard}
@@ -130,6 +164,10 @@ const styles = StyleSheet.create({
   scrollArea: {
     flex: 1,
   },
+  scrollContent: {
+    paddingHorizontal: 28,
+    paddingBottom: 140,
+  },
   menuBackdrop: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 20,
@@ -158,126 +196,106 @@ const styles = StyleSheet.create({
   },
   profileMenuItemText: {
     color: '#3b332d',
-    fontFamily: 'serif',
     fontSize: 15,
     fontWeight: '600',
-  },
-  scrollContent: {
-    paddingHorizontal: 14,
-    paddingBottom: 132,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
-    paddingHorizontal: 8,
-    marginTop: 6,
+    marginTop: 18,
+    marginBottom: 28,
+    gap: 16,
+  },
+  headerTextWrap: {
+    flex: 1,
+    paddingRight: 8,
   },
   greeting: {
-    color: '#2b2b2b',
-    fontSize: 31,
-    fontFamily: 'serif',
+    fontSize: 30,
+    color: '#2f2a28',
+    fontWeight: '400',
   },
   userName: {
-    color: '#7faf9b',
-    fontSize: 39,
-    marginTop: -2,
-    fontFamily: 'serif',
+    fontSize: 44,
+    lineHeight: 50,
+    color: '#88b8a5',
     fontWeight: '700',
+    marginTop: 4,
   },
   subtitle: {
-    color: '#7e7870',
-    marginTop: 2,
-    fontSize: 12,
-    fontFamily: 'serif',
+    marginTop: 8,
+    fontSize: 16,
+    color: '#7c7570',
   },
   profileAvatar: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#5a9d86',
-    shadowColor: '#1a1814',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.14,
-    shadowRadius: 5,
-    elevation: 4,
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    overflow: 'hidden',
+    borderWidth: 4,
+    borderColor: '#7fb09b',
+    backgroundColor: '#f8f5ef',
+    flexShrink: 0,
   },
   profileAvatarImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 27,
   },
   suggestionCard: {
-    backgroundColor: '#f0ede7',
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 14,
-    marginBottom: 16,
-    minHeight: 136,
-    justifyContent: 'center',
+    backgroundColor: '#f7f4ee',
+    borderRadius: 28,
+    padding: 28,
+    minHeight: 170,
+    marginBottom: 32,
   },
   suggestionTitle: {
-    color: '#7faf9b',
-    fontSize: 15,
+    fontSize: 22,
     fontWeight: '700',
-    fontFamily: 'serif',
-    marginBottom: 12,
+    color: '#7fb09b',
+    marginBottom: 28,
   },
   viewButton: {
     alignSelf: 'flex-start',
-    marginTop: 0,
-    backgroundColor: '#7faf9b',
+    backgroundColor: '#7fb09b',
     borderRadius: 999,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 36,
   },
   viewButtonText: {
-    color: '#f9f7f3',
-    fontSize: 12,
-    fontFamily: 'serif',
-    fontWeight: '600',
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
   },
   sectionTitle: {
-    color: '#2b2b2b',
-    fontFamily: 'serif',
-    fontSize: 22,
-    marginBottom: 10,
+    fontSize: 28,
+    color: '#2f2a28',
+    marginBottom: 20,
+    fontWeight: '500',
   },
   quickActionRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 10,
-    marginBottom: 20,
+    gap: 18,
   },
   quickActionCard: {
-    width: '48%',
-    minHeight: 168,
-    backgroundColor: '#f0ede7',
-    borderRadius: 16,
-    alignItems: 'center',
+    width: '47%',
+    backgroundColor: '#f7f4ee',
+    borderRadius: 28,
+    minHeight: 240,
     justifyContent: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 8,
-    marginBottom: 10,
+    alignItems: 'center',
+    paddingHorizontal: 16,
   },
   quickActionIcon: {
-    fontSize: 46,
-    lineHeight: 52,
-    marginBottom: 10,
+    fontSize: 58,
+    marginBottom: 24,
   },
   quickActionLabel: {
-    fontFamily: 'serif',
-    color: '#2b2b2b',
-    fontSize: 14,
+    fontSize: 24,
     fontWeight: '600',
+    color: '#2f2a28',
     textAlign: 'center',
   },
 });

@@ -43,7 +43,7 @@ async function readImageAsBase64(imageUri) {
   }
 
   return FileSystem.readAsStringAsync(imageUri, {
-    encoding: FileSystem.EncodingType.Base64,
+    encoding: 'base64',
   });
 }
 
@@ -101,7 +101,6 @@ function normalizeAnalyzerResponse(apiResponse, category) {
 }
 
 export async function processOutfitImage(imageUri) {
-  // Future extension point for image preprocessing APIs.
   return {
     processedImageUri: imageUri,
     backgroundRemoved: false,

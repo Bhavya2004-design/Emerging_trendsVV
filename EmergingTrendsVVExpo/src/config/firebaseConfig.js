@@ -1,8 +1,8 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: 'AIzaSyAXxwmiiuICHpBTXEGt67kQMGp5JavJO_4',
   authDomain: 'voguevault-dcd9d.firebaseapp.com',
   databaseURL: 'https://voguevault-dcd9d-default-rtdb.firebaseio.com',
@@ -12,11 +12,11 @@ const firebaseConfig = {
   appId: '1:4517007795:web:d4dd4ff56bd29d01d8fbc6',
 };
 
-const app = initializeApp(firebaseConfig);
+export const isFirebaseConfigured = true;
+
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getDatabase(app);
-
-export const isFirebaseConfigured = true;
 
 export default app;
