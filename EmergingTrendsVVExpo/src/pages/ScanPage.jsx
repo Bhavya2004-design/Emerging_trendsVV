@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import {
   Alert,
   Image,
-  PermissionsAndroid,
   Platform,
   Pressable,
   ScrollView,
@@ -12,10 +11,16 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { launchCamera } from '../services/expoImagePickerAdapter';
 import AppScreenHeader from '../components/AppScreenHeader';
+import OutfitScanCamera from '../components/OutfitScanCamera';
 import BottomTabBar from '../components/BottomTabBar';
 import { vaultTabs } from '../data/vaultMockData';
+import {
+  AI_DEV_SERVER_PORT,
+  aiApiBaseUrl,
+  aiScanUrlBlockedByExpoTunnel,
+  isLikelyIphoneHotspotClientDevUrl,
+} from '../config/aiConfig';
 import {
   analyzeOutfitImage,
   processOutfitImage,
@@ -58,6 +63,7 @@ export default function ScanPage({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [aiDetails, setAiDetails] = useState(createEmptyAiDetails);
+  const [cameraModalVisible, setCameraModalVisible] = useState(false);
 
   const selectedTabLabel = useMemo(
     () =>
@@ -66,61 +72,14 @@ export default function ScanPage({
     [selectedCategory],
   );
 
-  async function ensureCameraPermission() {
-    if (Platform.OS !== 'android') {
-      return true;
-    }
-
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.CAMERA,
-      {
-        title: 'Camera Permission',
-        message: 'VogueVault needs camera access to scan your outfit.',
-        buttonPositive: 'Allow',
-        buttonNegative: 'Deny',
-      },
-    );
-
-    return granted === PermissionsAndroid.RESULTS.GRANTED;
+  function handleOpenCamera() {
+    setCameraModalVisible(true);
   }
 
-  async function handleOpenCamera() {
-    const permissionGranted = await ensureCameraPermission();
-
-    if (!permissionGranted) {
-      Alert.alert(
-        'Permission needed',
-        'Please allow camera access to scan outfits.',
-      );
-      return;
-    }
-
-    const result = await launchCamera({
-      mediaType: 'photo',
-      cameraType: 'back',
-      quality: 0.9,
-      saveToPhotos: true,
-    });
-
-    if (result.didCancel) {
-      return;
-    }
-
-    if (result.errorCode) {
-      Alert.alert(
-        'Camera error',
-        result.errorMessage || 'Could not open camera.',
-      );
-      return;
-    }
-
-    const uri = result.assets?.[0]?.uri;
-
+  function handleScanPhotoCaptured(uri) {
     if (!uri) {
-      Alert.alert('Scan failed', 'No image captured. Try again.');
       return;
     }
-
     setCapturedImageUri(uri);
     setProcessedImageUri('');
     setAiDetails(createEmptyAiDetails());
@@ -180,6 +139,28 @@ export default function ScanPage({
       });
 
       setAiDetails(analysis);
+
+      if (analysis.provider === 'offline') {
+        let extraNote = '';
+        const rootCause = String(
+          Array.isArray(analysis.warnings) && analysis.warnings.length > 0
+            ? analysis.warnings[0]
+            : '',
+        ).trim();
+        if (aiScanUrlBlockedByExpoTunnel) {
+          extraNote = `\n\nYou are using Expo tunnel (Metro shows a *.exp.direct address). That tunnel does NOT forward port ${AI_DEV_SERVER_PORT} to your laptop.\n\nFix: in EmergingTrendsVVExpo/.env add:\nEXPO_PUBLIC_AI_API_BASE_URL=http://YOUR_PC_LAN_IP:${AI_DEV_SERVER_PORT}\n(Get YOUR_PC_LAN_IP from Windows ipconfig on your Wi‑Fi adapter.) Then restart Expo: npx expo start -c`;
+        } else if (
+          Platform.OS === 'ios' &&
+          isLikelyIphoneHotspotClientDevUrl(aiApiBaseUrl)
+        ) {
+          extraNote = `\n\nYou are on iPhone Personal Hotspot (${aiApiBaseUrl}). iOS usually blocks the hosting phone from calling back to a tethered laptop on 172.20.10.x.\n\nBetter setup: turn on Mobile Hotspot on your Windows laptop, join that Wi‑Fi from the iPhone, run ipconfig, then set EXPO_PUBLIC_AI_API_BASE_URL to http://YOUR_HOTSPOT_IPV4:${AI_DEV_SERVER_PORT} (often 192.168.137.1 on the “Local Area Connection*” adapter). Restart Expo after changing .env.`;
+        }
+
+        Alert.alert(
+          'AI server not reached',
+          `Your phone could not reach the scan server at:\n${aiApiBaseUrl}${rootCause ? `\n\nDetected issue:\n${rootCause}` : ''}\n\nFix: run "npm run dev" in EmergingTrendsVVExpo/server, allow Windows Firewall port ${AI_DEV_SERVER_PORT}, and use a URL the phone can route to (same Wi‑Fi, laptop-hosted hotspot, or a tunnel like ngrok).${extraNote}`,
+        );
+      }
     } catch (error) {
       Alert.alert(
         'AI detection failed',
@@ -367,26 +348,6 @@ export default function ScanPage({
               </View>
 
               <View style={styles.editFieldWrap}>
-                <Text style={styles.detailLabel}>STYLE</Text>
-                <TextInput
-                  style={styles.editInput}
-                  value={aiDetails.style}
-                  onChangeText={value => updateAiTextField('style', value)}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.editFieldWrap}>
-                <Text style={styles.detailLabel}>OCCASION</Text>
-                <TextInput
-                  style={styles.editInput}
-                  value={aiDetails.occasion}
-                  onChangeText={value => updateAiTextField('occasion', value)}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.editFieldWrap}>
                 <Text style={styles.detailLabel}>FEATURES (comma separated)</Text>
                 <TextInput
                   style={styles.editInput}
@@ -440,6 +401,12 @@ export default function ScanPage({
 
         <BottomTabBar selectedTab={selectedBottomTab} onNavigate={onNavigate} />
       </View>
+
+      <OutfitScanCamera
+        visible={cameraModalVisible}
+        onClose={() => setCameraModalVisible(false)}
+        onPhotoCaptured={handleScanPhotoCaptured}
+      />
     </SafeAreaView>
   );
 }

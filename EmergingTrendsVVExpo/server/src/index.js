@@ -43,10 +43,12 @@ function requireApiKey(req, res, next) {
 }
 
 app.get('/health', (_req, res) => {
+  const visionConfigured = Boolean(String(process.env.GOOGLE_CLOUD_VISION_API_KEY || '').trim());
   res.json({
     ok: true,
     service: 'outfit-ai-server',
-    mode: (process.env.AI_MODE || 'stub').toLowerCase(),
+    mode: visionConfigured ? 'vision' : (process.env.AI_MODE || 'stub').toLowerCase(),
+    visionConfigured,
     authEnabled: Boolean(apiKey),
     time: new Date().toISOString(),
   });
@@ -83,7 +85,10 @@ app.post('/api/analyze-outfit', analyzeLimiter, requireApiKey, async (req, res) 
 });
 
 const port = Number.parseInt(process.env.PORT || '8787', 10);
-app.listen(port, () => {
+const listenHost = process.env.LISTEN_HOST || '0.0.0.0';
+app.listen(port, listenHost, () => {
   // eslint-disable-next-line no-console
-  console.log(`Outfit AI server listening on http://localhost:${port}`);
+  console.log(
+    `Outfit AI server listening on http://${listenHost === '0.0.0.0' ? 'localhost' : listenHost}:${port} (all interfaces: port ${port})`,
+  );
 });

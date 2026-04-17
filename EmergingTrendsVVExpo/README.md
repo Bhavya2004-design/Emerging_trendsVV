@@ -42,15 +42,13 @@ npm.cmd run dev
 Set environment variable before starting Expo:
 
 ```bash
-$env:EXPO_PUBLIC_AI_API_BASE_URL="http://<your-laptop-ip>:8787"
+$env:EXPO_PUBLIC_AI_API_BASE_URL="https://ladylike-elk-playmate.ngrok-free.dev"
 $env:EXPO_PUBLIC_AI_SERVER_API_KEY="vv-local-dev-key"
 ```
 
 Notes:
 
-- Android emulator can use `http://10.0.2.2:8787`.
-- iOS simulator can use `http://localhost:8787`.
-- Physical phone must use laptop LAN IP.
+- Use `https://ladylike-elk-playmate.ngrok-free.dev` for backend API access.
 
 ## 4) Start Expo
 

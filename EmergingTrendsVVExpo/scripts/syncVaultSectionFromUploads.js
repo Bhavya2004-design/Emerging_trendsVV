@@ -15,8 +15,20 @@ const CLOTHING_ROOT = path.join(ROOT, 'assets', 'clothing');
 const OVERRIDES_PATH = path.join(ROOT, 'src', 'data', 'vaultAiOverrides.json');
 const UPLOADED_MAP_PATH = path.join(ROOT, 'src', 'data', 'vaultUploadedImages.js');
 
-const API_BASE_URL = process.env.AI_API_BASE_URL || 'http://127.0.0.1:8787';
+const API_BASE_URL = process.env.AI_API_BASE_URL || 'https://ladylike-elk-playmate.ngrok-free.dev';
 const API_KEY = process.env.AI_SERVER_API_KEY || 'vv-local-dev-key';
+
+function joinUrl(baseUrl, endpointPath) {
+  const base = String(baseUrl || '').replace(/\/+$/, '');
+  const path = String(endpointPath || '').replace(/^\/+/, '');
+  return `${base}/${path}`;
+}
+
+function isNgrokUrl(url) {
+  return /\.ngrok(-free)?\.app\b|\.ngrok(-free)?\.dev\b|\.ngrok\.io\b/i.test(
+    String(url || ''),
+  );
+}
 
 const SECTION_ITEM_IDS = {
   travel: [
@@ -65,11 +77,14 @@ async function analyzeImage(filePath, categoryHint) {
   const headers = {
     'Content-Type': 'application/json',
   };
+  if (isNgrokUrl(API_BASE_URL)) {
+    headers['ngrok-skip-browser-warning'] = 'true';
+  }
   if (API_KEY) {
     headers['x-api-key'] = API_KEY;
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/analyze-outfit`, {
+  const response = await fetch(joinUrl(API_BASE_URL, '/api/analyze-outfit'), {
     method: 'POST',
     headers,
     body: JSON.stringify({ imageBase64, mimeType, categoryHint }),
