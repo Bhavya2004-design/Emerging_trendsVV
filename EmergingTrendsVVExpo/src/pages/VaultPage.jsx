@@ -106,6 +106,23 @@ export default function VaultPage({
   const horizontalPadding = 16;
   const cardWidth = (width - horizontalPadding * 2 - gutter) / 2;
 
+  function resolveImageHeight(imageSource) {
+    const fallbackRatio = 1;
+    let ratio = fallbackRatio;
+
+    if (typeof imageSource === 'number') {
+      const resolved = Image.resolveAssetSource(imageSource);
+      if (resolved?.width && resolved?.height) {
+        ratio = resolved.width / resolved.height;
+      }
+    }
+
+    const clampedRatio = Math.min(1.8, Math.max(0.65, ratio));
+    const adaptiveHeight = cardWidth / clampedRatio;
+
+    return Math.min(190, Math.max(112, adaptiveHeight));
+  }
+
   function handleToggleFavorite(itemId) {
     setFavoriteIds(currentFavorites => ({
       ...currentFavorites,
@@ -231,6 +248,9 @@ export default function VaultPage({
   function renderCard({ item, index }) {
     const isFavorite = Boolean(favoriteIds[item.id]);
     const isLeftColumn = index % 2 === 0;
+    const localImage = item.imageKey ? vaultImages[item.imageKey] : null;
+    const imageSource = localImage || (item.imageUri ? { uri: item.imageUri } : null);
+    const imageHeight = resolveImageHeight(imageSource);
 
     return (
       <Pressable
@@ -265,14 +285,12 @@ export default function VaultPage({
           </Pressable>
         </View>
 
-        {item.imageKey && vaultImages[item.imageKey] ? (
+        {imageSource ? (
           <Image
-            source={vaultImages[item.imageKey]}
-            style={styles.imageMock}
-            resizeMode="cover"
+            source={imageSource}
+            style={[styles.imageMock, { height: imageHeight }]}
+            resizeMode="contain"
           />
-        ) : item.imageUri ? (
-          <Image source={{ uri: item.imageUri }} style={styles.imageMock} resizeMode="cover" />
         ) : (
           <OutfitMockImage mockImage={item.mockImage} />
         )}
@@ -1003,6 +1021,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fbf7f0',
     borderRadius: 14,
+    overflow: 'hidden',
     padding: 10,
     marginBottom: 16,
     shadowColor: '#b49e84',
@@ -1038,8 +1057,10 @@ const styles = StyleSheet.create({
     color: '#e3ba4e',
   },
   imageMock: {
+    width: '100%',
     height: 126,
     borderRadius: 12,
+    backgroundColor: '#f3efe8',
     overflow: 'hidden',
     marginBottom: 10,
   },
