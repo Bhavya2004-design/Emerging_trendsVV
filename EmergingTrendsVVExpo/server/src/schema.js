@@ -65,6 +65,7 @@ export const analyzeRequestSchema = z.object({
 
 export const aiOutfitSchema = z.object({
   itemType: z.enum(allowedItemTypes),
+  relatedItemTypes: z.array(z.enum(allowedItemTypes)).max(4).default([]),
   color: z.string().trim().min(2).max(40),
   secondaryColors: z.array(z.string().trim().min(2).max(40)).max(3).default([]),
   material: z.enum(allowedMaterials),
@@ -101,6 +102,7 @@ export function toJsonSchemaForModel() {
         additionalProperties: false,
         required: [
           'itemType',
+          'relatedItemTypes',
           'color',
           'secondaryColors',
           'material',
@@ -115,6 +117,11 @@ export function toJsonSchemaForModel() {
         ],
         properties: {
           itemType: { type: 'string', enum: allowedItemTypes },
+          relatedItemTypes: {
+            type: 'array',
+            maxItems: 4,
+            items: { type: 'string', enum: allowedItemTypes },
+          },
           color: { type: 'string' },
           secondaryColors: {
             type: 'array',

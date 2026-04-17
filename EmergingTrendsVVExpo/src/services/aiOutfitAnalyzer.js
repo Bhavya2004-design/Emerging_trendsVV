@@ -118,6 +118,7 @@ function buildOfflineFallbackEnvelope(category, remoteError) {
     detectedAt: new Date().toISOString(),
     result: {
       itemType: 'other',
+      relatedItemTypes: [],
       color: 'unknown',
       secondaryColors: [],
       material: 'unknown',
@@ -200,6 +201,11 @@ function normalizeAnalyzerResponse(apiResponse, category) {
   const secondaryColors = Array.isArray(result.secondaryColors)
     ? result.secondaryColors.filter(Boolean)
     : [];
+  const relatedItemTypes = Array.isArray(result.relatedItemTypes)
+    ? result.relatedItemTypes
+        .map(v => String(v || '').trim().toLowerCase())
+        .filter(Boolean)
+    : [];
 
   const color = [result.color, ...secondaryColors].filter(Boolean).join(', ');
   const materialNotes = String(result.materialNotes || '').trim();
@@ -224,6 +230,7 @@ function normalizeAnalyzerResponse(apiResponse, category) {
     model: String(apiResponse?.model || '').trim(),
     detectedAt: String(apiResponse?.detectedAt || '').trim(),
     displayItemType: toTitleCase(result.itemType),
+    detectedItems: relatedItemTypes,
   };
 }
 

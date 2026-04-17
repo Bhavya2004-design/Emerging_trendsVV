@@ -38,6 +38,7 @@ const subtitleByCategory = {
 function createEmptyAiDetails() {
   return {
     itemType: '',
+    detectedItems: [],
     color: '',
     material: '',
     style: '',
@@ -199,6 +200,7 @@ export default function ScanPage({
         title: `Scanned ${normalizedItemType}`,
         subtitle: composedSubtitle,
         itemType: aiDetails.itemType,
+        detectedItems: aiDetails.detectedItems,
         color: aiDetails.color,
         material: aiDetails.material,
         style: aiDetails.style,
@@ -326,6 +328,16 @@ export default function ScanPage({
                   autoCapitalize="none"
                 />
               </View>
+
+              {Array.isArray(aiDetails.detectedItems) &&
+              aiDetails.detectedItems.length > 0 ? (
+                <View style={styles.editFieldWrap}>
+                  <Text style={styles.detailLabel}>ALSO DETECTED</Text>
+                  <Text style={styles.detectedItemsText}>
+                    {aiDetails.detectedItems.join(', ')}
+                  </Text>
+                </View>
+              ) : null}
 
               <View style={styles.editFieldWrap}>
                 <Text style={styles.detailLabel}>COLOR</Text>
@@ -608,6 +620,17 @@ const styles = StyleSheet.create({
   },
   editInput: {
     backgroundColor: '#ffffff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd0c2',
+    color: '#2d2925',
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    fontFamily: 'serif',
+    fontSize: 15,
+  },
+  detectedItemsText: {
+    backgroundColor: '#f7f3ed',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#ddd0c2',

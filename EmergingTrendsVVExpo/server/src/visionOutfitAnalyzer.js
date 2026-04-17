@@ -286,10 +286,12 @@ function applyHoodieHeuristics(labelDescriptions, itemType, score) {
   return { itemType, score };
 }
 
-function scoreItemType(labelDescriptions) {
+function rankItemTypes(labelDescriptions) {
   const labs = labelDescriptions.map(s => String(s).toLowerCase());
-  let bestType = 'other';
-  let bestScore = 0;
+  const typeScores = {};
+  for (const type of Object.keys(ITEM_TYPE_SYNONYMS)) {
+    typeScores[type] = 0;
+  }
 
   for (const [type, synonyms] of Object.entries(ITEM_TYPE_SYNONYMS)) {
     for (const lab of labs) {
@@ -297,22 +299,40 @@ function scoreItemType(labelDescriptions) {
         const p = partial_ratio(syn, lab);
         const t = token_set_ratio(syn, lab);
         const s = Math.max(p, t);
-        if (s > bestScore) {
-          bestScore = s;
-          bestType = type;
+        if (s > typeScores[type]) {
+          typeScores[type] = s;
         }
       }
     }
   }
 
-  const hood = applyHoodieHeuristics(labelDescriptions, bestType, bestScore);
-  bestType = hood.itemType;
-  bestScore = hood.score;
+  const hoodieBoost = applyHoodieHeuristics(
+    labelDescriptions,
+    'hoodie',
+    typeScores.hoodie || 0,
+  );
+  typeScores.hoodie = Math.max(typeScores.hoodie || 0, hoodieBoost.score);
 
-  if (bestScore < TYPE_MATCH_THRESHOLD) {
-    return { itemType: 'other', score: bestScore };
+  const ranked = Object.entries(typeScores)
+    .map(([type, score]) => ({ type, score }))
+    .sort((a, b) => b.score - a.score);
+
+  const best = ranked[0] || { type: 'other', score: 0 };
+  const primaryType = best.score >= TYPE_MATCH_THRESHOLD ? best.type : 'other';
+  const relatedItemTypes = ranked
+    .filter(
+      entry =>
+        entry.type !== primaryType &&
+        entry.type !== 'other' &&
+        entry.score >= TYPE_MATCH_THRESHOLD - 8,
+    )
+    .slice(0, 3)
+    .map(entry => entry.type);
+
+  if (primaryType === 'other') {
+    return { itemType: 'other', score: best.score, relatedItemTypes };
   }
-  return { itemType: bestType, score: bestScore };
+  return { itemType: primaryType, score: best.score, relatedItemTypes };
 }
 
 function inferStyleAndOccasion(labelTexts, categoryHint) {
@@ -442,7 +462,11 @@ function visionResponseToEnvelope(visionJson, categoryHint) {
 
   const labelTexts = [...labels.map(l => l.description), ...objects.map(o => o.name)];
 
-  const { itemType, score: typeScore } = scoreItemType(labelTexts);
+  const {
+    itemType,
+    score: typeScore,
+    relatedItemTypes,
+  } = rankItemTypes(labelTexts);
   const dominant = dominantColorFromVision(colorInfo);
   const { color: colorName, secondary: secondaryColors } = mergeColorSignals(
     labels,
@@ -485,6 +509,7 @@ function visionResponseToEnvelope(visionJson, categoryHint) {
     detectedAt: new Date().toISOString(),
     result: {
       itemType,
+      relatedItemTypes,
       color: colorName,
       secondaryColors,
       material,

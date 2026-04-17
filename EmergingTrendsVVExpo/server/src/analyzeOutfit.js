@@ -6,11 +6,17 @@ import {
 } from './schema.js';
 import { buildUserPrompt, systemPrompt } from './prompt.js';
 import { analyzeOutfitWithVision } from './visionOutfitAnalyzer.js';
+import {
+  classifyFashionItemsWithHf,
+  isHfFashionClassifierEnabled,
+} from './fashionItemClassifier.js';
 
 const openAiModel = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
 const aiMode = (process.env.AI_MODE || 'stub').toLowerCase();
 const openAiApiKey = process.env.OPENAI_API_KEY || '';
 const visionApiKey = String(process.env.GOOGLE_CLOUD_VISION_API_KEY || '').trim();
+const hfPrimaryOverrideEnabled =
+  String(process.env.HUGGINGFACE_ENABLE_PRIMARY_OVERRIDE || '0').trim() === '1';
 const openAiTimeoutMs = Number.parseInt(
   process.env.OPENAI_TIMEOUT_MS || '280000',
   10,
@@ -40,6 +46,8 @@ function normalizeEnvelope(candidate, provider, model) {
   const now = new Date().toISOString();
   const fallbackResult = {
     itemType: candidate?.result?.itemType || candidate?.itemType || 'other',
+    relatedItemTypes:
+      candidate?.result?.relatedItemTypes || candidate?.relatedItemTypes || [],
     color: candidate?.result?.color || candidate?.color || 'unknown',
     secondaryColors:
       candidate?.result?.secondaryColors || candidate?.secondaryColors || [],
@@ -83,6 +91,7 @@ function unconfiguredEnvelope(categoryHint) {
       detectedAt: new Date().toISOString(),
       result: {
         itemType: 'other',
+        relatedItemTypes: [],
         color: 'unknown',
         secondaryColors: [],
         material: 'unknown',
@@ -94,7 +103,7 @@ function unconfiguredEnvelope(categoryHint) {
         confidence: 0,
         reasoning: '',
         warnings: [
-          'Set GOOGLE_CLOUD_VISION_API_KEY (recommended) or AI_MODE=openai with OPENAI_API_KEY.',
+          'Set GOOGLE_CLOUD_VISION_API_KEY, or HUGGINGFACE_API_KEY, or AI_MODE=openai with OPENAI_API_KEY.',
         ],
       },
     },
@@ -103,13 +112,68 @@ function unconfiguredEnvelope(categoryHint) {
   );
 }
 
+function mergeItemTypes(baseEnvelope, hfItems) {
+  if (!hfItems) {
+    return baseEnvelope;
+  }
+
+  const merged = structuredClone(baseEnvelope);
+  const currentPrimary = merged.result.itemType;
+  const shouldPromoteHfPrimary =
+    hfPrimaryOverrideEnabled &&
+    (currentPrimary === 'other' ||
+      (merged.result.confidence < 0.5 && hfItems.confidence >= 0.72));
+
+  if (shouldPromoteHfPrimary) {
+    merged.result.itemType = hfItems.primaryItemType;
+  }
+
+  const related = new Set([
+    ...(Array.isArray(merged.result.relatedItemTypes)
+      ? merged.result.relatedItemTypes
+      : []),
+    ...(Array.isArray(hfItems.relatedItemTypes) ? hfItems.relatedItemTypes : []),
+  ]);
+
+  related.delete(merged.result.itemType);
+  related.delete('other');
+  merged.result.relatedItemTypes = [...related].slice(0, 4);
+
+  if (shouldPromoteHfPrimary) {
+    merged.result.confidence = Math.max(
+      merged.result.confidence,
+      Math.min(0.95, hfItems.confidence * 0.92),
+    );
+  }
+  merged.result.reasoning = String(merged.result.reasoning || '').trim();
+  merged.result.reasoning = merged.result.reasoning
+    ? `${merged.result.reasoning} + hf-fashion-labels${shouldPromoteHfPrimary ? '(primary)' : '(related)'}` 
+    : `hf-fashion-labels${shouldPromoteHfPrimary ? '(primary)' : '(related)'}`;
+  merged.model = `${merged.model}+hf-fashion`;
+
+  return merged;
+}
+
 export async function analyzeOutfit({ imageBase64, mimeType, categoryHint }) {
   if (visionApiKey) {
     const visionResult = await analyzeOutfitWithVision(
       { imageBase64, categoryHint },
       visionApiKey,
     );
-    return normalizeEnvelope(visionResult, 'google-cloud-vision', 'label+color+objects-v1');
+    const baseEnvelope = normalizeEnvelope(
+      visionResult,
+      'google-cloud-vision',
+      'label+color+objects-v1',
+    );
+    if (!isHfFashionClassifierEnabled()) {
+      return baseEnvelope;
+    }
+    try {
+      const hfItems = await classifyFashionItemsWithHf({ imageBase64, mimeType });
+      return mergeItemTypes(baseEnvelope, hfItems);
+    } catch {
+      return baseEnvelope;
+    }
   }
 
   if (aiMode === 'openai') {
